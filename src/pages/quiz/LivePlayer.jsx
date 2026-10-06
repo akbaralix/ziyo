@@ -104,7 +104,7 @@ export default function LivePlayer() {
 
       // 2. Connect Socket
       const token = localStorage.getItem("token");
-      const newSocket = io("http://localhost:3000", {
+      const newSocket = io("https://ziyo.onrender.com", {
         auth: { token },
       });
 

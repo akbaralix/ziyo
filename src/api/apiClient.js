@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_URL || "https://ziyo.onrender.com";
 
 /**
  * Universal fetch wrapper to handle JSON requests, token headers, and error parsing
@@ -39,7 +39,7 @@ export async function apiClient(endpoint, options = {}) {
 
     if (!response.ok) {
       throw new Error(
-        data.message || `Server xatoligi yuz berdi (${response.status})`
+        data.message || `Server xatoligi yuz berdi (${response.status})`,
       );
     }
 
@@ -51,4 +51,3 @@ export async function apiClient(endpoint, options = {}) {
 }
 
 export default apiClient;
-

@@ -63,7 +63,7 @@ export default function LiveHost() {
   // Connect socket
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const newSocket = io("http://localhost:3000", {
+    const newSocket = io("https://ziyo.onrender.com", {
       auth: { token },
     });
 
