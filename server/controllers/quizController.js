@@ -151,7 +151,7 @@ export async function joinByPin(req, res) {
     const { pin } = req.params;
     const session = await GameSession.findOne({
       pin,
-      status: { $in: ["waiting", "active"] },
+      status: { $ne: "ended" },
     }).populate("quiz", "title questionsCount description");
 
     if (!session) {

@@ -242,22 +242,20 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #10b981;
+  background: #1e10b9;
   color: #ffffff;
   border: none;
   padding: 12px 24px;
   border-radius: 14px;
   font-size: 15px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
   transition: all 0.2s;
   touch-action: manipulation;
 }
 
 .lobby-start-btn:hover:not(:disabled) {
-  background: #059669;
+  background: #050c96ba;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
 }
 
 .lobby-start-btn:active:not(:disabled) {

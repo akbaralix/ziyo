@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   GoTrophy,
   GoSearch,
@@ -7,7 +8,6 @@ import {
   GoArrowDown,
 } from "react-icons/go";
 import {
-  IoSparklesOutline,
   IoMedalOutline,
   IoBookOutline,
   IoExtensionPuzzleOutline,
@@ -15,7 +15,7 @@ import {
 } from "react-icons/io5";
 import { FaCrown } from "react-icons/fa";
 import defaultAvatar from "../../assets/logo.jpg";
-import initialLeaderboardData from "./reytingData.json";
+import { getRatings } from "../../api/ratingApi.js";
 import "./reytinglar.css";
 
 const TIMEFRAMES = [
@@ -37,19 +37,58 @@ function Reytinglar() {
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const currentUserId = useMemo(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      return u?._id || u?.id || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const currentUsername = useMemo(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      return u?.telegramUsername || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // TanStack Query orqali serverdan real reyting ma'lumotlarini olish
+  const { data: ratingResponse, isLoading } = useQuery({
+    queryKey: ["ratings", timeframe, selectedCategory],
+    queryFn: () => getRatings({ timeframe, category: selectedCategory }),
+    staleTime: 1000 * 60 * 2,
+  });
+
+  const rawUsers = ratingResponse?.ratings || [];
+
   // Foydalanuvchilarni XP bo'yicha kamayish tartibida saralash
   const sortedUsers = useMemo(() => {
     // Vaqt filtri bo'yicha XP ni moslash (dinamik multiplikator bilan)
     const multiplier =
       timeframe === "weekly" ? 0.25 : timeframe === "monthly" ? 0.65 : 1;
 
-    let users = initialLeaderboardData.map((u) => ({
-      ...u,
-      calculatedXp: Math.round(u.xp * multiplier),
-    }));
+    let users = rawUsers.map((u) => {
+      const isMe =
+        Boolean((currentUserId && (u.id === currentUserId || u._id === currentUserId)) ||
+        (currentUsername && u.username && u.username === currentUsername));
 
-    // XP bo'yicha eng kattasi yuqorida
-    users.sort((a, b) => b.calculatedXp - a.calculatedXp);
+      return {
+        ...u,
+        isCurrentUser: isMe,
+        calculatedXp: Math.round((u.xp || 0) * multiplier),
+      };
+    });
+
+    // Kategoriya bo'yicha saralash / filtrlash
+    if (selectedCategory === "Kitobxonlik") {
+      users.sort((a, b) => (b.readBooks || 0) - (a.readBooks || 0) || b.calculatedXp - a.calculatedXp);
+    } else {
+      // XP bo'yicha eng kattasi yuqorida
+      users.sort((a, b) => b.calculatedXp - a.calculatedXp || (b.solvedQuizzes || 0) - (a.solvedQuizzes || 0));
+    }
 
     // Ranklarni belgilash
     users = users.map((u, index) => ({
@@ -64,12 +103,12 @@ function Reytinglar() {
         (u) =>
           u.name.toLowerCase().includes(q) ||
           u.username.toLowerCase().includes(q) ||
-          u.level.toLowerCase().includes(q),
+          (u.level && u.level.toLowerCase().includes(q)),
       );
     }
 
     return users;
-  }, [timeframe, searchQuery]);
+  }, [rawUsers, timeframe, selectedCategory, searchQuery, currentUserId, currentUsername]);
 
   // Top 3 foydalanuvchilar (podium uchun)
   const top1 = sortedUsers.find((u) => u.rank === 1);
@@ -79,13 +118,8 @@ function Reytinglar() {
   // 4-o'rindan keyingi foydalanuvchilar
   const remainingUsers = sortedUsers.filter((u) => u.rank > 3);
 
-  // Hozirgi foydalanuvchi ma'lumotlari
-  const currentUser = sortedUsers.find((u) => u.isCurrentUser);
-
   return (
     <div className="reyting-page">
-      {/* Header Banner */}
-
       {/* Filter and Search Bar */}
       <div className="reyting-controls">
         <div className="timeframe-tabs">
@@ -130,7 +164,7 @@ function Reytinglar() {
       </div>
 
       {/* TOP 3 PODIUM SECTION */}
-      {!searchQuery && top1 && (
+      {!searchQuery && top1 && !isLoading && (
         <div className="podium-section">
           <div className="podium-container">
             {/* 2nd Place (Chapda) */}
@@ -220,7 +254,7 @@ function Reytinglar() {
         </div>
       )}
 
-      {/* LEADERBOARD LIST (4-o'rindan pastdagilar) */}
+      {/* LEADERBOARD LIST (4-o'rindan pastdagilar yoki qidiruv natijalari) */}
       <div className="leaderboard-table-card">
         <div className="leaderboard-header-row">
           <span className="col-rank">O'rin</span>
@@ -231,7 +265,11 @@ function Reytinglar() {
         </div>
 
         <div className="leaderboard-list">
-          {sortedUsers.length === 0 ? (
+          {isLoading ? (
+            <div className="empty-leaderboard">
+              <p>Reyting yuklanmoqda...</p>
+            </div>
+          ) : sortedUsers.length === 0 ? (
             <div className="empty-leaderboard">
               <IoRibbonOutline className="empty-icon" />
               <p>Foydalanuvchilar topilmadi</p>
@@ -271,10 +309,10 @@ function Reytinglar() {
                   <div className="col-stats hide-mobile">
                     <div className="activity-badges">
                       <span className="act-pill" title="Yechilgan testlar">
-                        <IoExtensionPuzzleOutline /> {user.solvedQuizzes} test
+                        <IoExtensionPuzzleOutline /> {user.solvedQuizzes || 0} test
                       </span>
                       <span className="act-pill" title="O'qilgan kitoblar">
-                        <IoBookOutline /> {user.readBooks} kitob
+                        <IoBookOutline /> {user.readBooks || 0} kitob
                       </span>
                     </div>
                   </div>
@@ -290,7 +328,7 @@ function Reytinglar() {
                         <GoArrowDown /> {user.trend}
                       </span>
                     )}
-                    {user.trend === "0" && (
+                    {(!user.trend || user.trend === "0") && (
                       <span className="trend-same">—</span>
                     )}
                   </div>

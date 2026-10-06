@@ -388,7 +388,7 @@ function Profil() {
                     >
                       {startingQuizId === quiz._id
                         ? "Ochilmoqda..."
-                        : "🚀 Jonli o'yinni boshlash"}
+                        : "🚀 Boshlash"}
                     </button>
                     <button
                       type="button"

@@ -641,7 +641,7 @@
 }
 
 .quiz-game-badge {
-  background: linear-gradient(135deg, #ec4899, #8b5cf6);
+  background: linear-gradient(135deg, #6d4bea, #8b5cf6);
   color: #ffffff;
   padding: 4px 10px;
   border-radius: 8px;
@@ -657,8 +657,8 @@
 
 .profile-quiz-title {
   margin: 0;
+  font-weight: 500;
   font-size: 16px;
-  font-weight: 700;
   color: #0f172a;
 }
 
@@ -684,11 +684,11 @@
 
 .quiz-host-btn {
   flex: 1;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  background: linear-gradient(135deg, #2525eb, #3b3bf6);
   color: #ffffff;
   border: none;
   padding: 8px 14px;
-  border-radius: 10px;
+  border-radius: 33px;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;

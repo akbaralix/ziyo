@@ -29,36 +29,190 @@ export function initSocketIO(io) {
         socket.role = "host";
         socket.join(`session:${sessionId}`);
 
-        socket.emit("host:joined", {
+        const baseData = {
           sessionId,
           pin: session.pin,
           quizTitle: session.quiz.title,
           questionsCount: session.quiz.questions.length,
+          status: session.status,
           players: session.players.map((p) => ({
             id: p._id,
             name: p.name,
             avatar: p.avatar,
+            score: p.score,
           })),
-        });
+        };
+
+        if (session.status === "question" && session.currentQuestion >= 0) {
+          const currentQ = session.quiz.questions[session.currentQuestion];
+          const elapsed = session.questionStartedAt
+            ? Math.floor(
+                (Date.now() - new Date(session.questionStartedAt).getTime()) /
+                  1000
+              )
+            : 0;
+          const timeLeft = Math.max(0, currentQ.timeLimit - elapsed);
+          const answeredCount = session.players.filter((p) =>
+            p.answers.some((a) => a.questionIndex === session.currentQuestion)
+          ).length;
+
+          baseData.currentQuestion = {
+            questionIndex: session.currentQuestion,
+            totalQuestions: session.quiz.questions.length,
+            text: currentQ.text,
+            options: currentQ.options,
+            timeLimit: currentQ.timeLimit,
+            points: currentQ.points,
+          };
+          baseData.timeLeft = timeLeft;
+          baseData.answeredCount = answeredCount;
+        } else if (
+          session.status === "answer" &&
+          session.currentQuestion >= 0
+        ) {
+          const currentQ = session.quiz.questions[session.currentQuestion];
+          const leaderboard = [...session.players]
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5)
+            .map((p, i) => ({ rank: i + 1, name: p.name, score: p.score }));
+
+          baseData.currentQuestion = {
+            questionIndex: session.currentQuestion,
+            totalQuestions: session.quiz.questions.length,
+            text: currentQ.text,
+            options: currentQ.options,
+            timeLimit: currentQ.timeLimit,
+            points: currentQ.points,
+          };
+          baseData.correctIndex = currentQ.correctIndex;
+          baseData.leaderboard = leaderboard;
+        } else if (session.status === "ended") {
+          const finalLeaderboard = [...session.players]
+            .sort((a, b) => b.score - a.score)
+            .map((p, i) => ({
+              rank: i + 1,
+              id: p._id,
+              name: p.name,
+              score: p.score,
+              avatar: p.avatar,
+            }));
+          baseData.leaderboard = finalLeaderboard;
+        }
+
+        socket.emit("host:joined", baseData);
       } catch (err) {
         socket.emit("error", { msg: "Server xatosi" });
       }
     });
 
     // ===================== O'YINCHI ULANISHI =====================
-    socket.on("player:join", async ({ sessionId, name, avatar }) => {
+    socket.on("player:join", async ({ sessionId, playerId, name, avatar }) => {
       try {
         const session = await GameSession.findOne({
           _id: sessionId,
-          status: { $in: ["waiting"] },
-        });
+          status: { $ne: "ended" },
+        }).populate("quiz");
+
         if (!session) {
           return socket.emit("player:join:error", {
-            msg: "O'yin topilmadi yoki boshlangan",
+            msg: "O'yin topilmadi yoki tugagan",
           });
         }
 
-        const player = {
+        // Qayta ulanayotgan o'yinchini aniqlash
+        let player = null;
+        if (playerId) {
+          player = session.players.find(
+            (p) => p._id.toString() === playerId.toString()
+          );
+        }
+        if (!player && name) {
+          player = session.players.find(
+            (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase()
+          );
+        }
+
+        if (player) {
+          // O'yinchi qayta ulandi
+          player.socketId = socket.id;
+          await session.save();
+
+          socket.playerId = player._id.toString();
+          socket.sessionId = sessionId;
+          socket.role = "player";
+          socket.join(`session:${sessionId}`);
+
+          const myAnswer =
+            session.currentQuestion >= 0
+              ? player.answers.find(
+                  (a) => a.questionIndex === session.currentQuestion
+                )
+              : null;
+
+          const responseData = {
+            playerId: player._id,
+            name: player.name,
+            score: player.score,
+            status: session.status,
+            quizTitle: session.quiz?.title,
+            myAnswerHistory: player.answers || [],
+          };
+
+          if (session.status === "question" && session.currentQuestion >= 0) {
+            const currentQ = session.quiz.questions[session.currentQuestion];
+            const elapsed = session.questionStartedAt
+              ? Math.floor(
+                  (Date.now() - new Date(session.questionStartedAt).getTime()) /
+                    1000
+                )
+              : 0;
+            const timeLeft = Math.max(0, currentQ.timeLimit - elapsed);
+
+            responseData.currentQuestion = {
+              questionIndex: session.currentQuestion,
+              totalQuestions: session.quiz.questions.length,
+              text: currentQ.text,
+              options: currentQ.options,
+              timeLimit: currentQ.timeLimit,
+              points: currentQ.points,
+            };
+            responseData.timeLeft = timeLeft;
+            responseData.hasAnswered = !!myAnswer;
+            responseData.chosenIndex = myAnswer ? myAnswer.chosenIndex : null;
+          } else if (
+            session.status === "answer" &&
+            session.currentQuestion >= 0
+          ) {
+            const currentQ = session.quiz.questions[session.currentQuestion];
+            responseData.currentQuestion = {
+              questionIndex: session.currentQuestion,
+              totalQuestions: session.quiz.questions.length,
+              text: currentQ.text,
+              options: currentQ.options,
+              timeLimit: currentQ.timeLimit,
+              points: currentQ.points,
+            };
+            responseData.correctIndex = currentQ.correctIndex;
+            responseData.myAnswer = myAnswer
+              ? {
+                  isCorrect: myAnswer.isCorrect,
+                  pointsEarned: myAnswer.pointsEarned,
+                }
+              : null;
+          }
+
+          socket.emit("player:joined", responseData);
+          return;
+        }
+
+        // Yangi o'yinchi - faqat kutilayotgan (waiting) holatda qabul qilinadi
+        if (session.status !== "waiting") {
+          return socket.emit("player:join:error", {
+            msg: "O'yin allaqachon boshlangan!",
+          });
+        }
+
+        const newPlayer = {
           socketId: socket.id,
           userId: socket.userId || null,
           name: name || "Noma'lum",
@@ -67,7 +221,7 @@ export function initSocketIO(io) {
           answers: [],
         };
 
-        session.players.push(player);
+        session.players.push(newPlayer);
         await session.save();
 
         const savedPlayer = session.players[session.players.length - 1];
@@ -80,7 +234,10 @@ export function initSocketIO(io) {
         socket.emit("player:joined", {
           playerId: savedPlayer._id,
           name: savedPlayer.name,
-          quizTitle: session.quiz,
+          score: 0,
+          status: "lobby",
+          quizTitle: session.quiz?.title,
+          myAnswerHistory: [],
         });
 
         // Hamma (host)ga yangi o'yinchi haqida xabar
@@ -216,10 +373,14 @@ export function initSocketIO(io) {
     // ===================== ULANISH UZILDI =====================
     socket.on("disconnect", async () => {
       if (socket.role === "player" && socket.sessionId && socket.playerId) {
-        // O'yinchini sessiyadan olib tashlamaymiz (natijalar uchun saqlanadi)
-        io.to(`session:${socket.sessionId}`).emit("player:left", {
-          playerId: socket.playerId,
-        });
+        try {
+          const session = await GameSession.findById(socket.sessionId);
+          if (session && session.status === "waiting") {
+            io.to(`session:${socket.sessionId}`).emit("player:left", {
+              playerId: socket.playerId,
+            });
+          }
+        } catch {}
       }
     });
   });
@@ -270,14 +431,17 @@ async function sendNextQuestion(io, sessionId, quiz, forceIndex) {
 }
 
 async function showAnswer(io, sessionId, session, questionIndex) {
-  const quiz = session.quiz || (await QuizGame.findById(session.quiz));
-  const question = quiz.questions[questionIndex];
+  const freshSession =
+    await GameSession.findById(sessionId).populate("quiz");
+  if (!freshSession) return;
+  const question = freshSession.quiz?.questions?.[questionIndex];
+  if (!question) return;
 
-  session.status = "answer";
-  await GameSession.findByIdAndUpdate(sessionId, { status: "answer" });
+  freshSession.status = "answer";
+  await freshSession.save();
 
   // Leaderboard hisoblash
-  const leaderboard = [...session.players]
+  const leaderboard = [...freshSession.players]
     .sort((a, b) => b.score - a.score)
     .slice(0, 5)
     .map((p, i) => ({ rank: i + 1, name: p.name, score: p.score }));

@@ -60,10 +60,33 @@ export default function LiveHost() {
     setIsMuted(muted);
   };
 
+  const startCountdown = (initialTime) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTimeLeft(initialTime);
+    if (initialTime <= 0) return;
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          return 0;
+        }
+        if (prev <= 6) {
+          sfx.playTick(true);
+        } else {
+          sfx.playTick(false);
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   // Connect socket
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const newSocket = io("https://ziyo.onrender.com", {
+    const socketUrl =
+      import.meta.env.VITE_API_URL || "https://ziyo.onrender.com";
+    const newSocket = io(socketUrl, {
       auth: { token },
     });
 
@@ -83,13 +106,37 @@ export default function LiveHost() {
       QRCode.toDataURL(joinUrl, { width: 220, margin: 1 })
         .then((url) => setQrDataUrl(url))
         .catch(console.error);
+
+      // Resume game state if already active
+      if (data.status === "question" && data.currentQuestion) {
+        setGameState("question");
+        setCurrentQuestion(data.currentQuestion);
+        setAnsweredCount(data.answeredCount || 0);
+        setCorrectIndex(null);
+        startCountdown(data.timeLeft ?? data.currentQuestion.timeLimit);
+      } else if (data.status === "answer" && data.currentQuestion) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        setGameState("answer");
+        setCurrentQuestion(data.currentQuestion);
+        setCorrectIndex(data.correctIndex);
+        setLeaderboard(data.leaderboard || []);
+      } else if (data.status === "ended") {
+        if (timerRef.current) clearInterval(timerRef.current);
+        setGameState("ended");
+        setFinalLeaderboard(data.leaderboard || []);
+      }
     });
 
     // New Player Joined
     newSocket.on("player:new", (player) => {
       sfx.playJoin();
       setPlayers((prev) => {
-        if (prev.some((p) => p.id === player.id)) return prev;
+        const exists = prev.some((p) => p.id === player.id);
+        if (exists) {
+          return prev.map((p) =>
+            p.id === player.id ? { ...p, ...player } : p
+          );
+        }
         return [...prev, player];
       });
     });
@@ -110,26 +157,9 @@ export default function LiveHost() {
       sfx.playStart();
       setGameState("question");
       setCurrentQuestion(data);
-      setTimeLeft(data.timeLimit);
       setAnsweredCount(0);
       setCorrectIndex(null);
-
-      // Start countdown
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            return 0;
-          }
-          if (prev <= 6) {
-            sfx.playTick(true);
-          } else {
-            sfx.playTick(false);
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      startCountdown(data.timeLimit);
     });
 
     // Answer Progress
@@ -207,10 +237,8 @@ export default function LiveHost() {
 
   return (
     <div className="live-host-screen">
-      {/* Top Header */}
       <header className="live-host-nav">
         <div className="host-nav-brand">
-          {/* <span className="live-logo-tag">ZIYO QUIZ</span> */}
           <span className="live-quiz-title">{quizTitle}</span>
         </div>
 

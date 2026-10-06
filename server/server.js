@@ -17,6 +17,7 @@ import startBot from "./bot/bot.js";
 import authRoutes from "./routes/authRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
+import ratingRoutes from "./routes/ratingRoutes.js";
 import { initSocketIO } from "./socket/gameSocket.js";
 
 const app = express();
@@ -44,6 +45,8 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/quiz", quizRoutes);
+app.use("/api/ratings", ratingRoutes);
+app.use("/api/rating", ratingRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
