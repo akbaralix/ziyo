@@ -1,0 +1,390 @@
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 30px 24px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  position: absolute;
+}
+
+.login-header {
+  text-align: center;
+}
+
+.login-logo-img {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 16px auto;
+}
+
+.login-logo-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 22px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.login-header h2 {
+  font-size: 24px;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.login-header p {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.login-action {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.login-action button {
+  gap: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 18px;
+  border-radius: 33px;
+  font-size: 15px;
+
+  transition: all 0.2s ease;
+}
+
+.btn-telegram {
+  background-color: #229ed9 !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(34, 158, 217, 0.35);
+}
+
+.btn-google {
+  background-color: #ffffff;
+  color: #334155;
+}
+
+.btn-google:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.login-action button svg {
+  font-size: 20px;
+}
+
+/* Telegram login section */
+.telegram-login {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.telegram-login h2 {
+  font-size: 22px;
+  font-weight: 500;
+  color: #1e293b;
+  margin: 10px 0 8px;
+}
+
+.telegram-login p {
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.telegram-login img {
+  width: 110px;
+  height: 110px;
+  margin-bottom: 4px;
+}
+
+.login-tg-btn {
+  padding: 14px 20px;
+  border-radius: 33px;
+  font-size: 17px;
+  background: #229ed9;
+  color: #ffffff;
+  border: none;
+  width: 100%;
+  gap: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s ease;
+  box-shadow: 0 4px 14px rgba(34, 158, 217, 0.35);
+}
+
+.login-tg-btn:hover:not(:disabled) {
+  background: #1d8ec3;
+}
+
+.login-tg-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Spinner and waiting */
+.waiting-status-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 12px 16px;
+  background-color: #f0f9ff;
+  border: 1px solid #7dd3fc;
+  border-radius: 22px;
+  color: #0369a1;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.spinner-icon {
+  animation: spin 1s linear infinite;
+  font-size: 16px;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Step badges & headers */
+.step-badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 4px 10px;
+  background: #e0f2fe;
+  color: #0284c7;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+.step-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: -4px 0 16px;
+}
+
+/* Form Styles */
+.user-login-info {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.user-login-info h2,
+.user-study h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.login-form {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-form input {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1.5px solid #e2e8f0;
+  outline: none;
+  font-size: 15px;
+  font-family: inherit;
+  transition: 0.2s border-color ease;
+  background: #f8fafc;
+}
+
+.login-form input:focus {
+  background: #ffffff;
+  border-color: #229ed9;
+}
+
+.login-form label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0 4px;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 14px;
+  pointer-events: none;
+  transition: 0.2s ease;
+}
+
+.login-form input:focus + label,
+.login-form input:not(:placeholder-shown) + label {
+  top: 0;
+  font-size: 11px;
+  color: #229ed9;
+  background: #ffffff;
+  font-weight: 600;
+}
+
+.next-stemp-btn {
+  padding: 14px;
+  border-radius: 14px;
+  background: #2563eb;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: 0.2s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.next-stemp-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.user-study {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.study-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #ffffff;
+}
+
+.study-option.active-study {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.study-emoji {
+  font-size: 28px;
+}
+
+.study-info h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.study-info p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Study Courses Grid */
+.study-curses {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.study-curses-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.study-curses-grid h3 {
+  grid-column: 1 / -1;
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  color: #1e293b;
+}
+
+.study-curses-grid button {
+  height: 52px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.study-curses-grid button.active-course {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.study-curses-grid button:active {
+  transform: scale(0.97);
+}
+
+.back-login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 14px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s ease;
+  margin-top: 4px;
+}
+
+/* Alert Messages */
+.login-alert {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-alert.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.login-alert.success {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}

@@ -1,0 +1,45 @@
+@import url(https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;800;900&display=swap);
+:root {
+  /* button */
+  --button-bg: #251fe2;
+  --button-text-color: white;
+  --button-padding: 15px;
+  --button-border-radius: 33px;
+  --button-font-size: 17px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+  font-family: "Poppins", sans-serif;
+}
+
+#ziyo {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  user-select: none;
+}
+
+img {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-drag: none;
+}

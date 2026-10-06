@@ -1,0 +1,82 @@
+
+  Quyida ushbu tizim qanday ishlashi, nimalar kerak bo'lishi va uni Kahootdan ham ustun qiladigan arxitektura to'liq tushuntirilgan.
+  ──────
+  ### 🎮 1. O'yin qanday ishlaydi? (Game Flow)
+
+  Tizim 3 ta asosiy bosqichdan iborat bo'ladi:
+
+    [ 1. Savollar yaratish ] ──> [ 2. Lobby (PIN & QR Kod) ] ──> [ 3. Jonli O'yin ] ──> [ 4. 3D Podium & Taqdirlash ]
+
+  #### A. Savollar to'plamini yaratish (Quiz Builder):
+
+  • Foydalanuvchi mavzu nomini kiritadi (masalan: “Informatika va Algoritmlar”).
+  • Savollar sonini belgilaydi (8 tadan 25 tagacha).
+  • Har bir savol uchun:
+      • Savol matni va rasmi (ixtiyoriy);
+      • 2 tadan 4 tagacha variantlar va to'g'ri javob;
+      • Vaqt limiti (masalan: 10, 20, 30 yoki 60 soniya);
+      • Ball miqdori (standart 1000 ball + tezlik bonusi).
+
+
+  #### B. Xona ochish va Ishtirokchilarni yig'ish (Lobby):
+
+  • O'yin egasi (Host) "O'yinni boshlash" tugmasini bosadi.
+  • Katta ekranda quyidagilar paydo bo'ladi:
+      1. 6 xonali o'yin PIN kodi (masalan: 742 915);
+      2. Dinamik QR kod (ishtirokchilar telefon kamerasini qaratishi bilan to'g'ridan-to'g'ri o'yinga ulanadi);
+      3. Havola (URL): ziyo.uz/live?pin=742915.
+  • Ishtirokchilar ulangani sari ularning ismlari va avatarlari ekranda chiroyli animatsiya bilan paydo bo'lib boradi.
+  • Barcha yig'ilgach, Host "Boshlash (Start)" tugmasini bosadi.
+
+  #### C. Jonli O'yin jarayoni:
+
+  • Host ekranida: Savol, orqaga hisoblash taymeri (musiqa va tovush effektlari bilan) va nechta kishi javob bergani jonli ko'rinib turadi.
+  • Ishtirokchi telefonida: Savol matni va qulay, katta rang-barang variant tugmalari chiqadi.
+  • Ball berish mexanikasi: To'g'ri topgan har bir o'yinchiga ball beriladi, qanchalik tez bosgan bo'lsa, shuncha ko'p ball oladi (bu o'yinni juda
+  qizg'in qiladi).
+  • Har bir savol yakunida qisqa Top 5 reyting ko'rsatiladi.
+
+  #### D. Final va 3D Podium (Taqdirlash marosimi):
+
+  O'yin tugashi bilan ekran qorong'ulashib, bayramona musiqa va kuchli silliq animatsiyalar boshlanadi:
+
+  1. 🥉 3-o'rin: Chap tomondagi shohsupaga sakrab chiqadi, to'plagan bali va ismi porlab ko'rinadi;
+  2. 🥈 2-o'rin: O'ng tomondagi pog'onaga ko'tariladi;
+  3. 🥇 1-o'rin: Markaziy eng baland shohsupaga oltin toj, feyerverklar (confetti salyuti) va yorqin effektlar bilan ko'tariladi!
+  4. Qolgan barcha ishtirokchilar: Podium ostida 4-o'rindan boshlab to'liq ro'yxatda to'plagan ballari va to'g'ri javoblar foizi bilan silliq
+  ro'yxat bo'lib chiqadi.
+  ──────
+  ### ⚡ 2. Tizimni Kahootdan ham yaxshiroq qiladigan jihatlar:
+
+   Imkoniyat                | Kahoot                                       | Bizning Ziyo Live tizimi
+  --------------------------|----------------------------------------------|------------------------------------------------------------------------
+   Savol matni              | Faqat katta proyektorda ko'rinadi            | Ham katta ekranda, ham o'yinchining o'z telefonida aniq ko'rinadi
+                            | (orqadagilar ko'rolmaydi)                    |
+   Platforma integratsiyasi | Alohida mustaqil platforma                   | Ziyo profili bilan integratsiyalashgan (yutganlarga to'g'ridan-to'g'ri
+                            |                                              | XP, Reyting va Medallar beriladi)
+   Kirish qulayligi         | Faqat PIN orqali                             | QR kod + Maxsus qisqa havola + PIN
+   Savollarni tuzish        | Faqat qo'lda                                 | Qo'lda tuzish + AI yordamida 1 soniyada avtomatik savol generatsiya
+                            |                                              | qilish
+   Xatolar ustida ishlash   | Pullik xizmat                                | O'yindan so'ng har bir o'quvchi xato qilgan savollarini mustaqil qayta
+                            |                                              | ko'rib chiqa oladi
+  ──────
+  ### 🛠 3. Texnik jihatdan nimalar ishlatiladi?
+
+  1. WebSockets (Socket.IO):
+      • An'anaviy HTTP so'rovlari o'rniga ikki tomonlama real-vaqtli aloqa. Savol o'zgarganda yoki kimdir javob berganda barcha telefonlarga 10-20
+      millisekundda yetib boradi.
+  2. Dinamik QR Kod generatori (qrcode.react):
+      • Har bir ochilgan xona uchun avtomatik QR kod chizib beradi.
+  3. Animatsiyalar va Effektlar (canvas-confetti + framer-motion):
+      • Podiumning pog'onama-pog'ona ko'tarilishi, g'olibga tushadigan salyutlar va silliq sahifalar almashinuvi.
+  4. Sound Effects (SFX / Ovozlar):
+      • Taymer chertishi, to'g'ri/noto'g'ri javob tovushi, g'oliblik fanfarlari — bular o'yin atmosferasini jonlantiradi.
+
+  ──────
+  ### 📋 4. Buni amalga oshirish rejasi:
+
+  • 1-qadam: Savollar to'plamini yaratish (8-25 ta savol, vaqt, rasm va variantlar) interfeysi va bazasi.
+  • 2-qadam: Backendda Socket.IO serverini o'rnatish va Xonalar (Rooms / PIN) arxitekturasini yo'lga qo'yish.
+  • 3-qadam: O'yin egasi (Host) ekrani — PIN, QR-kod, Lobby va savollarni boshqarish pulti.
+  • 4-qadam: O'yinchi (Player) ekrani — Telefonda QR kod bilan ulanish, ism tanlash va tezkor javob berish.
+  • 5-qadam: Final Podium, natijalar tahlili, ovozlar va XP mukofotlash tizimi.
