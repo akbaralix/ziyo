@@ -91,45 +91,6 @@ function Home() {
         </div>
       </div>
 
-      {/* Ziyo Live Quick Banner */}
-      <div className="home-live-banner">
-        <div className="live-banner-content">
-          <div className="live-banner-tag">
-            <FaGamepad /> Ziyo Live (Kahoot)
-          </div>
-          <h3>
-            Jonli viktorinada qatnashing yoki o'z o'yiningizni boshlang! ⚡
-          </h3>
-          <p>
-            Telefoningiz yoki kompyuteringiz orqali real-vaqtda bilimingizni
-            sinab ko'ring.
-          </p>
-        </div>
-
-        <div className="live-banner-actions">
-          <form onSubmit={handleQuickJoin} className="live-quick-pin-form">
-            <input
-              type="text"
-              placeholder="PIN kod..."
-              value={quickPin}
-              onChange={(e) => setQuickPin(e.target.value)}
-              maxLength={10}
-            />
-            <button type="submit" className="quick-join-btn">
-              <FaPlay /> Kirish
-            </button>
-          </form>
-
-          <button
-            type="button"
-            className="create-live-btn"
-            onClick={() => navigate("/quiz/builder")}
-          >
-            + Yangi viktorina tuzish
-          </button>
-        </div>
-      </div>
-
       <div className="post-sorts">
         {categories.map((item) => (
           <div className="post-sort" key={item.name}>

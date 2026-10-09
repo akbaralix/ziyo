@@ -60,8 +60,7 @@
   padding: 8px 18px;
   border-radius: 999px;
   font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
+  color: #485261;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
@@ -115,11 +114,6 @@
     box-shadow 0.25s ease;
 }
 
-.book-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.08);
-}
-
 /* 3D Book Cover Visual */
 .book-cover {
   height: 180px;
@@ -131,6 +125,11 @@
   justify-content: space-between;
   cursor: pointer;
   overflow: hidden;
+}
+.book-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .book-spine {
@@ -328,20 +327,14 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #2563eb;
+  background: #2825eb;
   color: #ffffff;
-  border: none;
   padding: 10px 16px;
   border-radius: 12px;
   font-size: 14px;
-  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  font-family: "poppins";
   transition: all 0.2s ease;
-}
-
-.read-book-btn:hover {
-  background: #1d4ed8;
 }
 
 .download-book-btn {

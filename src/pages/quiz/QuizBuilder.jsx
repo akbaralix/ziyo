@@ -50,6 +50,8 @@ export default function QuizBuilder() {
     DEFAULT_QUESTION(),
     DEFAULT_QUESTION(),
   ]);
+  const [aiQuizOpen, setAiQuizOpen] = useState(false);
+  const [aipromptText, setAipromptText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -465,8 +467,7 @@ export default function QuizBuilder() {
           {/* Question Explanation Box */}
           <div className="question-explanation-card">
             <label className="explanation-label">
-              <FaInfoCircle /> To'g'ri javob tushuntirishi (O'yindan so'ng
-              ko'rsatiladi):
+              <FaInfoCircle /> To'g'ri javob tushuntirishi (ixtiyoriy):
             </label>
             <input
               type="text"
@@ -510,6 +511,28 @@ export default function QuizBuilder() {
           </div>
         </main>
       </div>
+      <div className="ai-builder-btn">
+        <button onClick={() => setAiQuizOpen(true)}>ai</button>
+      </div>
+
+      {aiQuizOpen && (
+        <div className="aiQuiz-container">
+          <div className="aiQuiz-header">
+            <button onClick={() => setAiQuizOpen(false)}>X</button>
+            <h2>AI orqalik yaratish</h2>
+          </div>
+          <div className="aiquiz-action">
+            <label>Mavzuni kiriting</label>
+            <input
+              type="text"
+              value={aipromptText}
+              onChange={(e) => setAipromptText(e.target.value)}
+            />
+
+            <button>Yaratish</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -63,17 +63,11 @@
   background-color: #229ed9 !important;
   color: #ffffff !important;
   border: none !important;
-  box-shadow: 0 4px 14px rgba(34, 158, 217, 0.35);
 }
 
 .btn-google {
-  background-color: #ffffff;
-  color: #334155;
-}
-
-.btn-google:hover {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
+  background-color: #99b7f3;
+  color: #fafafa;
 }
 
 .login-action button svg {

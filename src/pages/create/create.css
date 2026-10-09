@@ -197,12 +197,6 @@
   transition: all 0.2s ease;
 }
 
-.create-input:focus {
-  background: #ffffff;
-  border-color: #3e59df;
-  box-shadow: 0 0 0 3px rgba(62, 89, 223, 0.12);
-}
-
 .create-textarea {
   width: 100%;
   min-height: 120px;
@@ -215,15 +209,8 @@
   outline: none;
   resize: none;
   background: #fafafa;
-  resize: vertical;
   line-height: 1.6;
   transition: all 0.2s ease;
-}
-
-.create-textarea:focus {
-  background: #ffffff;
-  border-color: #3e59df;
-  box-shadow: 0 0 0 3px rgba(62, 89, 223, 0.12);
 }
 
 /* --- Quick Text Helpers --- */
@@ -236,6 +223,7 @@
 
 .quick-emoji-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -250,11 +238,6 @@
 .emoji-btn:hover {
   transform: scale(1.15);
   background: #e5e7eb;
-}
-
-.char-counter {
-  font-size: 12px;
-  color: #9ca3af;
 }
 
 /* --- Image Upload Section --- */

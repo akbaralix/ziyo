@@ -361,9 +361,9 @@ function Kutubxona() {
                     {/* 3D Kitob Muqovasi */}
                     <div
                       className="book-cover"
-                      style={{ background: book.coverColor }}
                       onClick={() => handleOpenBook(book)}
                     >
+                      <img src={book.img} alt="" />
                       <div className="book-spine" />
                       <div className="book-cover-content">
                         <span className="book-badge">{book.badge}</span>

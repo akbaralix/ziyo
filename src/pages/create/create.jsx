@@ -99,7 +99,7 @@ function Create() {
 
   const handleOptionTextChange = (id, newText) => {
     setQuizOptions((prev) =>
-      prev.map((opt) => (opt.id === id ? { ...opt, text: newText } : opt))
+      prev.map((opt) => (opt.id === id ? { ...opt, text: newText } : opt)),
     );
   };
 
@@ -124,7 +124,10 @@ function Create() {
       id: String.fromCharCode(97 + index),
     }));
     setQuizOptions(relettered);
-    if (correctOption === id || !relettered.some((o) => o.id === correctOption)) {
+    if (
+      correctOption === id ||
+      !relettered.some((o) => o.id === correctOption)
+    ) {
       setCorrectOption(relettered[0].id);
     }
   };
@@ -190,6 +193,10 @@ function Create() {
         showToast("Iltimos, post matnini yozing!");
         return false;
       }
+    }
+    if (content.length > 500) {
+      showToast("Maqola 500 ta sozdan kop bolishi mumkun emas");
+      return;
     }
     return true;
   };
@@ -322,7 +329,8 @@ function Create() {
             type="button"
             className="type-btn"
             style={{
-              background: "linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(139, 92, 246, 0.1))",
+              background:
+                "linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(139, 92, 246, 0.1))",
               borderColor: "#8b5cf6",
               color: "#8b5cf6",
               fontWeight: "700",
@@ -330,11 +338,10 @@ function Create() {
             onClick={() => navigate("/quiz/builder")}
           >
             <span className="type-icon">🎮</span>
-            <span>Ziyo Live (Kahoot)</span>
+            <span>Ziyo Live </span>
           </button>
         </div>
       </div>
-
 
       {viewMode === "edit" ? (
         /* Edit Form Card */
@@ -366,7 +373,9 @@ function Create() {
           <div className="form-group">
             <label className="form-label">
               <span>
-                {postType === "quiz" ? "Savol sarlavhasi" : "Mavzu yoki sarlavha"}
+                {postType === "quiz"
+                  ? "Savol sarlavhasi"
+                  : "Mavzu yoki sarlavha"}
               </span>
               <span className="form-label-hint">{title.length}/100</span>
             </label>
@@ -392,9 +401,7 @@ function Create() {
                   ? "Savolning to'liq matni"
                   : "Asosiy matn / Maqola"}
               </span>
-              <span className="form-label-hint">
-                {content.length} ta belgi
-              </span>
+              <span className="form-label-hint">{content.length} ta belgi</span>
             </label>
             <textarea
               className="create-textarea"
@@ -404,6 +411,7 @@ function Create() {
                   : "Bilimingiz, tajribangiz yoki qiziqarli fikringizni yozing..."
               }
               value={content}
+              maxLength={500}
               onChange={(e) => setContent(e.target.value)}
             />
             <div className="textarea-toolbar">
@@ -419,7 +427,6 @@ function Create() {
                   </button>
                 ))}
               </div>
-              <span className="char-counter">Formatlash: Oddiy matn</span>
             </div>
           </div>
 
@@ -461,7 +468,9 @@ function Create() {
                       onClick={() => setCorrectOption(opt.id)}
                     >
                       <IoCheckmark />
-                      {correctOption === opt.id ? "To'g'ri javob" : "To'g'ri qilish"}
+                      {correctOption === opt.id
+                        ? "To'g'ri javob"
+                        : "To'g'ri qilish"}
                     </button>
                     {quizOptions.length > 2 && (
                       <button
@@ -566,7 +575,7 @@ function Create() {
               onClick={handlePublish}
             >
               <FiSend />
-              {isSubmitting ? "Chop etilmoqda..." : "Chop etish"}
+              {isSubmitting ? "Kuting..." : "Chop etish"}
             </button>
           </div>
         </div>
@@ -576,7 +585,8 @@ function Create() {
           <div className="preview-notice">
             <HiOutlineLightBulb />
             <span>
-              Bu sizning postingiz bosh sahifada qanday ko'rinishini aks ettiradi.
+              Bu sizning postingiz bosh sahifada qanday ko'rinishini aks
+              ettiradi.
             </span>
           </div>
 
@@ -590,19 +600,25 @@ function Create() {
                     {(() => {
                       try {
                         const u = JSON.parse(localStorage.getItem("ziyo_user"));
-                        if (u && (u.firstName || u.lastName)) return `${u.firstName || ""} ${u.lastName || ""}`.trim();
-                        const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+                        if (u && (u.firstName || u.lastName))
+                          return `${u.firstName || ""} ${u.lastName || ""}`.trim();
+                        const p = JSON.parse(
+                          localStorage.getItem("ziyo_user_profile"),
+                        );
                         if (p && p.name) return p.name;
                       } catch {}
                       return "Foydalanuvchi";
                     })()}
                   </h4>
                   <span className="post-user-username">
-                    @{(() => {
+                    @
+                    {(() => {
                       try {
                         const u = JSON.parse(localStorage.getItem("ziyo_user"));
                         if (u && u.telegramUsername) return u.telegramUsername;
-                        const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+                        const p = JSON.parse(
+                          localStorage.getItem("ziyo_user_profile"),
+                        );
                         if (p && p.username) return p.username;
                       } catch {}
                       return "foydalanuvchi";
@@ -615,9 +631,7 @@ function Create() {
 
             {/* Content */}
             <div className="post-content">
-              <h3 className="post-title">
-                {title || "Sarlavha kiritilmagan"}
-              </h3>
+              <h3 className="post-title">{title || "Sarlavha kiritilmagan"}</h3>
 
               {content && <p className="post-text">{content}</p>}
 
@@ -635,7 +649,10 @@ function Create() {
                           }`}
                           style={
                             correctOption === opt.id
-                              ? { borderColor: "#10b981", background: "#f0fdf4" }
+                              ? {
+                                  borderColor: "#10b981",
+                                  background: "#f0fdf4",
+                                }
                               : {}
                           }
                         >
@@ -730,14 +747,11 @@ function Create() {
             </div>
             <h3>Muvaffaqiyatli chop etildi! 🎉</h3>
             <p>
-              Sizning yangi postingiz Ziyo platformasida barcha foydalanuvchilarga
-              ko'rsatiladi.
+              Sizning yangi postingiz Ziyo platformasida barcha
+              foydalanuvchilarga ko'rsatiladi.
             </p>
             <div className="success-actions">
-              <button
-                className="modal-home-btn"
-                onClick={() => navigate("/")}
-              >
+              <button className="modal-home-btn" onClick={() => navigate("/")}>
                 Bosh sahifaga o'tish
               </button>
               <button className="modal-another-btn" onClick={resetForm}>
