@@ -13,8 +13,8 @@
 }
 
 .login-logo-img {
-  width: 90px;
-  height: 90px;
+  width: 130px;
+  height: 130px;
   margin: 0 auto 16px auto;
 }
 
@@ -22,11 +22,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 22px;
   user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .login-header h2 {
@@ -217,11 +215,75 @@
   align-items: center;
   justify-content: center;
 }
+.profile-carousel-container {
+  background: #ffffff;
+  padding: 30px 20px;
+  border-radius: 24px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+.profile-carousel-container h3 {
+  margin-bottom: 25px;
+  font-size: 20px;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.profile-carousel-wrapper {
+  position: relative;
+  width: 100%;
+}
+
 .profile-all-img {
   display: flex;
   align-items: center;
-  padding: 20px;
-  gap: 10px;
+  gap: 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 20px calc(50% - 40px);
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+
+.profile-all-img::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-img-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.55;
+  transform: scale(0.75);
+}
+
+.profile-img-btn img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.profile-img-btn.active-profile {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+  z-index: 10;
+}
+
+.profile-img-btn.active-profile img {
+  border-color: #4f46e5;
+  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
 }
 .profile-all-img button {
   background: none;
@@ -361,6 +423,7 @@
 .study-curses-grid button {
   height: 52px;
   border: 1.5px solid #e2e8f0;
+  font-family: "poppins";
   border-radius: 14px;
   background: #ffffff;
   color: #1e293b;
@@ -388,14 +451,14 @@
   width: 100%;
   padding: 12px;
   border: none;
-  border-radius: 14px;
-  background: #f1f5f9;
+  border-radius: var(--button-border-radius);
+  background: #f8f8f8;
   color: #475569;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: 0.2s ease;
-  margin-top: 4px;
+  margin-top: 14px;
 }
 
 /* Alert Messages */

@@ -21,7 +21,7 @@ export const getLeaderboard = async (req, res) => {
     // Barcha ro'yxatdan o'tgan foydalanuvchilarni olish
     const users = await User.find(
       {},
-      "firstName lastName telegramUsername avatar xp solvedQuizzes readBooks studyPlace course createdAt"
+      "firstName lastName telegramUsername profilePic xp solvedQuizzes readBooks studyPlace course createdAt",
     )
       .sort({ xp: -1, solvedQuizzes: -1, readBooks: -1, createdAt: 1 })
       .lean();
@@ -37,7 +37,7 @@ export const getLeaderboard = async (req, res) => {
         id: u._id.toString(),
         name,
         username,
-        avatar: u.avatar || "",
+        profilePic: u.profilePic,
         xp: u.xp || 0,
         level: calculateLevel(u.xp || 0),
         solvedQuizzes: u.solvedQuizzes || 0,

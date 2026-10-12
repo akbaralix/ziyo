@@ -30,7 +30,9 @@ export const createPost = async (req, res) => {
     }
 
     const author = req.user;
-    const fullName = `${author.firstName || ""} ${author.lastName || ""}`.trim() || "Foydalanuvchi";
+    const fullName =
+      `${author.firstName || ""} ${author.lastName || ""}`.trim() ||
+      "Foydalanuvchi";
 
     const post = new Post({
       author: author._id,
@@ -38,8 +40,9 @@ export const createPost = async (req, res) => {
         id: author._id,
         name: fullName,
         username: author.telegramUsername || "user",
-        avatar: author.avatar || "",
+        profilePic: author.profilePic || "",
       },
+      profilePic: author.profilePic,
       type: type || "post",
       title: title.trim(),
       content: content ? content.trim() : "",
@@ -115,15 +118,14 @@ export const getPosts = async (req, res) => {
       filter.$or = [{ title: searchRegex }, { content: searchRegex }];
     }
 
-    const posts = await Post.find(filter)
-      .sort({ createdAt: -1 })
-      .lean();
+    const posts = await Post.find(filter).sort({ createdAt: -1 }).lean();
 
     const formattedPosts = posts.map((post) => {
       const isLiked =
         currentUserId && Array.isArray(post.likes)
           ? post.likes.some(
-              (likeUserId) => likeUserId.toString() === currentUserId.toString()
+              (likeUserId) =>
+                likeUserId.toString() === currentUserId.toString(),
             )
           : false;
 
@@ -134,9 +136,13 @@ export const getPosts = async (req, res) => {
 
       // Foydalanuvchining quiz javobi holati
       let userQuizAnswer = null;
-      if (post.type === "quiz" && currentUserId && Array.isArray(post.quizAnswers)) {
+      if (
+        post.type === "quiz" &&
+        currentUserId &&
+        Array.isArray(post.quizAnswers)
+      ) {
         const found = post.quizAnswers.find(
-          (ans) => ans.user && ans.user.toString() === currentUserId.toString()
+          (ans) => ans.user && ans.user.toString() === currentUserId.toString(),
         );
         if (found) {
           userQuizAnswer = {
@@ -196,7 +202,7 @@ export const toggleLike = async (req, res) => {
     }
 
     const userLikedIndex = post.likes.findIndex(
-      (likeId) => likeId.toString() === userId.toString()
+      (likeId) => likeId.toString() === userId.toString(),
     );
 
     let isLiked = false;
@@ -250,15 +256,18 @@ export const addComment = async (req, res) => {
       });
     }
 
-    const fullName = `${author.firstName || ""} ${author.lastName || ""}`.trim() || "Foydalanuvchi";
+    const fullName =
+      `${author.firstName || ""} ${author.lastName || ""}`.trim() ||
+      "Foydalanuvchi";
 
     const comment = new Comment({
       post: post._id,
       author: author._id,
+      profilePic: author.profilePic,
       user: {
         name: fullName,
         username: author.telegramUsername || "user",
-        avatar: author.avatar || "",
+        profilePic: author.profilePic || "",
       },
       text: text.trim(),
     });
@@ -442,7 +451,7 @@ export const checkQuizAnswer = async (req, res) => {
     const alreadyAnswered =
       Array.isArray(post.quizAnswers) &&
       post.quizAnswers.some(
-        (ans) => ans.user && ans.user.toString() === req.user._id.toString()
+        (ans) => ans.user && ans.user.toString() === req.user._id.toString(),
       );
 
     if (alreadyAnswered) {

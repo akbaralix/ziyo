@@ -11,7 +11,7 @@ import { IoEyeOffOutline, IoAlertCircleOutline } from "react-icons/io5";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import logo from "../assets/logo.jpg";
+import user from "../assets/user.jpg";
 import {
   fetchPosts,
   togglePostLike,
@@ -281,6 +281,10 @@ function Post({
   };
 
   const handleOpenComments = (post) => {
+    if (post.userQuizAnswer === null) {
+      toast.warning("Avval  javob bering");
+      return;
+    }
     setActiveCommentPost(post);
   };
 
@@ -349,7 +353,7 @@ function Post({
               <div className="post-header">
                 <div className="post-user-info">
                   <img
-                    src={post.user?.profilePic || logo}
+                    src={post.user?.profilePic || user}
                     alt={post.user?.name || "User"}
                     className="post-user-avatar"
                   />
@@ -786,7 +790,7 @@ function Post({
                 {commentsList.map((c) => (
                   <div key={c.id} className="comment-item">
                     <img
-                      src={c.user?.avatar || logo}
+                      src={c.user?.profilePic || logo}
                       alt="User"
                       className="comment-avatar"
                     />

@@ -142,8 +142,9 @@
 
 .reyting-search input {
   width: 100%;
+
   padding: 12px 16px 12px 42px;
-  border-radius: 14px;
+  border-radius: 24px;
   border: 1.5px solid #e2e8f0;
   background: #ffffff;
   font-size: 14px;
@@ -154,13 +155,13 @@
 
 .reyting-search input:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
 .category-scroll-bar {
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  scrollbar-width: none;
   padding-bottom: 2px;
 }
 
@@ -385,12 +386,17 @@
 
 .pedestal-label {
   font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-top: 4px;
   opacity: 0.85;
 }
-
+.pedestal-label img {
+  width: 40px;
+}
 .pedestal-1 {
   height: 140px;
   background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
@@ -426,7 +432,7 @@
   border-bottom: 1px solid #e2e8f0;
   font-size: 13px;
   font-weight: 700;
-  color: #64748b;
+  color: #373d45;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -455,12 +461,8 @@
 
 /* Current user highlighted row */
 .leaderboard-row.current-user-row {
-  background: #eff6ff;
+  background: #aebef5;
   border-left: 4px solid #2563eb;
-}
-
-.leaderboard-row.current-user-row:hover {
-  background: #e0f2fe;
 }
 
 /* Row Columns */
@@ -521,7 +523,7 @@
 .user-realname {
   font-size: 15px;
   font-weight: 700;
-  color: #0f172a;
+  color: #212121;
 }
 
 .you-pill {
@@ -535,7 +537,7 @@
 
 .user-subhandle {
   font-size: 12px;
-  color: #64748b;
+  color: #212121;
   margin-top: 2px;
 }
 

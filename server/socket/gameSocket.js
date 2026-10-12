@@ -38,7 +38,7 @@ export function initSocketIO(io) {
           players: session.players.map((p) => ({
             id: p._id,
             name: p.name,
-            avatar: p.avatar,
+            profilePic: p.profilePic,
             score: p.score,
           })),
         };
@@ -48,12 +48,12 @@ export function initSocketIO(io) {
           const elapsed = session.questionStartedAt
             ? Math.floor(
                 (Date.now() - new Date(session.questionStartedAt).getTime()) /
-                  1000
+                  1000,
               )
             : 0;
           const timeLeft = Math.max(0, currentQ.timeLimit - elapsed);
           const answeredCount = session.players.filter((p) =>
-            p.answers.some((a) => a.questionIndex === session.currentQuestion)
+            p.answers.some((a) => a.questionIndex === session.currentQuestion),
           ).length;
 
           baseData.currentQuestion = {
@@ -94,7 +94,7 @@ export function initSocketIO(io) {
               id: p._id,
               name: p.name,
               score: p.score,
-              avatar: p.avatar,
+              profilePic: p.profilePic,
             }));
           baseData.leaderboard = finalLeaderboard;
         }
@@ -106,152 +106,156 @@ export function initSocketIO(io) {
     });
 
     // ===================== O'YINCHI ULANISHI =====================
-    socket.on("player:join", async ({ sessionId, playerId, name, avatar }) => {
-      try {
-        const session = await GameSession.findOne({
-          _id: sessionId,
-          status: { $ne: "ended" },
-        }).populate("quiz");
+    socket.on(
+      "player:join",
+      async ({ sessionId, playerId, name, profilePic }) => {
+        try {
+          const session = await GameSession.findOne({
+            _id: sessionId,
+            status: { $ne: "ended" },
+          }).populate("quiz");
 
-        if (!session) {
-          return socket.emit("player:join:error", {
-            msg: "O'yin topilmadi yoki tugagan",
-          });
-        }
+          if (!session) {
+            return socket.emit("player:join:error", {
+              msg: "O'yin topilmadi yoki tugagan",
+            });
+          }
 
-        // Qayta ulanayotgan o'yinchini aniqlash
-        let player = null;
-        if (playerId) {
-          player = session.players.find(
-            (p) => p._id.toString() === playerId.toString()
-          );
-        }
-        if (!player && name) {
-          player = session.players.find(
-            (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase()
-          );
-        }
+          // Qayta ulanayotgan o'yinchini aniqlash
+          let player = null;
+          if (playerId) {
+            player = session.players.find(
+              (p) => p._id.toString() === playerId.toString(),
+            );
+          }
+          if (!player && name) {
+            player = session.players.find(
+              (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase(),
+            );
+          }
 
-        if (player) {
-          // O'yinchi qayta ulandi
-          player.socketId = socket.id;
+          if (player) {
+            // O'yinchi qayta ulandi
+            player.socketId = socket.id;
+            await session.save();
+
+            socket.playerId = player._id.toString();
+            socket.sessionId = sessionId;
+            socket.role = "player";
+            socket.join(`session:${sessionId}`);
+
+            const myAnswer =
+              session.currentQuestion >= 0
+                ? player.answers.find(
+                    (a) => a.questionIndex === session.currentQuestion,
+                  )
+                : null;
+
+            const responseData = {
+              playerId: player._id,
+              name: player.name,
+              score: player.score,
+              status: session.status,
+              quizTitle: session.quiz?.title,
+              myAnswerHistory: player.answers || [],
+            };
+
+            if (session.status === "question" && session.currentQuestion >= 0) {
+              const currentQ = session.quiz.questions[session.currentQuestion];
+              const elapsed = session.questionStartedAt
+                ? Math.floor(
+                    (Date.now() -
+                      new Date(session.questionStartedAt).getTime()) /
+                      1000,
+                  )
+                : 0;
+              const timeLeft = Math.max(0, currentQ.timeLimit - elapsed);
+
+              responseData.currentQuestion = {
+                questionIndex: session.currentQuestion,
+                totalQuestions: session.quiz.questions.length,
+                text: currentQ.text,
+                options: currentQ.options,
+                timeLimit: currentQ.timeLimit,
+                points: currentQ.points,
+              };
+              responseData.timeLeft = timeLeft;
+              responseData.hasAnswered = !!myAnswer;
+              responseData.chosenIndex = myAnswer ? myAnswer.chosenIndex : null;
+            } else if (
+              session.status === "answer" &&
+              session.currentQuestion >= 0
+            ) {
+              const currentQ = session.quiz.questions[session.currentQuestion];
+              responseData.currentQuestion = {
+                questionIndex: session.currentQuestion,
+                totalQuestions: session.quiz.questions.length,
+                text: currentQ.text,
+                options: currentQ.options,
+                timeLimit: currentQ.timeLimit,
+                points: currentQ.points,
+              };
+              responseData.correctIndex = currentQ.correctIndex;
+              responseData.myAnswer = myAnswer
+                ? {
+                    isCorrect: myAnswer.isCorrect,
+                    pointsEarned: myAnswer.pointsEarned,
+                  }
+                : null;
+            }
+
+            socket.emit("player:joined", responseData);
+            return;
+          }
+
+          // Yangi o'yinchi - faqat kutilayotgan (waiting) holatda qabul qilinadi
+          if (session.status !== "waiting") {
+            return socket.emit("player:join:error", {
+              msg: "O'yin allaqachon boshlangan!",
+            });
+          }
+
+          const newPlayer = {
+            socketId: socket.id,
+            userId: socket.userId || null,
+            name: name || "Noma'lum",
+            profilePic: profilePic || "",
+            score: 0,
+            answers: [],
+          };
+
+          session.players.push(newPlayer);
           await session.save();
 
-          socket.playerId = player._id.toString();
+          const savedPlayer = session.players[session.players.length - 1];
+          socket.playerId = savedPlayer._id.toString();
           socket.sessionId = sessionId;
           socket.role = "player";
           socket.join(`session:${sessionId}`);
 
-          const myAnswer =
-            session.currentQuestion >= 0
-              ? player.answers.find(
-                  (a) => a.questionIndex === session.currentQuestion
-                )
-              : null;
-
-          const responseData = {
-            playerId: player._id,
-            name: player.name,
-            score: player.score,
-            status: session.status,
+          // O'yinchiga tasdiqlash
+          socket.emit("player:joined", {
+            playerId: savedPlayer._id,
+            name: savedPlayer.name,
+            score: 0,
+            status: "lobby",
             quizTitle: session.quiz?.title,
-            myAnswerHistory: player.answers || [],
-          };
-
-          if (session.status === "question" && session.currentQuestion >= 0) {
-            const currentQ = session.quiz.questions[session.currentQuestion];
-            const elapsed = session.questionStartedAt
-              ? Math.floor(
-                  (Date.now() - new Date(session.questionStartedAt).getTime()) /
-                    1000
-                )
-              : 0;
-            const timeLeft = Math.max(0, currentQ.timeLimit - elapsed);
-
-            responseData.currentQuestion = {
-              questionIndex: session.currentQuestion,
-              totalQuestions: session.quiz.questions.length,
-              text: currentQ.text,
-              options: currentQ.options,
-              timeLimit: currentQ.timeLimit,
-              points: currentQ.points,
-            };
-            responseData.timeLeft = timeLeft;
-            responseData.hasAnswered = !!myAnswer;
-            responseData.chosenIndex = myAnswer ? myAnswer.chosenIndex : null;
-          } else if (
-            session.status === "answer" &&
-            session.currentQuestion >= 0
-          ) {
-            const currentQ = session.quiz.questions[session.currentQuestion];
-            responseData.currentQuestion = {
-              questionIndex: session.currentQuestion,
-              totalQuestions: session.quiz.questions.length,
-              text: currentQ.text,
-              options: currentQ.options,
-              timeLimit: currentQ.timeLimit,
-              points: currentQ.points,
-            };
-            responseData.correctIndex = currentQ.correctIndex;
-            responseData.myAnswer = myAnswer
-              ? {
-                  isCorrect: myAnswer.isCorrect,
-                  pointsEarned: myAnswer.pointsEarned,
-                }
-              : null;
-          }
-
-          socket.emit("player:joined", responseData);
-          return;
-        }
-
-        // Yangi o'yinchi - faqat kutilayotgan (waiting) holatda qabul qilinadi
-        if (session.status !== "waiting") {
-          return socket.emit("player:join:error", {
-            msg: "O'yin allaqachon boshlangan!",
+            myAnswerHistory: [],
           });
+
+          // Hamma (host)ga yangi o'yinchi haqida xabar
+          io.to(`session:${sessionId}`).emit("player:new", {
+            id: savedPlayer._id,
+            name: savedPlayer.name,
+            profilePic: savedPlayer.profilePic,
+            totalPlayers: session.players.length,
+          });
+        } catch (err) {
+          console.error("player:join error:", err);
+          socket.emit("player:join:error", { msg: "Server xatosi" });
         }
-
-        const newPlayer = {
-          socketId: socket.id,
-          userId: socket.userId || null,
-          name: name || "Noma'lum",
-          avatar: avatar || "",
-          score: 0,
-          answers: [],
-        };
-
-        session.players.push(newPlayer);
-        await session.save();
-
-        const savedPlayer = session.players[session.players.length - 1];
-        socket.playerId = savedPlayer._id.toString();
-        socket.sessionId = sessionId;
-        socket.role = "player";
-        socket.join(`session:${sessionId}`);
-
-        // O'yinchiga tasdiqlash
-        socket.emit("player:joined", {
-          playerId: savedPlayer._id,
-          name: savedPlayer.name,
-          score: 0,
-          status: "lobby",
-          quizTitle: session.quiz?.title,
-          myAnswerHistory: [],
-        });
-
-        // Hamma (host)ga yangi o'yinchi haqida xabar
-        io.to(`session:${sessionId}`).emit("player:new", {
-          id: savedPlayer._id,
-          name: savedPlayer.name,
-          avatar: savedPlayer.avatar,
-          totalPlayers: session.players.length,
-        });
-      } catch (err) {
-        console.error("player:join error:", err);
-        socket.emit("player:join:error", { msg: "Server xatosi" });
-      }
-    });
+      },
+    );
 
     // ===================== O'YINNI BOSHLASH (HOST) =====================
     socket.on("host:start", async ({ sessionId }) => {
@@ -431,8 +435,7 @@ async function sendNextQuestion(io, sessionId, quiz, forceIndex) {
 }
 
 async function showAnswer(io, sessionId, session, questionIndex) {
-  const freshSession =
-    await GameSession.findById(sessionId).populate("quiz");
+  const freshSession = await GameSession.findById(sessionId).populate("quiz");
   if (!freshSession) return;
   const question = freshSession.quiz?.questions?.[questionIndex];
   if (!question) return;
@@ -482,7 +485,7 @@ async function endGame(io, sessionId) {
       id: p._id,
       name: p.name,
       score: p.score,
-      avatar: p.avatar,
+      profilePic: p.profilePic,
       answers: p.answers,
     }));
 

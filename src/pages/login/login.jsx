@@ -10,17 +10,38 @@ import {
   checkTelegramSession,
   registerTelegramUser,
 } from "../../api/authApi.js";
-import logo from "../../assets/logo.jpg";
+import logo from "../../assets/logo.png";
 import telegramImg from "../../assets/telegram.png";
 import "./login.css";
 import ModalOverlay from "../../components/ModalOverlay/ModalOverlay.jsx";
-import rasm from "../../assets/user/user-female-pic.jpg";
+
 const images = Object.values(
   import.meta.glob("../../assets/user/*.{png,jpg,jpeg,webp}", {
     eager: true,
     import: "default",
   }),
 );
+
+// Telegram'dan kelgan stilsizlantirilgan Unicode harflarni (masalan: 𝕬𝖐𝖇𝖆𝖗𝖆𝖑𝖎) oddiy matnga aylantirish
+const normalizeTelegramText = (text) => {
+  if (!text) return "";
+  return text
+    .normalize("NFKC")
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, (char) => {
+      // Fancy/Mathematical Unicode harflarini oddiy harflarga aylantirish
+      const codePoint = char.codePointAt(0);
+
+      // Katta harflar (Mathematical Bold, Italic, Fraktur va h.k.)
+      if (codePoint >= 0x1d400 && codePoint <= 0x1d7ca) {
+        const offset = (codePoint - 0x1d400) % 52;
+        if (offset < 26) return String.fromCharCode(65 + offset);
+        return String.fromCharCode(97 + offset - 26);
+      }
+      return char;
+    })
+    .trim();
+};
+
 function Login() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -35,7 +56,8 @@ function Login() {
   const [isWaitingTg, setIsWaitingTg] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
+  const [activeIndex, setActiveIndex] = useState(0);
+  const containerRef = useRef(null);
   const [telegramInfo, setTelegramInfo] = useState({
     telegramId: "",
     username: "",
@@ -51,7 +73,7 @@ function Login() {
 
   const pollingRef = useRef(null);
 
-  // Agar allaqachon login qilingan bo'lsa, home ga o'tkazish
+  // Agar allaqachon login qilingan bo'lsa, home sahifasiga o'tkazish
   if (token) {
     return <Navigate to="/" replace />;
   }
@@ -71,7 +93,7 @@ function Login() {
     };
   }, []);
 
-  // Telegram login boshlash
+  // Telegram login jarayonini boshlash
   const handleStartTelegramAuth = async () => {
     setStepTelegram(true);
     setLoading(true);
@@ -110,6 +132,7 @@ function Login() {
 
         if (res.expired) {
           stopPolling();
+          setIsWaitingTg(false);
           toast.error(
             "Login havolasining muddati tugadi. Iltimos, qaytadan urinib ko'ring.",
           );
@@ -129,6 +152,7 @@ function Login() {
                 JSON.stringify({
                   name: `${res.user.firstName} ${res.user.lastName}`,
                   username: res.user.telegramUsername || "user",
+                  profilePic: res.user.profilePic || "",
                   bio: res.user.bio || "",
                   studyPlace: res.user.studyPlace,
                   course: res.user.course,
@@ -143,15 +167,17 @@ function Login() {
               navigate("/");
             }, 800);
           } else if (res.isNewUser && res.telegramData) {
-            // 2. Foydalanuvchi yangi -> Steplarga o'tadi
+            // 2. Foydalanuvchi yangi -> Bosqichlarga (step) o'tadi
             setTelegramInfo({
               telegramId: res.telegramData.telegramId,
               username: res.telegramData.username || "",
             });
             setUserData((prev) => ({
               ...prev,
-              firstName: res.telegramData.firstName || "",
-              lastName: res.telegramData.lastName || "",
+              firstName: normalizeTelegramText(
+                res.telegramData.firstName || "",
+              ),
+              lastName: normalizeTelegramText(res.telegramData.lastName || ""),
             }));
             setStepTelegram(false);
             setLoginStep(1); // Ism-familiya to'ldirish bosqichiga o'tish
@@ -166,10 +192,25 @@ function Login() {
   // Step 1: Ism va Familiyani tasdiqlash
   const handleStep1Next = (e) => {
     e.preventDefault();
-    if (!userData.firstName.trim() || !userData.lastName.trim()) {
+
+    const firstName = userData.firstName.trim();
+    const lastName = userData.lastName.trim();
+
+    if (!firstName || !lastName) {
       toast.warning("Iltimos, ism va familiyangizni kiriting.");
       return;
     }
+
+    if (firstName.length > 30 || lastName.length > 30) {
+      toast.warning("Ism yoki familiya 30 ta belgidan oshmasligi kerak.");
+      return;
+    }
+
+    if (firstName.length < 3 || lastName.length < 3) {
+      toast.warning("Ism va familiya 3 ta belgidan kam bo'lmasligi kerak.");
+      return;
+    }
+
     setLoginStep(2);
   };
 
@@ -198,6 +239,7 @@ function Login() {
         telegramId: telegramInfo.telegramId,
         firstName: userData.firstName,
         lastName: userData.lastName,
+        profilePic: userData.profilePic,
         studyPlace: userData.studyPlace,
         course: finalCourse,
       });
@@ -211,6 +253,7 @@ function Login() {
             JSON.stringify({
               name: `${res.user.firstName} ${res.user.lastName}`,
               username: res.user.telegramUsername || "user",
+              profilePic: res.user.profilePic || userData.profilePic,
               bio: res.user.bio || "",
               studyPlace: res.user.studyPlace,
               course: res.user.course,
@@ -232,6 +275,42 @@ function Login() {
     }
   };
 
+  // Scroll qilinganda qoq markazdagi rasmni aniqlash
+  const handleScroll = () => {
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+
+    // Konteynerning o'rtasini topamiz
+    const containerCenter = container.scrollLeft + container.offsetWidth / 2;
+
+    const buttons = container.querySelectorAll(".profile-img-btn");
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    buttons.forEach((btn, index) => {
+      // Har bir tugmaning markaziy nuqtasi
+      const btnCenter = btn.offsetLeft + btn.offsetWidth / 2;
+      const distance = Math.abs(containerCenter - btnCenter);
+
+      // Qaysi biri konteyner markaziga yaqinroq ekanini topamiz
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    setActiveIndex(closestIndex);
+  };
+
+  // Modal ochilganda birinchi marta o'rtadagi elementni aniqlab olish
+  useEffect(() => {
+    if (showSuccessModal) {
+      requestAnimationFrame(() => {
+        handleScroll();
+      });
+    }
+  }, [showSuccessModal]);
+
   return (
     <div className="login-card">
       {/* DASTLABKI EKRAN (Kirish usuli tanlovi) */}
@@ -246,6 +325,7 @@ function Login() {
           </div>
 
           <button
+            type="button"
             onClick={handleStartTelegramAuth}
             className="btn-telegram"
             disabled={loading}
@@ -255,6 +335,7 @@ function Login() {
           </button>
 
           <button
+            type="button"
             className="btn-google"
             onClick={() =>
               toast.info("Google orqali kirish tez kunda ishga tushiriladi.")
@@ -279,6 +360,7 @@ function Login() {
           </p>
 
           <button
+            type="button"
             className="login-tg-btn"
             onClick={handleOpenBot}
             disabled={!botUrl || loading}
@@ -295,6 +377,7 @@ function Login() {
           )}
 
           <button
+            type="button"
             className="back-login-btn"
             onClick={() => {
               stopPolling();
@@ -309,7 +392,7 @@ function Login() {
 
       {/* STEP 1: ISM VA FAMILIYA (Yangi foydalanuvchilar uchun) */}
       {loginStep === 1 && (
-        <form onSubmit={handleStep1Next} className="user-login-info">
+        <form className="user-login-info" onSubmit={handleStep1Next}>
           <div className="step-badge">1 / 3 - Bosqich</div>
           <h2>Ma'lumotlaringizni kiriting</h2>
           <p className="step-subtitle">
@@ -320,7 +403,13 @@ function Login() {
             {userData.profilePic ? (
               <img src={userData.profilePic} alt="Profil rasmi" />
             ) : null}
-            <button onClick={() => setShowSuccessModal(true)}>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowSuccessModal(true);
+              }}
+            >
               <MdAddAPhoto />
             </button>
           </div>
@@ -356,30 +445,6 @@ function Login() {
             />
             <label>Familiyangiz</label>
           </div>
-
-          <ModalOverlay
-            isOpen={showSuccessModal}
-            onClose={() => setShowSuccessModal(false)}
-          >
-            <div className="profile-all-img">
-              {images.map((image, index) => (
-                <button
-                  key={image}
-                  type="button"
-                  onClick={() => {
-                    setUserData({
-                      ...userData,
-                      profilePic: image,
-                    });
-
-                    setShowSuccessModal(false);
-                  }}
-                >
-                  <img src={image} alt={`Profil rasmi ${index + 1}`} />
-                </button>
-              ))}
-            </div>
-          </ModalOverlay>
 
           <button type="submit" className="next-stemp-btn">
             Davom etish
@@ -435,6 +500,7 @@ function Login() {
           </div>
 
           <button
+            type="button"
             className="next-stemp-btn"
             disabled={!userData.studyPlace}
             onClick={handleStep2Next}
@@ -442,7 +508,11 @@ function Login() {
             Davom etish
           </button>
 
-          <button className="back-login-btn" onClick={() => setLoginStep(1)}>
+          <button
+            type="button"
+            className="back-login-btn"
+            onClick={() => setLoginStep(1)}
+          >
             <IoIosArrowBack />
             Orqaga
           </button>
@@ -504,6 +574,7 @@ function Login() {
           )}
 
           <button
+            type="button"
             className="back-login-btn"
             disabled={loading}
             onClick={() => setLoginStep(2)}
@@ -513,6 +584,43 @@ function Login() {
           </button>
         </div>
       )}
+
+      <ModalOverlay
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+      >
+        <div className="profile-carousel-container">
+          <h3>Profil rasmini tanlang</h3>
+
+          <div className="profile-carousel-wrapper">
+            <div
+              className="profile-all-img"
+              ref={containerRef}
+              onScroll={handleScroll}
+            >
+              {images.map((image, index) => {
+                const isActive = index === activeIndex;
+                return (
+                  <button
+                    key={image}
+                    type="button"
+                    className={`profile-img-btn ${isActive ? "active-profile" : ""}`}
+                    onClick={() => {
+                      setUserData({
+                        ...userData,
+                        profilePic: image,
+                      });
+                      setShowSuccessModal(false);
+                    }}
+                  >
+                    <img src={image} alt={`Profil rasmi ${index + 1}`} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </ModalOverlay>
     </div>
   );
 }

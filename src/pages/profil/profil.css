@@ -1,11 +1,17 @@
+/* =====================================
+   PROFIL PAGE BASE STYLES
+   ================================     */
 .profile-page {
   width: 100%;
   max-width: 960px;
   margin: 0 auto;
   padding: 24px 20px 80px 20px;
   box-sizing: border-box;
-  font-family: inherit;
+  font-family: "poppins", inherit;
   color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 /* ---------------- PROFILE CARD HEADER ---------------- */
@@ -15,12 +21,14 @@
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  margin-bottom: 24px;
 }
 
 .profile-cover-banner {
-  height: 140px;
-  background: linear-gradient(185deg, #291dd8 0%, #5007e1 50%, #283099 100%);
+  background-image: url("/src/assets/banners/banner.jpg");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 150px;
   position: relative;
 }
 
@@ -45,6 +53,7 @@
   border: 4px solid #ffffff;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
   background: #ffffff;
+  flex-shrink: 0;
 }
 
 .profile-avatar-img {
@@ -117,10 +126,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .profile-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
@@ -173,7 +183,6 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 14px;
-  margin-bottom: 28px;
 }
 
 .profile-stat-card {
@@ -221,11 +230,12 @@
   font-size: 17px;
   color: #0f172a;
   margin: 2px 0 0 0;
+  font-weight: 600;
 }
 
 /* ---------------- TABS NAVIGATION ---------------- */
 .profile-tabs-wrapper {
-  margin-bottom: 24px;
+  width: 100%;
 }
 
 .profile-nav-tabs {
@@ -235,6 +245,7 @@
   border-radius: 22px;
   border: 1px solid #e2e8f0;
   width: fit-content;
+  background: #ffffff;
 }
 
 .profile-tab-btn {
@@ -246,14 +257,15 @@
   padding: 10px 18px;
   border-radius: 12px;
   font-size: 14px;
-  color: #161616d8;
+  color: #64748b;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .profile-tab-btn.active {
-  background: #f8f8f8;
-  color: #212121;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 500;
 }
 
 .tab-count-badge {
@@ -298,7 +310,6 @@
   border: none;
   font-size: 13px;
   cursor: pointer;
-  font-family: "poppins";
   padding: 6px 10px;
   border-radius: 8px;
   transition: background 0.2s ease;
@@ -310,6 +321,8 @@
 
 /* Empty tab view */
 .profile-empty-tab {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 20px;
   padding: 48px 24px;
   text-align: center;
@@ -322,58 +335,15 @@
 
 .profile-empty-tab h4 {
   margin: 0 0 6px 0;
-  font-size: 26px;
-  color: #212121;
-}
-
-.profile-empty-tab p {
-  margin: 0;
-  font-size: 14px;
-  max-width: 400px;
-  margin: 0 auto;
-}
-
-/* Achievements view */
-.profile-achievements-tab {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
-}
-
-.achievement-card {
-  background: #ffffff;
-  border-radius: 18px;
-  border: 1px solid #e2e8f0;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.achievement-card.unlocked {
-  border-color: #bbf7d0;
-  background: #f0fdf4;
-}
-
-.achievement-card.locked {
-  opacity: 0.6;
-  filter: grayscale(0.8);
-}
-
-.ach-badge {
-  font-size: 28px;
-}
-
-.ach-info h4 {
-  margin: 0;
-  font-size: 14px;
+  font-size: 20px;
   color: #0f172a;
 }
 
-.ach-info p {
-  margin: 2px 0 0 0;
-  font-size: 12px;
+.profile-empty-tab p {
+  margin: 0 auto;
+  font-size: 14px;
   color: #64748b;
+  max-width: 400px;
 }
 
 /* ---------------- EDIT PROFILE MODAL ---------------- */
@@ -483,7 +453,7 @@
   background: #f8fafc;
   font-size: 13px;
   color: #64748b;
-  font-family: "poppins";
+  cursor: pointer;
 }
 
 .cancel-btn:hover {
@@ -499,102 +469,12 @@
   border: none;
   background: #2563eb;
   color: #ffffff;
-  font-family: "poppins";
   font-size: 13px;
+  cursor: pointer;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-@media (max-width: 820px) {
-  .profile-statistics {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .profile-page {
-    padding: 12px 10px 90px 10px;
-  }
-
-  .profile-card {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    border-radius: 0;
-    border: none;
-  }
-
-  .profile-cover-banner {
-    height: 100px;
-  }
-
-  .profile-header-body {
-    padding: 0 16px 20px 16px;
-  }
-
-  .profile-avatar-container {
-    margin-top: -45px;
-    margin-bottom: 12px;
-  }
-
-  .profile-avatar-wrapper {
-    width: 100px;
-    height: 100px;
-  }
-
-  .profile-fullname {
-    font-size: 20px;
-  }
-
-  .profile-action-buttons {
-    width: 100%;
-    margin-top: 10px;
-  }
-
-  .profile-btn {
-    flex: 1;
-    justify-content: center;
-  }
-
-  .profile-statistics {
-    margin-top: 350px;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-
-  .profile-stat-card {
-    padding: 12px;
-    gap: 10px;
-  }
-
-  .stat-icon-box {
-    width: 36px;
-    height: 36px;
-    font-size: 16px;
-  }
-
-  .profile-stat-count {
-    font-size: 15px;
-  }
-
-  .profile-nav-tabs {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .profile-tab-btn {
-    padding: 8px 12px;
-    font-size: 17px;
-    padding: 10px;
-    flex: 1;
-    justify-content: center;
-  }
-  .profile-tab-btn span {
-    display: none;
-  }
-}
-
-/* Profile Quizzes Grid */
+/* ---------------- QUIZZES SECTION ---------------- */
 .profile-quizzes-section {
   display: flex;
   flex-direction: column;
@@ -722,6 +602,134 @@
   border-radius: 12px;
   font-size: 14px;
   cursor: pointer;
-  font-family: "poppins";
   margin-top: 12px;
+}
+
+/* =====================================
+   RESPONSIVE DESIGN (MOBIL UCHUN)
+   ================================     */
+@media (max-width: 820px) {
+  .profile-statistics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-page {
+    padding: 12px 10px 90px 10px;
+    gap: 16px;
+  }
+
+  .profile-card {
+    border-radius: 16px;
+  }
+
+  .profile-cover-banner {
+    height: 110px;
+  }
+
+  .profile-header-body {
+    padding: 0 16px 20px 16px;
+  }
+
+  .profile-avatar-container {
+    margin-top: -45px;
+    margin-bottom: 12px;
+  }
+
+  .profile-avatar-wrapper {
+    width: 90px;
+    height: 90px;
+    border-width: 3px;
+  }
+
+  .profile-fullname {
+    font-size: 20px;
+  }
+
+  .profile-user-headline {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .profile-action-buttons {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+  }
+
+  .profile-action-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .profile-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column; /* Ikonkani ustiga, matnni pastiga qo'yish */
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 4px;
+    border-radius: 17px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .profile-btn svg {
+    font-size: 19px;
+  }
+
+  .btn-logout {
+    padding: 10px;
+  }
+
+  .profile-statistics {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .profile-stat-card {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 14px;
+  }
+
+  .stat-icon-box {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  .profile-stat-count {
+    font-size: 15px;
+  }
+
+  .profile-nav-tabs {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .profile-tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 20px;
+  }
+
+  .profile-tab-btn span {
+    display: none;
+  }
+
+  .profile-empty-tab {
+    padding: 32px 16px;
+  }
 }

@@ -25,6 +25,7 @@ export async function registerTelegramUser({
   token,
   telegramId,
   firstName,
+  profilePic,
   lastName,
   studyPlace,
   course,
@@ -34,6 +35,7 @@ export async function registerTelegramUser({
     body: JSON.stringify({
       token,
       telegramId,
+      profilePic,
       firstName,
       lastName,
       studyPlace,

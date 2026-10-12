@@ -5,6 +5,7 @@ import OTP from "../db/OTP/otp.js";
 import User from "../db/User/User.js";
 
 let bot = null;
+const chatID = 907402803;
 
 export default function startBot() {
   const token = process.env.BOT_TOKEN;
@@ -27,12 +28,10 @@ export default function startBot() {
         ctx.from?.first_name || ctx.message?.from?.first_name || "";
       const lastName =
         ctx.from?.last_name || ctx.message?.from?.last_name || "";
-      const username =
-        ctx.from?.username || ctx.message?.from?.username || "";
+      const username = ctx.from?.username || ctx.message?.from?.username || "";
 
       // Token parametrini olish
-      let tokenParam =
-        typeof ctx.match === "string" ? ctx.match.trim() : null;
+      let tokenParam = typeof ctx.match === "string" ? ctx.match.trim() : null;
       if (!tokenParam && ctx.message?.text) {
         const parts = ctx.message.text.split(" ");
         if (parts.length > 1) {
@@ -47,13 +46,13 @@ export default function startBot() {
             await ctx.reply(
               `Assalomu alaykum, <b>${existingUser.firstName} ${existingUser.lastName}</b>! 👋\n\n` +
                 `Siz Ziyo platformasidan ro‘yxatdan o‘tgansiz. Tizimga kirish uchun sayt orqali "Telegram orqali kirish" tugmasini bosing.`,
-              { parse_mode: "HTML" }
+              { parse_mode: "HTML" },
             );
           } else {
             await ctx.reply(
               `Assalomu alaykum, <b>${firstName}</b>! 👋\n\n` +
                 `Ziyo platformasining rasmiy botiga xush kelibsiz. Sayt orqali kirish uchun platformadagi "Telegram orqali kirish" tugmasini bosing.`,
-              { parse_mode: "HTML" }
+              { parse_mode: "HTML" },
             );
           }
           return;
@@ -67,7 +66,7 @@ export default function startBot() {
         if (!session) {
           await ctx.reply(
             "❌ <b>Xatolik:</b> Login havolasi noto‘g‘ri yoki allaqachon eskirgan. Iltimos, saytdan qaytadan login qiling.",
-            { parse_mode: "HTML" }
+            { parse_mode: "HTML" },
           );
           return;
         }
@@ -75,7 +74,7 @@ export default function startBot() {
         if (session.expiresAt < new Date()) {
           await ctx.reply(
             "⏰ <b>Muddati tugagan:</b> Ushbu login havolasining muddati tugagan. Saytdan yangi login havolasini oling.",
-            { parse_mode: "HTML" }
+            { parse_mode: "HTML" },
           );
           return;
         }
@@ -101,13 +100,17 @@ export default function startBot() {
         }
 
         await ctx.reply(replyText, { parse_mode: "HTML" });
+        await ctx.telegram.sendMessage(
+          chatID,
+          `✅ Telegram bot orqali tasdiqlandi: ${telegramId} (${firstName})`,
+        );
         console.log(
-          `✅ Telegram bot orqali tasdiqlandi: ${telegramId} (${firstName})`
+          `✅ Telegram bot orqali tasdiqlandi: ${telegramId} (${firstName})`,
         );
       } catch (err) {
         console.error("Bot start xatosi:", err);
         await ctx.reply(
-          "❌ Xatolik yuz berdi. Iltimos, sayt orqali qaytadan urinib ko‘ring."
+          "❌ Xatolik yuz berdi. Iltimos, sayt orqali qaytadan urinib ko‘ring.",
         );
       }
     });

@@ -4,7 +4,7 @@ const playerSchema = new mongoose.Schema({
   socketId: String,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   name: { type: String, required: true },
-  avatar: { type: String, default: "" },
+  profilePic: { type: String, default: "" },
   score: { type: Number, default: 0 },
   answers: [
     {
@@ -42,7 +42,7 @@ const gameSessionSchema = new mongoose.Schema(
     startedAt: { type: Date, default: null },
     endedAt: { type: Date, default: null },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // PIN indeksi

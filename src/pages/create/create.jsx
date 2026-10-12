@@ -11,19 +11,18 @@ import {
   IoGridOutline,
   IoExtensionPuzzleOutline,
   IoCalculatorOutline,
-  IoSparklesOutline,
   IoCheckmark,
   IoCodeSlashOutline,
 } from "react-icons/io5";
 import { LuAtom, LuBrain, LuBookOpen } from "react-icons/lu";
-import { FiSend, FiBookmark } from "react-icons/fi";
+import { FiCheck, FiBookmark } from "react-icons/fi";
 import { HiOutlineLightBulb } from "react-icons/hi";
 import { FaHeart, FaRegComment } from "react-icons/fa";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { createPost } from "../../api/postApi.js";
 import ModalOverlay from "../../components/ModalOverlay";
-import logo from "../../assets/logo.jpg";
+import logo from "../../assets/logo.png";
 import "./create.css";
 
 const CATEGORIES = [
@@ -208,7 +207,9 @@ function Create() {
     },
     onError: (err) => {
       console.error("Post yaratish xatosi:", err);
-      toast.error(err.message || "Server bilan bog'lanishda xatolik yuz berdi.");
+      toast.error(
+        err.message || "Server bilan bog'lanishda xatolik yuz berdi.",
+      );
     },
   });
 
@@ -337,7 +338,7 @@ function Create() {
           <div className="form-group">
             <label className="form-label">
               <span>Kategoriya tanlang</span>
-              <span className="form-label-hint">Post qaysi fanga oid?</span>
+              <span className="form-label-hint">Post turi</span>
             </label>
             <div className="categories-list">
               {CATEGORIES.map((cat) => (
@@ -561,7 +562,7 @@ function Create() {
               disabled={isSubmitting}
               onClick={handlePublish}
             >
-              <FiSend />
+              <FiCheck />
               {isSubmitting ? "Kuting..." : "Chop etish"}
             </button>
           </div>
@@ -718,7 +719,7 @@ function Create() {
               disabled={isSubmitting}
               onClick={handlePublish}
             >
-              <FiSend />
+              <FiCheck />
               Chop etish
             </button>
           </div>
@@ -736,8 +737,8 @@ function Create() {
           </div>
           <h3>Muvaffaqiyatli chop etildi! 🎉</h3>
           <p>
-            Sizning yangi postingiz Ziyo platformasida barcha
-            foydalanuvchilarga ko'rsatiladi.
+            Sizning yangi postingiz Ziyo platformasida barcha foydalanuvchilarga
+            ko'rsatiladi.
           </p>
           <div className="success-actions">
             <button className="modal-home-btn" onClick={() => navigate("/")}>

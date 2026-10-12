@@ -14,8 +14,9 @@ import {
   IoRibbonOutline,
 } from "react-icons/io5";
 import { FaCrown } from "react-icons/fa";
-import defaultAvatar from "../../assets/logo.jpg";
+import userPic from "../../assets/user.jpg";
 import { getRatings } from "../../api/ratingApi.js";
+import utyaWin from "/utyaicon1.gif";
 import "./reytinglar.css";
 
 const TIMEFRAMES = [
@@ -71,9 +72,11 @@ function Reytinglar() {
       timeframe === "weekly" ? 0.25 : timeframe === "monthly" ? 0.65 : 1;
 
     let users = rawUsers.map((u) => {
-      const isMe =
-        Boolean((currentUserId && (u.id === currentUserId || u._id === currentUserId)) ||
-        (currentUsername && u.username && u.username === currentUsername));
+      const isMe = Boolean(
+        (currentUserId &&
+          (u.id === currentUserId || u._id === currentUserId)) ||
+        (currentUsername && u.username && u.username === currentUsername),
+      );
 
       return {
         ...u,
@@ -84,10 +87,18 @@ function Reytinglar() {
 
     // Kategoriya bo'yicha saralash / filtrlash
     if (selectedCategory === "Kitobxonlik") {
-      users.sort((a, b) => (b.readBooks || 0) - (a.readBooks || 0) || b.calculatedXp - a.calculatedXp);
+      users.sort(
+        (a, b) =>
+          (b.readBooks || 0) - (a.readBooks || 0) ||
+          b.calculatedXp - a.calculatedXp,
+      );
     } else {
       // XP bo'yicha eng kattasi yuqorida
-      users.sort((a, b) => b.calculatedXp - a.calculatedXp || (b.solvedQuizzes || 0) - (a.solvedQuizzes || 0));
+      users.sort(
+        (a, b) =>
+          b.calculatedXp - a.calculatedXp ||
+          (b.solvedQuizzes || 0) - (a.solvedQuizzes || 0),
+      );
     }
 
     // Ranklarni belgilash
@@ -108,7 +119,14 @@ function Reytinglar() {
     }
 
     return users;
-  }, [rawUsers, timeframe, selectedCategory, searchQuery, currentUserId, currentUsername]);
+  }, [
+    rawUsers,
+    timeframe,
+    selectedCategory,
+    searchQuery,
+    currentUserId,
+    currentUsername,
+  ]);
 
   // Top 3 foydalanuvchilar (podium uchun)
   const top1 = sortedUsers.find((u) => u.rank === 1);
@@ -173,7 +191,7 @@ function Reytinglar() {
                 <div className="podium-user-card">
                   <div className="podium-avatar-wrapper rank-2">
                     <img
-                      src={top2.avatar || defaultAvatar}
+                      src={top2.profilePic || userPic}
                       alt={top2.name}
                       className="podium-avatar"
                     />
@@ -203,7 +221,7 @@ function Reytinglar() {
                 <div className="podium-user-card first-card">
                   <div className="podium-avatar-wrapper rank-1">
                     <img
-                      src={top1.avatar || defaultAvatar}
+                      src={top1.profilePic || userPic}
                       alt={top1.name}
                       className="podium-avatar"
                     />
@@ -219,7 +237,9 @@ function Reytinglar() {
                 </div>
                 <div className="podium-pedestal pedestal-1">
                   <span className="pedestal-number">1</span>
-                  <span className="pedestal-label">G'olib 🏆</span>
+                  <span className="pedestal-label">
+                    G'olib <img src={utyaWin} alt="G'olib" />
+                  </span>
                 </div>
               </div>
             )}
@@ -230,7 +250,7 @@ function Reytinglar() {
                 <div className="podium-user-card">
                   <div className="podium-avatar-wrapper rank-3">
                     <img
-                      src={top3.avatar || defaultAvatar}
+                      src={top3.profilePic || userPic}
                       alt={top3.name}
                       className="podium-avatar"
                     />
@@ -289,7 +309,7 @@ function Reytinglar() {
                   <div className="col-user">
                     <div className="user-avatar-box">
                       <img
-                        src={user.avatar || defaultAvatar}
+                        src={user.profilePic || userPic}
                         alt={user.name}
                         className="user-list-avatar"
                       />
@@ -309,7 +329,8 @@ function Reytinglar() {
                   <div className="col-stats hide-mobile">
                     <div className="activity-badges">
                       <span className="act-pill" title="Yechilgan testlar">
-                        <IoExtensionPuzzleOutline /> {user.solvedQuizzes || 0} test
+                        <IoExtensionPuzzleOutline /> {user.solvedQuizzes || 0}{" "}
+                        test
                       </span>
                       <span className="act-pill" title="O'qilgan kitoblar">
                         <IoBookOutline /> {user.readBooks || 0} kitob

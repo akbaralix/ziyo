@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import ReactDOM from "react-dom"; // 👈 Mana shu qator yetishmayotgan edi
 import "./ModalOverlay.css";
 
 function ModalOverlay({
@@ -64,7 +65,7 @@ function ModalOverlay({
     }
   };
 
-  return (
+  return ReactDOM.createPortal(
     <div
       className={`modal-overlay-container ${className}`.trim()}
       style={style}
@@ -74,7 +75,8 @@ function ModalOverlay({
       {...props}
     >
       {children}
-    </div>
+    </div>,
+    document.body,
   );
 }
 

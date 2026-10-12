@@ -4,7 +4,7 @@ import { PiPlusBold } from "react-icons/pi";
 
 import { GoHome, GoTrophy, GoPerson } from "react-icons/go";
 import { SiWikibooks } from "react-icons/si";
-import logo from "../../assets/logo.jpg";
+import logo from "../../assets/logo.png";
 import "./navbar.css";
 
 function Navbar({ isCollapsed, onToggle }) {
@@ -45,7 +45,14 @@ function Navbar({ isCollapsed, onToggle }) {
         <div className="navbar-user-profil">
           <div className="navbar-user">
             <div className="navbar-user-img">
-              <img src={logo} alt="User" draggable="false" />
+              <img
+                src={
+                  JSON.parse(localStorage.getItem("ziyo_user"))?.profilePic ||
+                  logo
+                }
+                alt="User"
+                draggable="false"
+              />
             </div>
             {!isCollapsed && (
               <span>
@@ -53,7 +60,9 @@ function Navbar({ isCollapsed, onToggle }) {
                   try {
                     const u = JSON.parse(localStorage.getItem("ziyo_user"));
                     if (u && u.firstName) return u.firstName;
-                    const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+                    const p = JSON.parse(
+                      localStorage.getItem("ziyo_user_profile"),
+                    );
                     if (p && p.name) return p.name.split(" ")[0];
                   } catch {}
                   return "Profil";

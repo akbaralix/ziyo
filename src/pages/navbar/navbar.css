@@ -153,7 +153,7 @@
   max-width: 400px;
   width: 90%;
   border-radius: 33px;
-
+  border: 1px solid #f8f8f8;
   background-color: #ffffffce;
   backdrop-filter: blur(13px);
   z-index: 100;

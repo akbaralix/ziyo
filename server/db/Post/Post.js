@@ -12,7 +12,7 @@ const postSchema = new mongoose.Schema(
       id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       name: { type: String, required: true },
       username: { type: String, default: "" },
-      avatar: { type: String, default: "" },
+      profilePic: { type: String, default: "" },
     },
     type: {
       type: String,

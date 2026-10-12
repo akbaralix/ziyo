@@ -13,7 +13,7 @@ const generateJwtToken = (user) => {
       telegramId: user.telegramId,
     },
     JWT_SECRET,
-    { expiresIn: "30d" }
+    { expiresIn: "30d" },
   );
 };
 
@@ -131,8 +131,15 @@ export const checkTelegramSession = async (req, res) => {
 // 3. Yangi foydalanuvchi ma'lumotlarini to'ldirib ro'yxatdan o'tishi
 export const registerTelegramUser = async (req, res) => {
   try {
-    const { token, telegramId, firstName, lastName, studyPlace, course } =
-      req.body;
+    const {
+      token,
+      telegramId,
+      firstName,
+      lastName,
+      profilePic,
+      studyPlace,
+      course,
+    } = req.body;
 
     if (!telegramId || !firstName || !lastName || !studyPlace || !course) {
       return res.status(400).json({
@@ -166,12 +173,14 @@ export const registerTelegramUser = async (req, res) => {
         telegramId: String(telegramId),
         firstName: firstName.trim(),
         lastName: lastName.trim(),
+        profilePic,
         studyPlace,
         course,
       });
     } else {
       user.firstName = firstName.trim();
       user.lastName = lastName.trim();
+      user.profilePic = profilePic;
       user.studyPlace = studyPlace;
       user.course = course;
     }
@@ -214,11 +223,14 @@ export const getMe = async (req, res) => {
 // 5. Profilni tahrirlash
 export const updateProfile = async (req, res) => {
   try {
-    const { firstName, lastName, bio, studyPlace, course } = req.body;
+    const { firstName, lastName, profilePic, bio, studyPlace, course } =
+      req.body;
     const user = req.user;
 
     if (firstName) user.firstName = firstName.trim();
     if (lastName) user.lastName = lastName.trim();
+    if (profilePic) user.profilePic = profilePic;
+
     if (bio !== undefined) user.bio = bio.trim();
     if (studyPlace) user.studyPlace = studyPlace;
     if (course) user.course = course;

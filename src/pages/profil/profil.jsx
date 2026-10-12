@@ -12,14 +12,12 @@ import {
   IoExtensionPuzzleOutline,
   IoBookmarkOutline,
   IoGridOutline,
-  IoSparklesOutline,
   IoClose,
   IoCheckmark,
 } from "react-icons/io5";
 import { GoTrophy } from "react-icons/go";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import logo from "../../assets/logo.jpg";
 import Post from "../../post/post";
 import ModalOverlay from "../../components/ModalOverlay";
 import "./profil.css";
@@ -33,6 +31,8 @@ import {
   deleteQuizGame,
 } from "../../api/quizApi.js";
 
+import userPic from "../../assets/user.jpg";
+
 function Profil() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -40,6 +40,7 @@ function Profil() {
   const [activeTab, setActiveTab] = useState("posts"); // 'posts' | 'saved' | 'stats'
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState("");
+  const [editLastName, setEditLastName] = useState(""); // 👈 Familiya uchun alohida state qo'shildi
   const [editBio, setEditBio] = useState("");
 
   // TanStack Query orqali profil ma'lumotlarini keshdan olish
@@ -110,7 +111,8 @@ function Profil() {
   const profileData = {
     name: fullName,
     username: u?.telegramUsername || "user",
-    bio: u?.bio || "Ziyo platformasida bilim ulashmoqdaman! 🚀",
+    profilePic: u?.profilePic,
+    bio: u?.bio,
     studyPlace: u?.studyPlace || "institut",
     course: u?.course || "1-kurs",
     level: (u?.xp || 0) > 1000 ? "Usta 🌟" : "Bilimdon ⚡",
@@ -145,25 +147,23 @@ function Profil() {
   });
 
   const handleOpenEdit = () => {
-    setEditName(profileData.name);
-    setEditBio(profileData.bio);
+    const parts = profileData.name.split(" ");
+    setEditName(parts[0] || "");
+    setEditLastName(parts.slice(1).join(" ") || "");
+    setEditBio(profileData.bio || "");
     setIsEditModalOpen(true);
   };
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
     if (!editName.trim()) {
-      toast.warning("Iltimos, ism va familiyangizni kiriting!");
+      toast.warning("Iltimos, ismingizni kiriting!");
       return;
     }
 
-    const names = editName.trim().split(" ");
-    const firstName = names[0] || "";
-    const lastName = names.slice(1).join(" ") || "";
-
     updateProfileMutation.mutate({
-      firstName,
-      lastName,
+      firstName: editName.trim(),
+      lastName: editLastName.trim(),
       bio: editBio.trim(),
     });
   };
@@ -190,7 +190,7 @@ function Profil() {
       count: `${profileData.solvedQuizzes} ta`,
       icon: <IoExtensionPuzzleOutline />,
       color: "#ffffff",
-      bgColor: "#1093df",
+      bgColor: "#23a8f5",
     },
     {
       id: 3,
@@ -198,7 +198,7 @@ function Profil() {
       count: `${profileData.xp.toLocaleString()} XP`,
       icon: <FaFire />,
       color: "#ffffff",
-      bgColor: "#deb81d",
+      bgColor: "#fdce12",
     },
     {
       id: 4,
@@ -220,7 +220,7 @@ function Profil() {
           <div className="profile-avatar-container">
             <div className="profile-avatar-wrapper">
               <img
-                src={profileData.profilePic}
+                src={profileData.profilePic || userPic}
                 alt="Profil rasmi"
                 className="profile-avatar-img"
               />
@@ -262,6 +262,7 @@ function Profil() {
                   title="Chiqish"
                 >
                   <FaSignOutAlt />
+                  <span>Chiqish</span>
                 </button>
               </div>
             </div>
@@ -337,7 +338,6 @@ function Profil() {
             </button>
           </div>
 
-          {/* Faqat o'z postlarimizni ko'rsatish */}
           <Post onlyMyPosts={true} />
         </div>
       )}
@@ -459,20 +459,21 @@ function Profil() {
 
           <form onSubmit={handleSaveProfile} className="edit-profile-form">
             <div className="form-field">
-              <label>To'liq ism</label>
+              <label>Ism</label>
               <input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 placeholder="Ismingizni kiriting..."
                 required
-              />{" "}
-              <label>Familya</label>
+              />
+
+              <label>Familiya</label>
               <input
                 type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Ismingizni kiriting..."
+                value={editLastName}
+                onChange={(e) => setEditLastName(e.target.value)}
+                placeholder="Familiyangizni kiriting..."
                 required
               />
             </div>

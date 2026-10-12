@@ -16,7 +16,7 @@ const commentSchema = new mongoose.Schema(
     user: {
       name: { type: String, required: true },
       username: { type: String, default: "" },
-      avatar: { type: String, default: "" },
+      profilePic: { type: String, default: "" },
     },
     text: {
       type: String,
@@ -24,7 +24,7 @@ const commentSchema = new mongoose.Schema(
       trim: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Comment = mongoose.model("Comment", commentSchema);
