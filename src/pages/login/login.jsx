@@ -28,10 +28,7 @@ const normalizeTelegramText = (text) => {
   return text
     .normalize("NFKC")
     .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, (char) => {
-      // Fancy/Mathematical Unicode harflarini oddiy harflarga aylantirish
       const codePoint = char.codePointAt(0);
-
-      // Katta harflar (Mathematical Bold, Italic, Fraktur va h.k.)
       if (codePoint >= 0x1d400 && codePoint <= 0x1d7ca) {
         const offset = (codePoint - 0x1d400) % 52;
         if (offset < 26) return String.fromCharCode(65 + offset);
@@ -66,7 +63,7 @@ function Login() {
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
-    profilePic: "",
+    profilePic: images[0] || "", // Agar rasmlar bo'lsa, birinchisini default qilib qo'yish xavfsizroq
     studyPlace: "", // "institut" | "maktab"
     course: "", // "1-kurs", "9-sinf" va h.k.
   });
@@ -178,6 +175,11 @@ function Login() {
                 res.telegramData.firstName || "",
               ),
               lastName: normalizeTelegramText(res.telegramData.lastName || ""),
+              profilePic:
+                res.telegramData.profilePic ||
+                prev.profilePic ||
+                images[0] ||
+                "",
             }));
             setStepTelegram(false);
             setLoginStep(1); // Ism-familiya to'ldirish bosqichiga o'tish

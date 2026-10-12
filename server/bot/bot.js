@@ -1,6 +1,5 @@
 import "dotenv/config";
-import { Bot } from "node-telegram-bot-api";
-import { run } from "node-telegram-bot-api/node";
+import { Telegraf } from "telegraf"; // 👈 node-telegram-bot-api o'rniga telegraf ishlatiladi
 import OTP from "../db/OTP/otp.js";
 import User from "../db/User/User.js";
 
@@ -20,7 +19,7 @@ export default function startBot() {
   }
 
   try {
-    bot = new Bot(token);
+    bot = new Telegraf(token); // 👈 Telegraf orqali yaratish
 
     bot.command("start", async (ctx) => {
       const telegramId = String(ctx.from?.id || ctx.message?.from?.id);
@@ -100,10 +99,13 @@ export default function startBot() {
         }
 
         await ctx.reply(replyText, { parse_mode: "HTML" });
-        await ctx.telegram.sendMessage(
+
+        // 👈 Xatolik to'g'irlandi: bot.telegram.sendMessage yoki to'g'ridan-to'g'ri bot.sendMessage
+        await bot.telegram.sendMessage(
           chatID,
           `✅ Telegram bot orqali tasdiqlandi: ${telegramId} (${firstName})`,
         );
+
         console.log(
           `✅ Telegram bot orqali tasdiqlandi: ${telegramId} (${firstName})`,
         );
@@ -115,9 +117,7 @@ export default function startBot() {
       }
     });
 
-    run(bot).catch((err) => {
-      console.error("Telegram bot run xatosi:", err.message || err);
-    });
+    bot.launch();
 
     console.log("🤖 Telegram bot muvaffaqiyatli ishga tushirildi...");
     return bot;
