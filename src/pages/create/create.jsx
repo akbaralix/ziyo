@@ -20,7 +20,9 @@ import { FiSend, FiBookmark } from "react-icons/fi";
 import { HiOutlineLightBulb } from "react-icons/hi";
 import { FaHeart, FaRegComment } from "react-icons/fa";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import { createPost } from "../../api/postApi.js";
+import ModalOverlay from "../../components/ModalOverlay";
 import logo from "../../assets/logo.jpg";
 import "./create.css";
 
@@ -74,7 +76,6 @@ function Create() {
   // UI state
   const [viewMode, setViewMode] = useState("edit"); // 'edit' | 'preview'
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
 
   // Load draft if available
   useEffect(() => {
@@ -105,7 +106,7 @@ function Create() {
 
   const handleAddOption = () => {
     if (quizOptions.length >= 6) {
-      showToast("Maksimal 6 ta variant qo'shish mumkin!");
+      toast.warning("Maksimal 6 ta variant qo'shish mumkin!");
       return;
     }
     const nextLetter = String.fromCharCode(97 + quizOptions.length); // 'e', 'f'...
@@ -114,7 +115,7 @@ function Create() {
 
   const handleRemoveOption = (id) => {
     if (quizOptions.length <= 2) {
-      showToast("Kamida 2 ta variant bo'lishi kerak!");
+      toast.warning("Kamida 2 ta variant bo'lishi kerak!");
       return;
     }
     const filtered = quizOptions.filter((opt) => opt.id !== id);
@@ -155,13 +156,6 @@ function Create() {
     setContent((prev) => prev + emoji);
   };
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage("");
-    }, 3000);
-  };
-
   const handleSaveDraft = () => {
     const draftData = {
       postType,
@@ -174,29 +168,29 @@ function Create() {
       savedAt: new Date().toISOString(),
     };
     localStorage.setItem("ziyo_post_draft", JSON.stringify(draftData));
-    showToast("Qoralama saqlandi! 💾");
+    toast.success("Qoralama saqlandi! 💾");
   };
 
   const validateForm = () => {
     if (!title.trim()) {
-      showToast("Iltimos, sarlavha yoki mavzuni kiriting!");
+      toast.warning("Iltimos, sarlavha yoki mavzuni kiriting!");
       return false;
     }
     if (postType === "quiz") {
       const filledOptions = quizOptions.filter((o) => o.text.trim().length > 0);
       if (filledOptions.length < 2) {
-        showToast("Viktorina uchun kamida 2 ta variantni to'ldiring!");
+        toast.warning("Viktorina uchun kamida 2 ta variantni to'ldiring!");
         return false;
       }
     } else {
       if (!content.trim()) {
-        showToast("Iltimos, post matnini yozing!");
+        toast.warning("Iltimos, post matnini yozing!");
         return false;
       }
     }
     if (content.length > 500) {
-      showToast("Maqola 500 ta sozdan kop bolishi mumkun emas");
-      return;
+      toast.warning("Maqola 500 ta so'zdan ko'p bo'lishi mumkin emas!");
+      return false;
     }
     return true;
   };
@@ -209,11 +203,12 @@ function Create() {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       localStorage.removeItem("ziyo_post_draft");
+      toast.success("Post muvaffaqiyatli chop etildi! 🎉");
       setShowSuccessModal(true);
     },
     onError: (err) => {
       console.error("Post yaratish xatosi:", err);
-      showToast(err.message || "Server bilan bog'lanishda xatolik yuz berdi.");
+      toast.error(err.message || "Server bilan bog'lanishda xatolik yuz berdi.");
     },
   });
 
@@ -256,14 +251,6 @@ function Create() {
 
   return (
     <div className="create-page">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="preview-notice" style={{ marginBottom: "16px" }}>
-          <IoSparklesOutline />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
       {/* Top Header */}
       <div className="create-header">
         <div className="create-top-bar">
@@ -401,7 +388,7 @@ function Create() {
                   ? "Savolning to'liq matni"
                   : "Asosiy matn / Maqola"}
               </span>
-              <span className="form-label-hint">{content.length} ta belgi</span>
+              <span className="form-label-hint">{content.length}/500</span>
             </label>
             <textarea
               className="create-textarea"
@@ -739,28 +726,29 @@ function Create() {
       )}
 
       {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="modal-overlay">
-          <div className="success-modal">
-            <div className="success-icon-box">
-              <IoCheckmarkCircle />
-            </div>
-            <h3>Muvaffaqiyatli chop etildi! 🎉</h3>
-            <p>
-              Sizning yangi postingiz Ziyo platformasida barcha
-              foydalanuvchilarga ko'rsatiladi.
-            </p>
-            <div className="success-actions">
-              <button className="modal-home-btn" onClick={() => navigate("/")}>
-                Bosh sahifaga o'tish
-              </button>
-              <button className="modal-another-btn" onClick={resetForm}>
-                Yana yangi post yaratish
-              </button>
-            </div>
+      <ModalOverlay
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+      >
+        <div className="success-modal">
+          <div className="success-icon-box">
+            <IoCheckmarkCircle />
+          </div>
+          <h3>Muvaffaqiyatli chop etildi! 🎉</h3>
+          <p>
+            Sizning yangi postingiz Ziyo platformasida barcha
+            foydalanuvchilarga ko'rsatiladi.
+          </p>
+          <div className="success-actions">
+            <button className="modal-home-btn" onClick={() => navigate("/")}>
+              Bosh sahifaga o'tish
+            </button>
+            <button className="modal-another-btn" onClick={resetForm}>
+              Yana yangi post yaratish
+            </button>
           </div>
         </div>
-      )}
+      </ModalOverlay>
     </div>
   );
 }

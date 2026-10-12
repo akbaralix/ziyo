@@ -1,10 +1,16 @@
 import { HiDotsVertical } from "react-icons/hi";
-import { FaRegHeart, FaHeart, FaRegComment, FaRegBookmark } from "react-icons/fa";
+import {
+  FaRegHeart,
+  FaHeart,
+  FaRegComment,
+  FaRegBookmark,
+} from "react-icons/fa";
 import { LuShare2, LuSend, LuPencil, LuTrash2 } from "react-icons/lu";
 import { IoMdClose } from "react-icons/io";
 import { IoEyeOffOutline, IoAlertCircleOutline } from "react-icons/io5";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import logo from "../assets/logo.jpg";
 import {
   fetchPosts,
@@ -15,6 +21,7 @@ import {
   deletePost,
   updatePost,
 } from "../api/postApi.js";
+import ModalOverlay from "../components/ModalOverlay";
 import "./post.css";
 
 function Post({
@@ -41,6 +48,26 @@ function Post({
     tags: "",
   });
 
+  const getTimeAgo = (date) => {
+    if (!date) return "";
+
+    const timestamp = new Date(date).getTime();
+
+    if (Number.isNaN(timestamp)) return "";
+
+    const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+
+    if (seconds < 60) return "Hozirgina";
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} daqiqa oldin`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} soat oldin`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)} kun oldin`;
+
+    return new Date(date).toLocaleDateString("uz-UZ", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
   // TanStack Query orqali postlarni keshdan tezkor olish
   const { data, isLoading: loading } = useQuery({
     queryKey: ["posts", selectedCategory, searchQuery, onlyMyPosts],
@@ -105,9 +132,10 @@ function Post({
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       setNewCommentText("");
+      toast.success("Izoh muvaffaqiyatli qo'shildi!");
     },
     onError: (err) => {
-      alert(err.message || "Izoh yozishda xatolik yuz berdi.");
+      toast.error(err.message || "Izoh yozishda xatolik yuz berdi.");
     },
   });
 
@@ -128,9 +156,10 @@ function Post({
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       setShowPostAction(false);
       setSelectedPost(null);
+      toast.success("Post muvaffaqiyatli o'chirildi!");
     },
     onError: (err) => {
-      alert(err.message || "Postni o'chirishda xatolik yuz berdi.");
+      toast.error(err.message || "Postni o'chirishda xatolik yuz berdi.");
     },
   });
 
@@ -148,9 +177,10 @@ function Post({
       setIsEditModalOpen(false);
       setShowPostAction(false);
       setSelectedPost(null);
+      toast.success("Post muvaffaqiyatli yangilandi!");
     },
     onError: (err) => {
-      alert(err.message || "Postni tahrirlashda xatolik yuz berdi.");
+      toast.error(err.message || "Postni tahrirlashda xatolik yuz berdi.");
     },
   });
 
@@ -169,7 +199,7 @@ function Post({
   const handleSaveEditSubmit = (e) => {
     e.preventDefault();
     if (!editFormData.title.trim()) {
-      alert("Sarlavha bo'sh bo'lishi mumkin emas!");
+      toast.warning("Sarlavha bo'sh bo'lishi mumkin emas!");
       return;
     }
 
@@ -206,13 +236,47 @@ function Post({
             explanation: res.explanation,
           },
         }));
+
+        queryClient.setQueriesData({ queryKey: ["posts"] }, (old) => {
+          if (!old || !old.posts) return old;
+          return {
+            ...old,
+            posts: old.posts.map((p) => {
+              if (p.id === postId) {
+                return {
+                  ...p,
+                  userQuizAnswer: {
+                    selected: selectOption,
+                    isCorrect: res.isCorrect,
+                    correctOption: res.correctOption,
+                    explanation: res.explanation,
+                  },
+                };
+              }
+              return p;
+            }),
+          };
+        });
+
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
       }
+    },
+    onError: (err) => {
+      toast.error(err.message || "Javobni yuborishda xatolik yuz berdi.");
     },
   });
 
   const handleChekQuiz = (postId, selectOption) => {
     if (quizAnswers[postId]) return;
+    const post = posts.find((p) => p.id === postId);
+    if (post?.userQuizAnswer) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.warning("Viktorinada qatnashish uchun avval tizimga kiring!");
+      return;
+    }
+
     quizMutation.mutate({ postId, selectOption });
   };
 
@@ -241,7 +305,7 @@ function Post({
       } catch {
         return false;
       }
-    })()
+    })(),
   );
 
   return (
@@ -265,14 +329,12 @@ function Post({
         <div
           style={{
             textAlign: "center",
+            color: "#212121",
             padding: "40px 20px",
-            color: "#6b7280",
-            background: "#ffffff",
-            borderRadius: "16px",
-            border: "1px solid #e5e7eb",
           }}
         >
-          <p style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>
+          <img src="/utyaduckicon12.png" alt="" />
+          <p style={{ fontSize: "20px" }}>
             Hozircha hech qanday post mavjud emas
           </p>
           <p style={{ fontSize: "14px", marginTop: "4px" }}>
@@ -281,13 +343,13 @@ function Post({
         </div>
       ) : (
         posts.map((post) => {
-          const quizState = quizAnswers[post.id];
+          const quizState = quizAnswers[post.id] || post.userQuizAnswer;
           return (
             <div key={post.id} className="post-card">
               <div className="post-header">
                 <div className="post-user-info">
                   <img
-                    src={post.user?.avatar || logo}
+                    src={post.user?.profilePic || logo}
                     alt={post.user?.name || "User"}
                     className="post-user-avatar"
                   />
@@ -318,31 +380,36 @@ function Post({
                     <div className="quiz-options">
                       {post.options.map((option) => {
                         const isSelected = quizState?.selected === option.id;
-                        const isCorrect = quizState?.correctOption === option.id;
-                        let optionClass = "quiz-option";
+                        const isCorrect =
+                          quizState?.correctOption === option.id;
+                        let optionClass = `quiz-option ${quizState ? "disabled" : ""}`;
                         let letterStyle = {};
                         let cardStyle = {};
 
                         if (quizState) {
                           if (isCorrect) {
                             cardStyle = {
-                              borderColor: "#1032b9",
+                              borderColor: "#10b981",
                               background: "#ecfdf5",
                             };
                             letterStyle = {
-                              background: "#1428d5",
+                              background: "#10b981",
                               color: "#fff",
-                              borderColor: "#5e76e2",
+                              borderColor: "#10b981",
                             };
                           } else if (isSelected && !quizState.isCorrect) {
                             cardStyle = {
-                              borderColor: "#e31212",
+                              borderColor: "#ef4444",
                               background: "#fef2f2",
                             };
                             letterStyle = {
-                              background: "#fd1313",
+                              background: "#ef4444",
                               color: "#fff",
-                              borderColor: "#ec1818",
+                              borderColor: "#ef4444",
+                            };
+                          } else {
+                            cardStyle = {
+                              opacity: 0.7,
                             };
                           }
                         }
@@ -351,12 +418,8 @@ function Post({
                           <button
                             key={option.id}
                             style={cardStyle}
-                            onClick={() =>
-                              handleChekQuiz(
-                                post.id,
-                                option.id
-                              )
-                            }
+                            disabled={!!quizState || quizMutation.isPending}
+                            onClick={() => handleChekQuiz(post.id, option.id)}
                             className={optionClass}
                           >
                             <span
@@ -372,18 +435,53 @@ function Post({
                         );
                       })}
                     </div>
-                    {quizState && quizState.explanation && (
+                    {quizState && (
                       <div
                         style={{
-                          marginTop: "10px",
-                          padding: "10px 14px",
-                          borderRadius: "10px",
-                          background: "#eff6ff",
-                          color: "#1e40af",
-                          fontSize: "13px",
+                          marginTop: "12px",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px",
                         }}
                       >
-                        💡 <strong>Tushuntirish:</strong> {quizState.explanation}
+                        <div
+                          style={{
+                            padding: "8px 14px",
+                            borderRadius: "10px",
+                            fontSize: "13px",
+                            fontWeight: "600",
+                            backgroundColor: quizState.isCorrect
+                              ? "#ecfdf5"
+                              : "#fef2f2",
+                            color: quizState.isCorrect ? "#047857" : "#b91c1c",
+                            border: `1px solid ${
+                              quizState.isCorrect ? "#a7f3d0" : "#fecaca"
+                            }`,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          {quizState.isCorrect
+                            ? "✅ To'g'ri javob berdingiz! (+10 XP)"
+                            : "❌ Noto'g'ri javob berdingiz."}
+                        </div>
+
+                        {quizState.explanation && (
+                          <div
+                            style={{
+                              padding: "10px 14px",
+                              borderRadius: "10px",
+                              background: "#eff6ff",
+                              color: "#1e40af",
+                              fontSize: "13px",
+                              border: "1px solid #dbeafe",
+                            }}
+                          >
+                            💡 <strong>Tushuntirish:</strong>{" "}
+                            {quizState.explanation}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -438,7 +536,7 @@ function Post({
                     <span>{post.commentsCount || 0}</span>
                   </button>
                 </div>
-
+                <span className="post-date">{getTimeAgo(post.createdAt)}</span>
                 <span className="post-category">{post.category}</span>
               </div>
             </div>
@@ -463,7 +561,9 @@ function Post({
             <>
               <div className="post-action-menyu-item edit-action">
                 <button onClick={() => handleOpenEdit(selectedPost)}>
-                  <span><LuPencil /></span>
+                  <span>
+                    <LuPencil />
+                  </span>
                   <p>Tahrirlash</p>
                 </button>
               </div>
@@ -473,8 +573,14 @@ function Post({
                   onClick={() => handleDeletePost(selectedPost)}
                   disabled={deleteMutation.isPending}
                 >
-                  <span><LuTrash2 /></span>
-                  <p>{deleteMutation.isPending ? "O'chirilmoqda..." : "Postni o'chirish"}</p>
+                  <span>
+                    <LuTrash2 />
+                  </span>
+                  <p>
+                    {deleteMutation.isPending
+                      ? "O'chirilmoqda..."
+                      : "Postni o'chirish"}
+                  </p>
                 </button>
               </div>
             </>
@@ -485,11 +591,13 @@ function Post({
             <button
               onClick={() => {
                 navigator.clipboard?.writeText(window.location.href);
-                alert("Post havolasi nusxalandi!");
+                toast.success("Post havolasi nusxalandi!");
                 setShowPostAction(false);
               }}
             >
-              <span><LuShare2 /></span>
+              <span>
+                <LuShare2 />
+              </span>
               <p>Ulashish</p>
             </button>
           </div>
@@ -497,11 +605,13 @@ function Post({
           <div className="post-action-menyu-item">
             <button
               onClick={() => {
-                alert("Post saqlanganlar ro'yxatiga qo'shildi!");
+                toast.success("Post saqlanganlar ro'yxatiga qo'shildi!");
                 setShowPostAction(false);
               }}
             >
-              <span><FaRegBookmark /></span>
+              <span>
+                <FaRegBookmark />
+              </span>
               <p>Saqlash</p>
             </button>
           </div>
@@ -511,11 +621,13 @@ function Post({
               <div className="post-action-menyu-item">
                 <button
                   onClick={() => {
-                    alert("Tavsiyalar yangilandi.");
+                    toast.info("Tavsiyalar yangilandi.");
                     setShowPostAction(false);
                   }}
                 >
-                  <span><IoEyeOffOutline /></span>
+                  <span>
+                    <IoEyeOffOutline />
+                  </span>
                   <p>Qiziq emas</p>
                 </button>
               </div>
@@ -523,11 +635,13 @@ function Post({
               <div className="post-action-menyu-item">
                 <button
                   onClick={() => {
-                    alert("Shikoyatingiz qabul qilindi.");
+                    toast.info("Shikoyatingiz qabul qilindi.");
                     setShowPostAction(false);
                   }}
                 >
-                  <span><IoAlertCircleOutline /></span>
+                  <span>
+                    <IoAlertCircleOutline />
+                  </span>
                   <p>Shikoyat qilish</p>
                 </button>
               </div>
@@ -537,187 +651,187 @@ function Post({
       )}
 
       {/* EDIT POST MODAL */}
-      {isEditModalOpen && (
-        <div
-          className="edit-post-modal-overlay"
-          onClick={() => setIsEditModalOpen(false)}
-        >
-          <div
-            className="edit-post-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="edit-post-modal-header">
-              <h3>Postni tahrirlash</h3>
-              <button
-                type="button"
-                className="comments-modal-close"
-                onClick={() => setIsEditModalOpen(false)}
-              >
-                <IoMdClose />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveEditSubmit} className="edit-post-form">
-              <div className="edit-post-field">
-                <label>Sarlavha</label>
-                <input
-                  type="text"
-                  value={editFormData.title}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, title: e.target.value })
-                  }
-                  className="edit-post-input"
-                  required
-                />
-              </div>
-
-              <div className="edit-post-field">
-                <label>Kategoriya</label>
-                <select
-                  value={editFormData.category}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, category: e.target.value })
-                  }
-                  className="edit-post-select"
-                >
-                  <option value="Dasturlash">Dasturlash</option>
-                  <option value="Fizika">Fizika</option>
-                  <option value="Matematika">Matematika</option>
-                  <option value="Mantiqiy savollar">Mantiqiy savollar</option>
-                  <option value="Qiziqarli faktlar">Qiziqarli faktlar</option>
-                  <option value="Kitoblar">Kitoblar</option>
-                  <option value="Savol-javob">Savol-javob</option>
-                </select>
-              </div>
-
-              <div className="edit-post-field">
-                <label>Matn</label>
-                <textarea
-                  rows={4}
-                  value={editFormData.content}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, content: e.target.value })
-                  }
-                  className="edit-post-textarea"
-                />
-              </div>
-
-              <div className="edit-post-field">
-                <label>Teglar (vergul bilan ajrating)</label>
-                <input
-                  type="text"
-                  placeholder="masalan: dasturlash, ilm"
-                  value={editFormData.tags}
-                  onChange={(e) =>
-                    setEditFormData({ ...editFormData, tags: e.target.value })
-                  }
-                  className="edit-post-input"
-                />
-              </div>
-
-              <div className="edit-post-actions">
-                <button
-                  type="button"
-                  className="edit-post-cancel-btn"
-                  onClick={() => setIsEditModalOpen(false)}
-                >
-                  Bekor qilish
-                </button>
-                <button
-                  type="submit"
-                  disabled={updateMutation.isPending}
-                  className="edit-post-save-btn"
-                >
-                  {updateMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* IZOHLAR MODALI (Comments Drawer/Modal) */}
-      {activeCommentPost && (
-        <div
-          className="comments-modal-overlay"
-          onClick={() => setActiveCommentPost(null)}
-        >
-          <div
-            className="comments-modal-box"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="comments-modal-header">
-              <h3>Izohlar ({activeCommentPost.commentsCount || commentsList.length})</h3>
-              <button
-                type="button"
-                className="comments-modal-close"
-                onClick={() => setActiveCommentPost(null)}
-              >
-                <IoMdClose />
-              </button>
-            </div>
-
-            <div className="comments-modal-body">
-              {commentsLoading ? (
-                <div className="comments-loading-state">
-                  Izohlar yuklanmoqda...
-                </div>
-              ) : commentsList.length === 0 ? (
-                <div className="comments-empty-state">
-                  Hozircha hech qanday izoh yo'q. Birinchi bo'lib fikringizni bildiring! 💬
-                </div>
-              ) : (
-                <div className="comments-list">
-                  {commentsList.map((c) => (
-                    <div key={c.id} className="comment-item">
-                      <img
-                        src={c.user?.avatar || logo}
-                        alt="User"
-                        className="comment-avatar"
-                      />
-                      <div className="comment-content-box">
-                        <div className="comment-user-header">
-                          <span className="comment-author-name">
-                            {c.user?.name || "Foydalanuvchi"}
-                          </span>
-                          <span className="comment-date">
-                            {c.createdAt
-                              ? new Date(c.createdAt).toLocaleDateString()
-                              : ""}
-                          </span>
-                        </div>
-                        <p className="comment-text-body">{c.text}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Comment input form */}
-            <form
-              onSubmit={handleAddCommentSubmit}
-              className="comment-form-container"
+      <ModalOverlay
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+      >
+        <div className="edit-post-modal">
+          <div className="edit-post-modal-header">
+            <h3>Postni tahrirlash</h3>
+            <button
+              type="button"
+              className="comments-modal-close"
+              onClick={() => setIsEditModalOpen(false)}
             >
+              <IoMdClose />
+            </button>
+          </div>
+
+          <form onSubmit={handleSaveEditSubmit} className="edit-post-form">
+            <div className="edit-post-field">
+              <label>Sarlavha</label>
               <input
                 type="text"
-                placeholder="Fikringizni yozing..."
-                value={newCommentText}
-                onChange={(e) => setNewCommentText(e.target.value)}
-                className="comment-input-field"
+                value={editFormData.title}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, title: e.target.value })
+                }
+                className="edit-post-input"
                 required
               />
+            </div>
+
+            <div className="edit-post-field">
+              <label>Kategoriya</label>
+              <select
+                value={editFormData.category}
+                onChange={(e) =>
+                  setEditFormData({
+                    ...editFormData,
+                    category: e.target.value,
+                  })
+                }
+                className="edit-post-select"
+              >
+                <option value="Dasturlash">Dasturlash</option>
+                <option value="Fizika">Fizika</option>
+                <option value="Matematika">Matematika</option>
+                <option value="Mantiqiy savollar">Mantiqiy savollar</option>
+                <option value="Qiziqarli faktlar">Qiziqarli faktlar</option>
+                <option value="Kitoblar">Kitoblar</option>
+                <option value="Savol-javob">Savol-javob</option>
+              </select>
+            </div>
+
+            <div className="edit-post-field">
+              <label>Matn</label>
+              <textarea
+                rows={4}
+                value={editFormData.content}
+                onChange={(e) =>
+                  setEditFormData({
+                    ...editFormData,
+                    content: e.target.value,
+                  })
+                }
+                className="edit-post-textarea"
+              />
+            </div>
+
+            <div className="edit-post-field">
+              <label>Teglar (vergul bilan ajrating)</label>
+              <input
+                type="text"
+                placeholder="masalan: dasturlash, ilm"
+                value={editFormData.tags}
+                onChange={(e) =>
+                  setEditFormData({ ...editFormData, tags: e.target.value })
+                }
+                className="edit-post-input"
+              />
+            </div>
+
+            <div className="edit-post-actions">
+              <button
+                type="button"
+                className="edit-post-cancel-btn"
+                onClick={() => setIsEditModalOpen(false)}
+              >
+                Bekor qilish
+              </button>
               <button
                 type="submit"
-                disabled={!newCommentText.trim() || commentMutation.isPending}
-                className="comment-submit-btn"
+                disabled={updateMutation.isPending}
+                className="edit-post-save-btn"
               >
-                <LuSend />
+                {updateMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
               </button>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
-      )}
+      </ModalOverlay>
+
+      {/* IZOHLAR MODALI (Comments Drawer/Modal) */}
+      <ModalOverlay
+        isOpen={!!activeCommentPost}
+        onClose={() => setActiveCommentPost(null)}
+      >
+        <div className="comments-modal-box">
+          <div className="comments-modal-header">
+            <h3>
+              Izohlar ({activeCommentPost?.commentsCount || commentsList.length}
+              )
+            </h3>
+            <button
+              type="button"
+              className="comments-modal-close"
+              onClick={() => setActiveCommentPost(null)}
+            >
+              <IoMdClose />
+            </button>
+          </div>
+
+          <div className="comments-modal-body">
+            {commentsLoading ? (
+              <div className="comments-loading-state">
+                Izohlar yuklanmoqda...
+              </div>
+            ) : commentsList.length === 0 ? (
+              <div className="comments-empty-state">
+                Hozircha hech qanday izoh yo'q. Birinchi bo'lib fikringizni
+                bildiring! 💬
+              </div>
+            ) : (
+              <div className="comments-list">
+                {commentsList.map((c) => (
+                  <div key={c.id} className="comment-item">
+                    <img
+                      src={c.user?.avatar || logo}
+                      alt="User"
+                      className="comment-avatar"
+                    />
+                    <div className="comment-content-box">
+                      <div className="comment-user-header">
+                        <span className="comment-author-name">
+                          {c.user?.name || "Foydalanuvchi"}
+                        </span>
+                        <span className="comment-date">
+                          {c.createdAt
+                            ? new Date(c.createdAt).toLocaleDateString()
+                            : ""}
+                        </span>
+                      </div>
+                      <p className="comment-text-body">{c.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Comment input form */}
+          <form
+            onSubmit={handleAddCommentSubmit}
+            className="comment-form-container"
+          >
+            <input
+              type="text"
+              placeholder="Fikringizni yozing..."
+              value={newCommentText}
+              onChange={(e) => setNewCommentText(e.target.value)}
+              className="comment-input-field"
+              required
+            />
+            <button
+              type="submit"
+              disabled={!newCommentText.trim() || commentMutation.isPending}
+              className="comment-submit-btn"
+            >
+              <LuSend />
+            </button>
+          </form>
+        </div>
+      </ModalOverlay>
     </div>
   );
 }

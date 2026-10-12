@@ -28,15 +28,13 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #f3f4f6;
   color: #374151;
   font-size: 20px;
   transition: all 0.2s ease;
-}
-
-.create-back-btn:hover {
-  background: #e5e7eb;
-  color: #111827;
 }
 
 .create-title {
@@ -69,7 +67,7 @@
 
 .mode-btn.active {
   background: #ffffff;
-  color: #251fe2;
+  color: #161616;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
@@ -82,28 +80,23 @@
 }
 
 .type-btn {
-  padding: 12px;
+  padding: 10px;
   background: #ffffff;
   border: 1.5px solid #e5e7eb;
   border-radius: 14px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
-  color: #4b5563;
+  font-size: 16px;
+  color: #222222;
   transition: all 0.2s ease;
   justify-content: center;
 }
 
-.type-btn:hover {
-  border-color: #3e59df;
-  background: #f9faff;
-}
-
 .type-btn.active {
-  border-color: #251fe2;
-  background: #eff2ff;
-  color: #251fe2;
+  border-color: #f2f1f1;
+  background: #f8f8f8;
+  color: #181824;
 }
 
 .type-icon {
@@ -114,11 +107,6 @@
 
 /* --- Main Form Card --- */
 .create-form-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -128,12 +116,16 @@
 .form-group {
   display: flex;
   flex-direction: column;
+  border-radius: 25px;
+  padding: 24px;
+  background: #fffefe;
   gap: 8px;
 }
 
 .form-label {
-  font-size: 14px;
-  color: #374151;
+  font-size: 15px;
+  color: #222222;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -142,7 +134,7 @@
 .form-label-hint {
   font-size: 12px;
   font-weight: 400;
-  color: #9ca3af;
+  color: #53565c;
 }
 
 /* --- Categories Pills --- */
@@ -161,20 +153,15 @@
   border-radius: 30px;
   font-size: 13px;
   font-weight: 500;
-  color: #4b5563;
+  color: #121212cb;
   border: 1px solid transparent;
   transition: all 0.2s ease;
 }
 
-.category-chip:hover {
-  background: #e5e7eb;
-  color: #111827;
-}
-
 .category-chip.selected {
-  background: #eff2ff;
-  border-color: #3e59df;
-  color: #251fe2;
+  background: #f8f8f8;
+  border-color: #a09e9e;
+  color: #212121;
 }
 
 .category-chip-icon {
@@ -188,7 +175,7 @@
   width: 100%;
   padding: 12px 16px;
   border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 33px;
   font-size: 15px;
   font-family: inherit;
   color: #111827;
@@ -349,7 +336,7 @@
   height: 36px;
   border-radius: 10px;
   background: #f3f4f6;
-  color: #374151;
+  color: #212121;
   font-weight: 700;
   font-size: 14px;
   display: flex;
@@ -359,16 +346,15 @@
 }
 
 .quiz-option-input-row.correct .quiz-option-badge {
-  background: #1062b9;
+  background: #3566c7;
   color: #ffffff;
 }
 
 .correct-check-btn {
   padding: 8px 12px;
   border-radius: 10px;
-  border: 1.5px solid #d1d5db;
-  background: #ffffff;
-  color: #6b7280;
+  background: #f8f8f8;
+  color: #212121;
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
@@ -379,42 +365,32 @@
 }
 
 .correct-check-btn.is-correct {
-  background: #ecfcfd;
-  border-color: #1062b9;
-  color: #1062b9;
+  background: #3566c7;
+  color: #fff;
 }
 
 .delete-option-btn {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #fee2e2;
-  color: #ef4444;
+  background: #f8f8f8;
+  color: #f13131;
   font-size: 18px;
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
-.delete-option-btn:hover {
-  background: #fecaca;
-}
-
 .add-option-btn {
   padding: 10px 16px;
-  border-radius: 10px;
-  border: 1.5px dashed #3e59df;
-  background: #f8faff;
-  color: #3e59df;
+  border-radius: var(--button-border-radius);
+  background: #f8f8f8;
+  color: #212121;
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   transition: all 0.2s ease;
-}
-
-.add-option-btn:hover {
-  background: #edf2ff;
 }
 
 /* --- Tags Input --- */
@@ -469,8 +445,8 @@
 
 .suggested-tag-btn {
   font-size: 12px;
-  color: #6b7280;
-  background: #f3f4f6;
+  color: #222222;
+  background: #e2e3e5cb;
   padding: 3px 8px;
   border-radius: 6px;
   transition: all 0.15s ease;
@@ -492,38 +468,27 @@
 }
 
 .draft-btn {
-  padding: 12px 20px;
-  border-radius: 12px;
+  padding: var(--button-padding);
+  border-radius: var(--button-border-radius);
   background: #f3f4f6;
-  color: #4b5563;
-  font-size: 15px;
+  color: #212121;
+  font-size: var(--button-font-size);
   display: flex;
   align-items: center;
   gap: 8px;
   transition: all 0.2s ease;
-}
-
-.draft-btn:hover {
-  background: #e5e7eb;
-  color: #111827;
 }
 
 .publish-btn {
-  padding: 12px 28px;
-  border-radius: 12px;
-  background: #251fe2;
+  padding: var(--button-padding);
+  border-radius: var(--button-border-radius);
+  background: var(--button-bg);
   color: #ffffff;
-  font-size: 15px;
+  font-size: var(--button-font-size);
   display: flex;
   align-items: center;
   gap: 8px;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(37, 31, 226, 0.25);
-}
-
-.publish-btn:hover {
-  background: #1e18bb;
-  transform: translateY(-1px);
 }
 
 .publish-btn:disabled {
@@ -552,21 +517,6 @@
 }
 
 /* --- Success Modal --- */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 20px;
-}
-
 .success-modal {
   background: #ffffff;
   border-radius: 20px;
@@ -663,13 +613,13 @@
   }
 
   .create-form-card {
-    padding: 16px;
-    border-radius: 16px;
     gap: 18px;
   }
-
+  .form-group {
+    padding: 16px;
+  }
   .quiz-option-input-row {
-    flex-wrap: wrap;
+    /* flex-wrap: wrap; */
   }
 
   .correct-check-btn {

@@ -17,6 +17,7 @@ import {
 import { IoSparkles } from "react-icons/io5";
 
 import { FaDiamond } from "react-icons/fa6";
+import { toast } from "react-toastify";
 import {
   createQuizGame,
   getQuizGameById,
@@ -138,7 +139,7 @@ export default function QuizBuilder() {
   // Yangi savol qo'shish
   const handleAddQuestion = () => {
     if (questions.length >= 25) {
-      alert("Maksimal 25 ta savol qo'shish mumkin!");
+      toast.warning("Maksimal 25 ta savol qo'shish mumkin!");
       return;
     }
     setQuestions([...questions, DEFAULT_QUESTION()]);
@@ -148,7 +149,7 @@ export default function QuizBuilder() {
   // Savolni nusxalash
   const handleDuplicateQuestion = (idx) => {
     if (questions.length >= 25) {
-      alert("Maksimal 25 ta savol qo'shish mumkin!");
+      toast.warning("Maksimal 25 ta savol qo'shish mumkin!");
       return;
     }
     const copy = JSON.parse(JSON.stringify(questions[idx]));
@@ -161,7 +162,7 @@ export default function QuizBuilder() {
   // Savolni o'chirish
   const handleDeleteQuestion = (idx) => {
     if (questions.length <= 8) {
-      alert("Kamida 8 ta savol bo'lishi shart!");
+      toast.warning("Kamida 8 ta savol bo'lishi shart!");
       return;
     }
     const updated = questions.filter((_, i) => i !== idx);
@@ -177,11 +178,13 @@ export default function QuizBuilder() {
     setErrorMsg("");
 
     if (!title.trim()) {
+      toast.warning("Iltimos, o'yin sarlavhasini kiriting!");
       setErrorMsg("Iltimos, o'yin sarlavhasini kiriting!");
       return;
     }
 
     if (questions.length < 8 || questions.length > 25) {
+      toast.warning("Savollar soni 8 tadan 25 tagacha bo'lishi kerak!");
       setErrorMsg("Savollar soni 8 tadan 25 tagacha bo'lishi kerak!");
       return;
     }
@@ -190,12 +193,16 @@ export default function QuizBuilder() {
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.text.trim()) {
+        toast.warning(`${i + 1}-savol matni bo'sh bo'lishi mumkin emas!`);
         setErrorMsg(`${i + 1}-savol matni bo'sh bo'lishi mumkin emas!`);
         setCurrentIndex(i);
         return;
       }
       const filledOptions = q.options.filter((o) => o.trim() !== "");
       if (filledOptions.length < 2) {
+        toast.warning(
+          `${i + 1}-savolda kamida 2 ta to'ldirilgan variant bo'lishi kerak!`
+        );
         setErrorMsg(
           `${i + 1}-savolda kamida 2 ta to'ldirilgan variant bo'lishi kerak!`,
         );
@@ -203,6 +210,7 @@ export default function QuizBuilder() {
         return;
       }
       if (q.options[q.correctIndex]?.trim() === "") {
+        toast.warning(`${i + 1}-savolning to'g'ri javobi bo'sh qolgan!`);
         setErrorMsg(`${i + 1}-savolning to'g'ri javobi bo'sh qolgan!`);
         setCurrentIndex(i);
         return;
@@ -229,8 +237,10 @@ export default function QuizBuilder() {
 
       if (isEditing) {
         await updateQuizGame(id, payload);
+        toast.success("Viktorina muvaffaqiyatli yangilandi! 🎉");
       } else {
         await createQuizGame(payload);
+        toast.success("Viktorina muvaffaqiyatli yaratildi! 🎉");
       }
 
       setSaveSuccess(true);
@@ -238,6 +248,7 @@ export default function QuizBuilder() {
         navigate("/profil");
       }, 1200);
     } catch (err) {
+      toast.error(err.message || "Saqlashda xatolik yuz berdi");
       setErrorMsg(err.message || "Saqlashda xatolik yuz berdi");
     } finally {
       setIsLoading(false);

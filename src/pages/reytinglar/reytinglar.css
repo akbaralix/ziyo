@@ -671,7 +671,9 @@
     width: 54px;
     height: 54px;
   }
-
+  .podium-section {
+    margin-top: 10px;
+  }
   .podium-first .podium-avatar {
     width: 68px;
     height: 68px;

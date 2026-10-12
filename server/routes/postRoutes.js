@@ -32,8 +32,8 @@ router.post("/:id/like", authMiddleware, toggleLike);
 router.get("/:id/comments", getComments);
 router.post("/:id/comments", authMiddleware, addComment);
 
-// Viktorina javobini tekshirish (Xavfsiz server tekshiruvi)
-router.post("/:id/answer", optionalAuthMiddleware, checkQuizAnswer);
+// Viktorina javobini tekshirish (Xavfsiz server tekshiruvi va saqlash)
+router.post("/:id/answer", authMiddleware, checkQuizAnswer);
 
 // Postni o'chirish (Faqat egasi)
 router.delete("/:id", authMiddleware, deletePost);

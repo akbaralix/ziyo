@@ -132,18 +132,36 @@ export const getPosts = async (req, res) => {
           ? post.author.toString() === currentUserId.toString()
           : false;
 
+      // Foydalanuvchining quiz javobi holati
+      let userQuizAnswer = null;
+      if (post.type === "quiz" && currentUserId && Array.isArray(post.quizAnswers)) {
+        const found = post.quizAnswers.find(
+          (ans) => ans.user && ans.user.toString() === currentUserId.toString()
+        );
+        if (found) {
+          userQuizAnswer = {
+            selected: found.selectedOption,
+            isCorrect: found.isCorrect,
+            correctOption: post.correctOption,
+            explanation: post.explanation || "",
+          };
+        }
+      }
+
       const safePost = {
         ...post,
         id: post._id,
         likes: post.likes ? post.likes.length : 0,
         isLiked,
         isAuthor,
+        userQuizAnswer,
       };
 
       // XAVFSIZLIK: DevTools orqali oldindan to'g'ri javobni ko'rib olmasliklari uchun yashiriladi
       if (safePost.type === "quiz") {
         delete safePost.correctOption;
         delete safePost.explanation;
+        delete safePost.quizAnswers;
       }
 
       return safePost;
@@ -392,7 +410,7 @@ export const updatePost = async (req, res) => {
   }
 };
 
-// 8. Viktorina (Quiz) javobini serverda xavfsiz tekshirish
+// 8. Viktorina (Quiz) javobini serverda xavfsiz tekshirish va bazaga saqlash
 export const checkQuizAnswer = async (req, res) => {
   try {
     const { id } = req.params;
@@ -405,6 +423,13 @@ export const checkQuizAnswer = async (req, res) => {
       });
     }
 
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Viktorina savoliga javob berish uchun tizimga kiring!",
+      });
+    }
+
     const post = await Post.findById(id);
     if (!post || post.type !== "quiz") {
       return res.status(404).json({
@@ -413,10 +438,39 @@ export const checkQuizAnswer = async (req, res) => {
       });
     }
 
+    // Foydalanuvchi bu quizga avval javob berganmi tekshiramiz
+    const alreadyAnswered =
+      Array.isArray(post.quizAnswers) &&
+      post.quizAnswers.some(
+        (ans) => ans.user && ans.user.toString() === req.user._id.toString()
+      );
+
+    if (alreadyAnswered) {
+      return res.status(400).json({
+        success: false,
+        message: "Siz ushbu viktorinaga allaqachon javob bergansiz!",
+        alreadyAnswered: true,
+        correctOption: post.correctOption,
+        explanation: post.explanation || "",
+      });
+    }
+
     const isCorrect = post.correctOption === selectedOption;
 
-    // Agar foydalanuvchi tizimga kirgan bo'lsa va to'g'ri topsa, unga XP va test statistikasini oshirish
-    if (req.user && isCorrect) {
+    // Bazaga javobni saqlaymiz
+    if (!Array.isArray(post.quizAnswers)) {
+      post.quizAnswers = [];
+    }
+    post.quizAnswers.push({
+      user: req.user._id,
+      selectedOption,
+      isCorrect,
+      answeredAt: new Date(),
+    });
+    await post.save();
+
+    // Agar foydalanuvchi to'g'ri topsa, unga XP va test statistikasini oshirish
+    if (isCorrect) {
       try {
         req.user.xp = (req.user.xp || 0) + 10;
         req.user.solvedQuizzes = (req.user.solvedQuizzes || 0) + 1;
@@ -429,6 +483,7 @@ export const checkQuizAnswer = async (req, res) => {
     return res.json({
       success: true,
       isCorrect,
+      selectedOption,
       correctOption: post.correctOption,
       explanation: post.explanation || "",
     });

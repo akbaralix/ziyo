@@ -19,6 +19,7 @@ import {
 } from "react-icons/fa";
 import { FaDiamond } from "react-icons/fa6";
 import { IoSparkles } from "react-icons/io5";
+import { toast } from "react-toastify";
 import { sfx } from "../../utils/soundEffects.js";
 import "./LiveHost.css";
 
@@ -219,7 +220,7 @@ export default function LiveHost() {
 
   const handleStartGame = () => {
     if (players.length === 0) {
-      alert("O'yinni boshlash uchun kamida 1 ta o'yinchi qo'shilishi kerak!");
+      toast.warning("O'yinni boshlash uchun kamida 1 ta o'yinchi qo'shilishi kerak!");
       return;
     }
     socket.emit("host:start", { sessionId });

@@ -22,6 +22,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    profilePic: {
+      type: String,
+      required: true,
+      trim: true,
+      default: "",
+    },
     studyPlace: {
       type: String,
       enum: ["institut", "maktab"],

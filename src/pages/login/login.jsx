@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
-import { FaTelegram, FaCheckCircle, FaSpinner } from "react-icons/fa";
+import { FaTelegram, FaSpinner } from "react-icons/fa";
+import { MdAddAPhoto } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import { IoIosArrowBack } from "react-icons/io";
+import { toast } from "react-toastify";
 import {
   initTelegramSession,
   checkTelegramSession,
@@ -11,7 +13,14 @@ import {
 import logo from "../../assets/logo.jpg";
 import telegramImg from "../../assets/telegram.png";
 import "./login.css";
-
+import ModalOverlay from "../../components/ModalOverlay/ModalOverlay.jsx";
+import rasm from "../../assets/user/user-female-pic.jpg";
+const images = Object.values(
+  import.meta.glob("../../assets/user/*.{png,jpg,jpeg,webp}", {
+    eager: true,
+    import: "default",
+  }),
+);
 function Login() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -25,8 +34,7 @@ function Login() {
   const [botUrl, setBotUrl] = useState("");
   const [isWaitingTg, setIsWaitingTg] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [telegramInfo, setTelegramInfo] = useState({
     telegramId: "",
@@ -36,6 +44,7 @@ function Login() {
   const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
+    profilePic: "",
     studyPlace: "", // "institut" | "maktab"
     course: "", // "1-kurs", "9-sinf" va h.k.
   });
@@ -65,8 +74,6 @@ function Login() {
   // Telegram login boshlash
   const handleStartTelegramAuth = async () => {
     setStepTelegram(true);
-    setErrorMsg("");
-    setSuccessMsg("");
     setLoading(true);
 
     try {
@@ -77,8 +84,8 @@ function Login() {
         startPolling(res.token);
       }
     } catch (err) {
-      setErrorMsg(
-        err.message || "Server bilan bog'lanishda xatolik yuz berdi."
+      toast.error(
+        err.message || "Server bilan bog'lanishda xatolik yuz berdi.",
       );
     } finally {
       setLoading(false);
@@ -103,8 +110,8 @@ function Login() {
 
         if (res.expired) {
           stopPolling();
-          setErrorMsg(
-            "Login havolasining muddati tugadi. Iltimos, qaytadan urinib ko'ring."
+          toast.error(
+            "Login havolasining muddati tugadi. Iltimos, qaytadan urinib ko'ring.",
           );
           return;
         }
@@ -128,10 +135,10 @@ function Login() {
                   xp: res.user.xp || 0,
                   readBooks: res.user.readBooks || 0,
                   solvedQuizzes: res.user.solvedQuizzes || 0,
-                })
+                }),
               );
             }
-            setSuccessMsg("Xush kelibsiz! Tizimga muvaffaqiyatli kirdingiz.");
+            toast.success("Xush kelibsiz! Tizimga muvaffaqiyatli kirdingiz.");
             setTimeout(() => {
               navigate("/");
             }, 800);
@@ -160,20 +167,18 @@ function Login() {
   const handleStep1Next = (e) => {
     e.preventDefault();
     if (!userData.firstName.trim() || !userData.lastName.trim()) {
-      setErrorMsg("Iltimos, ism va familiyangizni kiriting.");
+      toast.warning("Iltimos, ism va familiyangizni kiriting.");
       return;
     }
-    setErrorMsg("");
     setLoginStep(2);
   };
 
   // Step 2: Maktab / Institut tanlash
   const handleStep2Next = () => {
     if (!userData.studyPlace) {
-      setErrorMsg("Iltimos, ta'lim maskanini tanlang.");
+      toast.warning("Iltimos, ta'lim maskanini tanlang.");
       return;
     }
-    setErrorMsg("");
     setLoginStep(3);
   };
 
@@ -181,12 +186,11 @@ function Login() {
   const handleCompleteRegistration = async (selectedCourse) => {
     const finalCourse = selectedCourse || userData.course;
     if (!finalCourse) {
-      setErrorMsg("Iltimos, o'quv bosqichingizni tanlang.");
+      toast.warning("Iltimos, o'quv bosqichingizni tanlang.");
       return;
     }
 
     setLoading(true);
-    setErrorMsg("");
 
     try {
       const res = await registerTelegramUser({
@@ -213,16 +217,16 @@ function Login() {
               xp: res.user.xp || 0,
               readBooks: res.user.readBooks || 0,
               solvedQuizzes: res.user.solvedQuizzes || 0,
-            })
+            }),
           );
         }
-        setSuccessMsg("Ro'yxatdan o'tish muvaffaqiyatli yakunlandi!");
+        toast.success("Ro'yxatdan o'tish muvaffaqiyatli yakunlandi! 🎉");
         setTimeout(() => {
           navigate("/");
         }, 800);
       }
     } catch (err) {
-      setErrorMsg(err.message || "Ro'yxatdan o'tishda xatolik yuz berdi.");
+      toast.error(err.message || "Ro'yxatdan o'tishda xatolik yuz berdi.");
     } finally {
       setLoading(false);
     }
@@ -230,14 +234,6 @@ function Login() {
 
   return (
     <div className="login-card">
-      {/* Xatolik va muvaffaqiyat bildirishnomalari */}
-      {errorMsg && <div className="login-alert error">{errorMsg}</div>}
-      {successMsg && (
-        <div className="login-alert success">
-          <FaCheckCircle /> {successMsg}
-        </div>
-      )}
-
       {/* DASTLABKI EKRAN (Kirish usuli tanlovi) */}
       {!stepTelegram && loginStep === 0 && (
         <div className="login-action">
@@ -261,7 +257,7 @@ function Login() {
           <button
             className="btn-google"
             onClick={() =>
-              alert("Google orqali kirish tez kunda ishga tushiriladi.")
+              toast.info("Google orqali kirish tez kunda ishga tushiriladi.")
             }
           >
             <FcGoogle />
@@ -320,6 +316,15 @@ function Login() {
             Platformada sizni qanday atashimizni xohlaysiz?
           </p>
 
+          <div className="profil-set-img">
+            {userData.profilePic ? (
+              <img src={userData.profilePic} alt="Profil rasmi" />
+            ) : null}
+            <button onClick={() => setShowSuccessModal(true)}>
+              <MdAddAPhoto />
+            </button>
+          </div>
+
           <div className="login-form">
             <input
               value={userData.firstName}
@@ -351,6 +356,30 @@ function Login() {
             />
             <label>Familiyangiz</label>
           </div>
+
+          <ModalOverlay
+            isOpen={showSuccessModal}
+            onClose={() => setShowSuccessModal(false)}
+          >
+            <div className="profile-all-img">
+              {images.map((image, index) => (
+                <button
+                  key={image}
+                  type="button"
+                  onClick={() => {
+                    setUserData({
+                      ...userData,
+                      profilePic: image,
+                    });
+
+                    setShowSuccessModal(false);
+                  }}
+                >
+                  <img src={image} alt={`Profil rasmi ${index + 1}`} />
+                </button>
+              ))}
+            </div>
+          </ModalOverlay>
 
           <button type="submit" className="next-stemp-btn">
             Davom etish
@@ -442,7 +471,7 @@ function Login() {
                   >
                     {c}
                   </button>
-                )
+                ),
               )}
             </div>
           )}

@@ -29,7 +29,7 @@
   border: 1.5px solid #e5e7eb;
   gap: 8px;
   padding: 6px 12px;
-  border-radius: 12px;
+  border-radius: 33px;
   flex: 1;
   max-width: 420px;
   min-width: 0; /* Prevents flex item from overflowing parent on small screens */
@@ -154,17 +154,10 @@
   transition: all 0.2s ease;
 }
 
-.post-sort-btn:hover {
-  border-color: #3e59df;
-  background: #f8faff;
-  color: #111827;
-}
-
 .post-sort-btn.active {
-  border-color: #251fe2;
-  background: #eff2ff;
-  color: #251fe2;
-  font-weight: 600;
+  border-color: #5d1fe2;
+  background: #f2eefa;
+  color: #531fe2;
 }
 
 .post-sort-btn span {

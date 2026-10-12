@@ -52,6 +52,27 @@ const postSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    quizAnswers: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        selectedOption: {
+          type: String,
+          required: true,
+        },
+        isCorrect: {
+          type: Boolean,
+          required: true,
+        },
+        answeredAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -63,7 +84,7 @@ const postSchema = new mongoose.Schema(
       default: 0,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Post = mongoose.model("Post", postSchema);

@@ -1,7 +1,7 @@
 @import url(https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;800;900&display=swap);
 :root {
   /* button */
-  --button-bg: #251fe2;
+  --button-bg: #461fe2;
   --button-text-color: white;
   --button-padding: 15px;
   --button-border-radius: 33px;
@@ -21,6 +21,7 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-x: clip;
+  background: #f0f2f5;
   font-family: "Poppins", sans-serif;
 }
 

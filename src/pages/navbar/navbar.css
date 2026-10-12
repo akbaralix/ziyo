@@ -154,9 +154,9 @@
   width: 90%;
   border-radius: 33px;
 
-  background-color: #c7c8cac1;
+  background-color: #ffffffce;
   backdrop-filter: blur(13px);
-  z-index: 1000;
+  z-index: 100;
 }
 
 .mobil-nav-menyu {
@@ -166,7 +166,7 @@
 }
 
 .mobil-nav-link {
-  color: #141313;
+  color: #242424;
   text-decoration: none;
   display: flex;
   flex-direction: column;
@@ -179,7 +179,7 @@
   justify-content: center;
 }
 .mobil-nav-link.active {
-  color: rgb(0, 0, 0);
+  color: rgb(24, 24, 24);
   font-weight: 800;
 }
 @media (max-width: 768px) {

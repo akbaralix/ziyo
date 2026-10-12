@@ -18,8 +18,10 @@ import {
 } from "react-icons/io5";
 import { GoTrophy } from "react-icons/go";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import logo from "../../assets/logo.jpg";
 import Post from "../../post/post";
+import ModalOverlay from "../../components/ModalOverlay";
 import "./profil.css";
 
 import { getUserProfile, updateProfile } from "../../api/userApi.js";
@@ -74,7 +76,7 @@ function Profil() {
         navigate(`/quiz/host/${res.sessionId}`);
       }
     } catch (err) {
-      alert(err.message || "O'yinni boshlashda xatolik yuz berdi");
+      toast.error(err.message || "O'yinni boshlashda xatolik yuz berdi");
     } finally {
       setStartingQuizId(null);
     }
@@ -85,8 +87,9 @@ function Profil() {
       try {
         await deleteQuizGame(quizId);
         refetchQuizzes();
+        toast.success("Viktorina muvaffaqiyatli o'chirildi!");
       } catch (err) {
-        alert(err.message || "O'chirishda xatolik");
+        toast.error(err.message || "O'chirishda xatolik");
       }
     }
   };
@@ -134,9 +137,10 @@ function Profil() {
         );
       }
       setIsEditModalOpen(false);
+      toast.success("Profil muvaffaqiyatli yangilandi!");
     },
     onError: (err) => {
-      alert(err.message || "Profilni saqlashda xatolik yuz berdi.");
+      toast.error(err.message || "Profilni saqlashda xatolik yuz berdi.");
     },
   });
 
@@ -148,7 +152,10 @@ function Profil() {
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
-    if (!editName.trim()) return;
+    if (!editName.trim()) {
+      toast.warning("Iltimos, ism va familiyangizni kiriting!");
+      return;
+    }
 
     const names = editName.trim().split(" ");
     const firstName = names[0] || "";
@@ -164,6 +171,7 @@ function Profil() {
   const handleLogout = () => {
     logout();
     queryClient.clear();
+    toast.info("Tizimdan chiqdingiz.");
     navigate("/login");
   };
 
@@ -173,32 +181,32 @@ function Profil() {
       title: "O'qilgan kitoblar",
       count: `${profileData.readBooks} ta`,
       icon: <FaBook />,
-      color: "#3b82f6",
-      bgColor: "#eff6ff",
+      color: "#ffffff",
+      bgColor: "#5134e4",
     },
     {
       id: 2,
       title: "Yechilgan testlar",
       count: `${profileData.solvedQuizzes} ta`,
       icon: <IoExtensionPuzzleOutline />,
-      color: "#10b981",
-      bgColor: "#ecfdf5",
+      color: "#ffffff",
+      bgColor: "#1093df",
     },
     {
       id: 3,
       title: "To'plangan XP",
       count: `${profileData.xp.toLocaleString()} XP`,
       icon: <FaFire />,
-      color: "#f59e0b",
-      bgColor: "#fef3c7",
+      color: "#ffffff",
+      bgColor: "#deb81d",
     },
     {
       id: 4,
       title: "Reyting o'rni",
       count: `#${profileData.rank} o'rin`,
       icon: <GoTrophy />,
-      color: "#8b5cf6",
-      bgColor: "#f5f3ff",
+      color: "#ffffff",
+      bgColor: "#1ed044",
     },
   ];
 
@@ -212,7 +220,7 @@ function Profil() {
           <div className="profile-avatar-container">
             <div className="profile-avatar-wrapper">
               <img
-                src={logo}
+                src={profileData.profilePic}
                 alt="Profil rasmi"
                 className="profile-avatar-img"
               />
@@ -311,15 +319,6 @@ function Profil() {
           >
             <IoBookmarkOutline />
             <span>Saqlanganlar</span>
-          </button>
-
-          <button
-            type="button"
-            className={`profile-tab-btn ${activeTab === "stats" ? "active" : ""}`}
-            onClick={() => setActiveTab("stats")}
-          >
-            <IoSparklesOutline />
-            <span>Yutuqlar</span>
           </button>
         </div>
       </div>
@@ -441,103 +440,73 @@ function Profil() {
         </div>
       )}
 
-      {activeTab === "stats" && (
-        <div className="profile-achievements-tab">
-          <div className="achievement-card unlocked">
-            <span className="ach-badge">🥇</span>
-            <div className="ach-info">
-              <h4>Faol bilimdon</h4>
-              <p>Platformada 200 dan ortiq testlarni muvaffaqiyatli yechdi.</p>
-            </div>
-          </div>
-          <div className="achievement-card unlocked">
-            <span className="ach-badge">📚</span>
-            <div className="ach-info">
-              <h4>Kitobxon</h4>
-              <p>Kutubxonadagi 30 dan ortiq kitoblarni to'liq mutolaa qildi.</p>
-            </div>
-          </div>
-          <div className="achievement-card locked">
-            <span className="ach-badge">👑</span>
-            <div className="ach-info">
-              <h4>Top 3 yetakchi</h4>
-              <p>Umumiy reytingda eng yaxshi 3 talikka kiring.</p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* EDIT PROFILE MODAL */}
-      {isEditModalOpen && (
-        <div
-          className="modal-backdrop"
-          onClick={() => setIsEditModalOpen(false)}
-        >
-          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="edit-modal-header">
-              <h3>Profilni tahrirlash</h3>
+      <ModalOverlay
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+      >
+        <div className="edit-modal">
+          <div className="edit-modal-header">
+            <h3>Profilni tahrirlash</h3>
+            <button
+              type="button"
+              className="close-modal-btn"
+              onClick={() => setIsEditModalOpen(false)}
+            >
+              <IoClose />
+            </button>
+          </div>
+
+          <form onSubmit={handleSaveProfile} className="edit-profile-form">
+            <div className="form-field">
+              <label>To'liq ism</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Ismingizni kiriting..."
+                required
+              />{" "}
+              <label>Familya</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Ismingizni kiriting..."
+                required
+              />
+            </div>
+
+            <div className="form-field">
+              <label>Foydalanuvchi ma'lumoti (Bio)</label>
+              <textarea
+                value={editBio}
+                onChange={(e) => setEditBio(e.target.value)}
+                placeholder="O'zingiz haqingizda qisqacha ma'lumot..."
+                rows={3}
+              />
+            </div>
+
+            <div className="modal-actions">
               <button
                 type="button"
-                className="close-modal-btn"
+                className="cancel-btn"
                 onClick={() => setIsEditModalOpen(false)}
               >
-                <IoClose />
+                Bekor qilish
+              </button>
+              <button
+                type="submit"
+                className="save-btn"
+                disabled={updateProfileMutation.isPending}
+              >
+                <IoCheckmark />{" "}
+                {updateProfileMutation.isPending ? "Saqlanmoqda..." : "Saqlash"}
               </button>
             </div>
-
-            <form onSubmit={handleSaveProfile} className="edit-profile-form">
-              <div className="form-field">
-                <label>To'liq ism</label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Ismingizni kiriting..."
-                  required
-                />{" "}
-                <label>Familya</label>
-                <input
-                  type="text"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Ismingizni kiriting..."
-                  required
-                />
-              </div>
-
-              <div className="form-field">
-                <label>Foydalanuvchi ma'lumoti (Bio)</label>
-                <textarea
-                  value={editBio}
-                  onChange={(e) => setEditBio(e.target.value)}
-                  placeholder="O'zingiz haqingizda qisqacha ma'lumot..."
-                  rows={3}
-                />
-              </div>
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => setIsEditModalOpen(false)}
-                >
-                  Bekor qilish
-                </button>
-                <button
-                  type="submit"
-                  className="save-btn"
-                  disabled={updateProfileMutation.isPending}
-                >
-                  <IoCheckmark />{" "}
-                  {updateProfileMutation.isPending
-                    ? "Saqlanmoqda..."
-                    : "Saqlash"}
-                </button>
-              </div>
-            </form>
-          </div>
+          </form>
         </div>
-      )}
+      </ModalOverlay>
     </div>
   );
 }

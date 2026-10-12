@@ -43,25 +43,37 @@ function Home() {
   };
 
   const categories = [
-    { name: "Barchasi", icon: <IoGridOutline />, iconBG: "#03e2ff" },
-    { name: "Fizika", icon: <LuAtom />, iconBG: "#85f308" },
+    {
+      name: "Barchasi",
+      icon: <IoGridOutline />,
+      iconBG: "#16A34A",
+      bg: "#F0FDF4",
+    },
+    {
+      name: "Fizika",
+      icon: <LuAtom />,
+      iconBG: "#0284C7",
+      bg: "#F0F9FF",
+    },
     {
       name: "Matematika",
       icon: <IoCalculatorOutline />,
-      iconBG: "#11ac1e",
+      iconBG: "#4F46E5",
+      bg: "#EEF2FF",
     },
     {
       name: "Mantiqiy savollar",
       icon: <IoExtensionPuzzleOutline />,
-      iconBG: "#e89612",
+      iconBG: "#D97706",
+      bg: "#FFFBEB",
     },
     {
       name: "Qiziqarli faktlar",
       icon: <IoBulbOutline />,
-      iconBG: "#4317c7",
+      iconBG: "#9333EA",
+      bg: "#FAF5FF",
     },
   ];
-
   return (
     <div className="home-container">
       <div className="home-header">

@@ -19,6 +19,7 @@ import { FaDiamond } from "react-icons/fa6";
 
 import { joinByPin } from "../../api/quizApi.js";
 import { sfx } from "../../utils/soundEffects.js";
+import { toast } from "react-toastify";
 import "./LivePlayer.css";
 
 const OPTION_COLORS = [
@@ -163,7 +164,9 @@ export default function LivePlayer() {
     });
 
     newSocket.on("player:join:error", (data) => {
-      setErrorMsg(data.msg || "O'yinga qo'shilishda xatolik");
+      const msg = data.msg || "O'yinga qo'shilishda xatolik";
+      setErrorMsg(msg);
+      toast.error(msg);
       setIsJoining(false);
       localStorage.removeItem("ziyo_live_player");
       setPlayerState("join");
@@ -262,7 +265,9 @@ export default function LivePlayer() {
     setErrorMsg("");
 
     if (!pin.trim() || !name.trim()) {
-      setErrorMsg("PIN kod va ismingizni kiriting!");
+      const msg = "PIN kod va ismingizni kiriting!";
+      setErrorMsg(msg);
+      toast.warning(msg);
       return;
     }
 
@@ -271,7 +276,9 @@ export default function LivePlayer() {
       // 1. Verify PIN via REST API
       const res = await joinByPin(pin.trim());
       if (!res.sessionId) {
-        setErrorMsg("Bunday o'yin topilmadi!");
+        const msg = "Bunday o'yin topilmadi!";
+        setErrorMsg(msg);
+        toast.error(msg);
         setIsJoining(false);
         return;
       }
@@ -295,7 +302,9 @@ export default function LivePlayer() {
         nameToUse: name.trim(),
       });
     } catch (err) {
-      setErrorMsg(err.message || "Ulanishda xatolik yuz berdi");
+      const msg = err.message || "Ulanishda xatolik yuz berdi";
+      setErrorMsg(msg);
+      toast.error(msg);
       setIsJoining(false);
     }
   };

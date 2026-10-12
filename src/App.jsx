@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import Router from "./router/router.jsx";
 import Navbar from "./pages/navbar/navbar.jsx";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 const NO_NAVBAR_PAGES = ["/login"];
 
@@ -20,6 +22,18 @@ function App() {
 
   return (
     <div className="app-layout">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
       {showNavbar && (
         <Navbar
           isCollapsed={isCollapsed}

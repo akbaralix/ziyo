@@ -33,7 +33,7 @@
 .kutubxona-search-bar input {
   width: 100%;
   padding: 14px 18px 14px 48px;
-  border-radius: 16px;
+  border-radius: 33px;
   border: 1.5px solid #e2e8f0;
   background: #ffffff;
   font-size: 15px;
@@ -42,15 +42,11 @@
   transition: all 0.2s ease;
 }
 
-.kutubxona-search-bar input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-}
-
 .kutubxona-categories {
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  scrollbar-width: none;
   padding-bottom: 4px;
 }
 
@@ -67,10 +63,8 @@
 }
 
 .category-pill.active {
-  background: #1e3a8a;
-  border-color: #1e3a8a;
+  background: var(--button-bg);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
 }
 
 .category-pill:hover:not(.active) {
@@ -223,9 +217,8 @@
 
 .book-genre {
   font-size: 12px;
-  font-weight: 700;
-  color: #2563eb;
-  background: #eff6ff;
+  color: #fff;
+  background: #000000;
   padding: 2px 8px;
   border-radius: 6px;
 }
@@ -275,9 +268,8 @@
 
 /* Progress Box */
 .reading-progress-box {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  background: #f8f8f8;
+  border-radius: 14px;
   padding: 10px 12px;
   margin-bottom: 14px;
 }
@@ -286,7 +278,6 @@
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  font-weight: 600;
   margin-bottom: 6px;
 }
 
@@ -294,23 +285,23 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #2563eb;
+  color: #6221ec;
 }
 
 .percent-text {
-  color: #64748b;
+  color: #6221ec;
 }
 
 .progress-bar-bg {
   height: 5px;
-  background: #e2e8f0;
+  background: #9e84dab1;
   border-radius: 999px;
   overflow: hidden;
 }
 
 .progress-bar-fill {
   height: 100%;
-  background: #2563eb;
+  background: #6a25eb;
   border-radius: 999px;
   transition: width 0.3s ease;
 }
@@ -327,10 +318,10 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #2825eb;
+  background: var(--button-bg);
   color: #ffffff;
   padding: 10px 16px;
-  border-radius: 12px;
+  border-radius: var(--button-border-radius);
   font-size: 14px;
   cursor: pointer;
   font-family: "poppins";
@@ -343,10 +334,9 @@
   justify-content: center;
   width: 42px;
   height: 42px;
-  border-radius: 12px;
-  background: #f1f5f9;
+  border-radius: var(--button-border-radius);
+  background: #f4f4f5;
   color: #475569;
-  border: 1px solid #e2e8f0;
   text-decoration: none;
   font-size: 18px;
   transition: all 0.2s ease;
