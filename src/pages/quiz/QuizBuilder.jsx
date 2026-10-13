@@ -14,7 +14,12 @@ import {
   FaCircle,
   FaSquare,
 } from "react-icons/fa";
-import { IoSparkles } from "react-icons/io5";
+import {
+  IoSparkles,
+  IoClose,
+  IoCopyOutline,
+  IoCheckmark,
+} from "react-icons/io5";
 
 import { FaDiamond } from "react-icons/fa6";
 import { toast } from "react-toastify";
@@ -52,7 +57,106 @@ export default function QuizBuilder() {
     DEFAULT_QUESTION(),
   ]);
   const [aiQuizOpen, setAiQuizOpen] = useState(false);
-  const [aipromptText, setAipromptText] = useState("");
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiCount, setAiCount] = useState(8);
+  const [aiJsonInput, setAiJsonInput] = useState("");
+
+  const getAiPrompt = () => {
+    const topic = aiTopic.trim() || "Umumiy bilimlar";
+    const count = Math.min(Math.max(Number(aiCount) || 8, 8), 25);
+    return `Siz ta'lim bo'yicha ekspert AI siz. Menga '${topic}' mavzusida ${count} ta test savolini aniq ushbu JSON formatda tuzib bering:
+[
+  {
+    "text": "Savol matni",
+    "options": ["A variant", "B variant", "C variant", "D variant"],
+    "correctIndex": 0,
+    "explanation": "To'g'ri javob izohi"
+  }
+]
+Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
+  };
+
+  const handleCopyAiPrompt = async () => {
+    const promptText = getAiPrompt();
+    try {
+      await navigator.clipboard.writeText(promptText);
+      toast.success("Prompt nusxalandi! Endi ChatGPT yoki Gemini-ga yuboring.");
+    } catch {
+      toast.info("Promptdan nusxa oling!");
+    }
+  };
+
+  const handleImportAiJson = () => {
+    if (!aiJsonInput.trim()) {
+      toast.warning("Iltimos, AI qaytargan JSON matnini kiriting!");
+      return;
+    }
+
+    try {
+      let raw = aiJsonInput.trim();
+      raw = raw
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/, "")
+        .replace(/```$/, "")
+        .trim();
+
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        throw new Error("JSON ma'lumot testlar massivi bo'lishi kerak!");
+      }
+
+      const validated = parsed.slice(0, 25).map((item, idx) => {
+        const questionText = item.text || item.question;
+        if (!questionText || !String(questionText).trim()) {
+          throw new Error(`${idx + 1}-savol matni topilmadi.`);
+        }
+        if (!Array.isArray(item.options) || item.options.length < 2) {
+          throw new Error(
+            `${idx + 1}-savolda kamida 2 ta javob varianti bo'lishi kerak.`,
+          );
+        }
+
+        const opts = item.options.map((o) => String(o).trim());
+        while (opts.length < 4) {
+          opts.push("");
+        }
+        const finalOptions = opts.slice(0, 4);
+
+        let correct =
+          item.correctIndex !== undefined
+            ? Number(item.correctIndex)
+            : item.correctAnswer !== undefined
+              ? Number(item.correctAnswer)
+              : 0;
+
+        if (isNaN(correct) || correct < 0 || correct >= 4) {
+          correct = 0;
+        }
+
+        return {
+          text: String(questionText).trim(),
+          options: finalOptions,
+          correctIndex: correct,
+          timeLimit: Number(item.timeLimit) || 20,
+          points: Number(item.points) || 100,
+          explanation: item.explanation ? String(item.explanation).trim() : "",
+        };
+      });
+
+      if (!title.trim() && aiTopic.trim()) {
+        setTitle(`${aiTopic.trim()} viktorinasi`);
+      }
+
+      setQuestions(validated);
+      setCurrentIndex(0);
+      setAiJsonInput("");
+      setAiQuizOpen(false);
+      toast.success(`${validated.length} ta savol muvaffaqiyatli yuklandi! 🎉`);
+    } catch (err) {
+      console.error(err);
+      toast.error(`JSON xatoligi: ${err.message || "Format noto'g'ri"}`);
+    }
+  };
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -201,7 +305,7 @@ export default function QuizBuilder() {
       const filledOptions = q.options.filter((o) => o.trim() !== "");
       if (filledOptions.length < 2) {
         toast.warning(
-          `${i + 1}-savolda kamida 2 ta to'ldirilgan variant bo'lishi kerak!`
+          `${i + 1}-savolda kamida 2 ta to'ldirilgan variant bo'lishi kerak!`,
         );
         setErrorMsg(
           `${i + 1}-savolda kamida 2 ta to'ldirilgan variant bo'lishi kerak!`,
@@ -270,15 +374,15 @@ export default function QuizBuilder() {
           <button
             type="button"
             className="builder-back-btn"
-            onClick={() => navigate("/profil")}
+            onClick={() => navigate(-1)}
           >
-            <FaArrowLeft /> Orqaga
+            <FaArrowLeft />
           </button>
           <div className="builder-title-input-wrap">
             <input
               type="text"
               className="builder-title-input"
-              placeholder="Viktorina nomi (masalan: Informatika va Dasturlash)..."
+              placeholder="Viktorina nomini kiriting"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={100}
@@ -523,24 +627,116 @@ export default function QuizBuilder() {
         </main>
       </div>
       <div className="ai-builder-btn">
-        <button onClick={() => setAiQuizOpen(true)}>ai</button>
+        <button type="button" onClick={() => setAiQuizOpen(true)}>
+          <IoSparkles /> AI Yordamchi
+        </button>
       </div>
 
       {aiQuizOpen && (
-        <div className="aiQuiz-container">
-          <div className="aiQuiz-header">
-            <button onClick={() => setAiQuizOpen(false)}>X</button>
-            <h2>AI orqalik yaratish</h2>
-          </div>
-          <div className="aiquiz-action">
-            <label>Mavzuni kiriting</label>
-            <input
-              type="text"
-              value={aipromptText}
-              onChange={(e) => setAipromptText(e.target.value)}
-            />
+        <div className="aiQuiz-backdrop" onClick={() => setAiQuizOpen(false)}>
+          <div
+            className="aiQuiz-container"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="aiQuiz-header">
+              <div className="aiQuiz-title-group">
+                <span className="aiQuiz-spark-icon">
+                  <IoSparkles />
+                </span>
+                <div>
+                  <h2>AI yordamida test yaratish</h2>
+                  <p className="aiQuiz-subtitle">
+                    Mavzu va savollar sonini kiriting, promptni nusxalang va olingan JSON natijasini yuklang.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="aiQuiz-close-btn"
+                onClick={() => setAiQuizOpen(false)}
+              >
+                <IoClose />
+              </button>
+            </div>
 
-            <button>Yaratish</button>
+            <div className="aiQuiz-body">
+              {/* 1-Qadam: Prompt */}
+              <div className="ai-step-card">
+                <div className="ai-step-title">1-Qadam: AI uchun prompt tayyorlash</div>
+                <div className="ai-inputs-row">
+                  <div className="ai-input-field flex-2">
+                    <label>Mavzu nomi</label>
+                    <input
+                      type="text"
+                      placeholder="Masalan: Fizika qonunlari, Tarix, Ingliz tili..."
+                      value={aiTopic}
+                      onChange={(e) => setAiTopic(e.target.value)}
+                    />
+                  </div>
+                  <div className="ai-input-field flex-1">
+                    <label>Savollar soni</label>
+                    <input
+                      type="number"
+                      min={8}
+                      max={25}
+                      value={aiCount}
+                      onChange={(e) => setAiCount(Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+
+                <div className="prompt-display-box">
+                  <label>Tayyor prompt (Nusxa oling):</label>
+                  <pre className="prompt-pre">{getAiPrompt()}</pre>
+                  <button
+                    type="button"
+                    className="copy-prompt-btn"
+                    onClick={handleCopyAiPrompt}
+                  >
+                    <IoCopyOutline /> Promptni nusxalash
+                  </button>
+                </div>
+              </div>
+
+              {/* 2-Qadam: JSON */}
+              <div className="ai-step-card">
+                <div className="ai-step-title">2-Qadam: Olingan JSON natijasini joylash</div>
+                <p className="ai-step-desc">
+                  ChatGPT yoki Gemini qaytargan JSON kodini quyidagi maydonga tashlang:
+                </p>
+                <textarea
+                  className="ai-json-textarea"
+                  rows={6}
+                  placeholder={`[
+  {
+    "text": "Savol matni",
+    "options": ["A", "B", "C", "D"],
+    "correctIndex": 0,
+    "explanation": "To'g'ri javob izohi"
+  }
+]`}
+                  value={aiJsonInput}
+                  onChange={(e) => setAiJsonInput(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="aiQuiz-footer">
+              <button
+                type="button"
+                className="aiQuiz-cancel-btn"
+                onClick={() => setAiQuizOpen(false)}
+              >
+                Bekor qilish
+              </button>
+              <button
+                type="button"
+                className="aiQuiz-submit-btn"
+                onClick={handleImportAiJson}
+              >
+                <IoCheckmark /> JSON’dan testlarni yuklash
+              </button>
+            </div>
           </div>
         </div>
       )}

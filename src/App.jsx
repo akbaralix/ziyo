@@ -15,7 +15,8 @@ function App() {
     location.pathname.startsWith("/quiz/host") ||
     location.pathname.startsWith("/live") ||
     location.pathname.startsWith("/quiz/live") ||
-    location.pathname.startsWith("/quiz/builder");
+    location.pathname.startsWith("/quiz/builder") ||
+    location.pathname.startsWith("/oktagon/battle");
 
   const showNavbar = !NO_NAVBAR_PAGES.includes(location.pathname) && !isQuizFullScreen;
 

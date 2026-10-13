@@ -341,9 +341,6 @@ function Post({
           <p style={{ fontSize: "20px" }}>
             Hozircha hech qanday post mavjud emas
           </p>
-          <p style={{ fontSize: "14px", marginTop: "4px" }}>
-            Birinchi bo'lib o'z bilimingiz yoki savolingizni ulashing! 🚀
-          </p>
         </div>
       ) : (
         posts.map((post) => {

@@ -19,6 +19,7 @@ import postRoutes from "./routes/postRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
 import { initSocketIO } from "./socket/gameSocket.js";
+import { initOctagonSocket } from "./socket/octagonSocket.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -55,6 +56,7 @@ app.get("/api/health", (req, res) => {
 
 // Socket.IO ishga tushirish
 initSocketIO(io);
+initOctagonSocket(io);
 
 await connectDB();
 

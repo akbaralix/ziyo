@@ -220,7 +220,7 @@ function Profil() {
           <div className="profile-avatar-container">
             <div className="profile-avatar-wrapper">
               <img
-                src={profileData.profilePic || userPic}
+                src={`https://eduziyo.web.app${profileData.profilePic || userPic}`}
                 alt="Profil rasmi"
                 className="profile-avatar-img"
               />

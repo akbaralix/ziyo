@@ -318,15 +318,15 @@ function Create() {
             className="type-btn"
             style={{
               background:
-                "linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(139, 92, 246, 0.1))",
-              borderColor: "#8b5cf6",
-              color: "#8b5cf6",
+                "linear-gradient(135deg, rgba(80, 72, 236, 0.1), rgba(93, 43, 210, 0.1))",
+              borderColor: "#3e0cb4",
+              color: "#5f5cf6",
               fontWeight: "700",
             }}
-            onClick={() => navigate("/quiz/builder")}
+            onClick={() => navigate("/oyinlar")}
           >
             <span className="type-icon">🎮</span>
-            <span>Ziyo Live </span>
+            <span>Ziyo O'yinlari</span>
           </button>
         </div>
       </div>

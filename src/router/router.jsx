@@ -8,6 +8,11 @@ import Kutubxona from "../pages/kutubxona/kutubxona.jsx";
 import QuizBuilder from "../pages/quiz/QuizBuilder.jsx";
 import LiveHost from "../pages/quiz/LiveHost.jsx";
 import LivePlayer from "../pages/quiz/LivePlayer.jsx";
+import Oyinlar from "../pages/oyinlar/oyinlar.jsx";
+import BarabanCreate from "../pages/oyinlar/baraban/BarabanCreate.jsx";
+import BarabanPlay from "../pages/oyinlar/baraban/BarabanPlay.jsx";
+import OctagonHome from "../pages/oktagon/OctagonHome.jsx";
+import OctagonBattle from "../pages/oktagon/OctagonBattle.jsx";
 
 function Router() {
   const token = localStorage.getItem("token");
@@ -45,7 +50,35 @@ function Router() {
         element={token ? <Profil /> : <Navigate to="/login" replace />}
       />
       <Route path="/create" element={<Navigate to="/yaratish" replace />} />
-
+      <Route
+        path="/oyinlar"
+        element={token ? <Oyinlar /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/yaratish/oyinlar"
+        element={<Navigate to="/oyinlar" replace />}
+      />
+      <Route
+        path="/oyinlar/baraban/create"
+        element={token ? <BarabanCreate /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/oyinlar/baraban/play"
+        element={token ? <BarabanPlay /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/oyinlar/baraban/play/:id"
+        element={token ? <BarabanPlay /> : <Navigate to="/login" replace />}
+      />
+      {/* Oktagon routes */}
+      <Route
+        path="/oktagon"
+        element={token ? <OctagonHome /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/oktagon/battle"
+        element={token ? <OctagonBattle /> : <Navigate to="/login" replace />}
+      />
       {/* Ziyo Live / Kahoot routes */}
       <Route
         path="/quiz/builder"
@@ -74,4 +107,3 @@ function Router() {
 }
 
 export default Router;
-

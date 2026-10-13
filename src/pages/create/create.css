@@ -80,14 +80,16 @@
 }
 
 .type-btn {
-  padding: 10px;
+  padding: 9px;
   background: #f8f8f8;
   border: 1.5px solid #e5e7eb;
   border-radius: 24px;
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 16px;
+  font-weight: 500;
+  font-family: "poppins";
+  font-size: 14px;
   color: #222222;
   transition: all 0.2s ease;
   justify-content: center;

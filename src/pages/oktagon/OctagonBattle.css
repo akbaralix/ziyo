@@ -1,0 +1,679 @@
+/* ====================================================
+   OKTAGON BATTLE STYLES (LIGHT MODE & 33px BORDER-RADIUS)
+   ==================================================== */
+
+.octagon-battle-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  font-family: inherit;
+  color: #0f172a;
+}
+
+/* ==================== 1. MATCHMAKING ==================== */
+.battle-matchmaking-view {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  box-sizing: border-box;
+}
+
+.matchmaking-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 33px;
+  padding: 48px 24px;
+  width: 100%;
+  max-width: 440px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.radar-circle-wrap {
+  width: 120px;
+  height: 120px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.radar-center-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #461fe2;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  z-index: 2;
+}
+
+.radar-ripple {
+  position: absolute;
+  border: 2px solid #c7d2fe;
+  border-radius: 50%;
+  animation: radarPulse 2.2s infinite ease-out;
+}
+
+.ripple-1 {
+  width: 90px;
+  height: 90px;
+}
+
+.ripple-2 {
+  width: 120px;
+  height: 120px;
+  animation-delay: 0.9s;
+}
+
+@keyframes radarPulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+.matchmaking-tag {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: #461fe2;
+  padding: 5px 14px;
+  border-radius: 33px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.matchmaking-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.matchmaking-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 14px;
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+.matchmaking-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  color: #475569;
+  padding: 12px 24px;
+  border-radius: 33px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.matchmaking-cancel-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* ==================== 2. COUNTDOWN ==================== */
+.battle-countdown-view {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.vs-match-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 33px;
+  padding: 44px 28px;
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+.vs-players-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 16px;
+}
+
+.vs-player-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.vs-avatar-circle {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #461fe2;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.vs-avatar-circle.rival {
+  background: #ef4444;
+}
+
+.vs-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.vs-xp {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.vs-center-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.vs-text {
+  font-size: 22px;
+  font-weight: 900;
+  color: #94a3b8;
+  letter-spacing: 2px;
+}
+
+.vs-count-num {
+  font-size: 48px;
+  font-weight: 800;
+  color: #461fe2;
+  line-height: 1;
+  animation: scaleTick 1s infinite ease-out;
+}
+
+@keyframes scaleTick {
+  0% {
+    transform: scale(1.3);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.vs-ready-notice {
+  font-size: 14px;
+  font-weight: 600;
+  color: #461fe2;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  padding: 8px 16px;
+  border-radius: 33px;
+  align-self: center;
+}
+
+/* ==================== 3. BATTLE ARENA ==================== */
+.battle-arena-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px 18px 40px;
+  box-sizing: border-box;
+  gap: 14px;
+}
+
+.arena-top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 33px;
+  padding: 10px 18px;
+  gap: 12px;
+}
+
+.fighter-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fighter-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #461fe2;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.fighter-avatar.rival {
+  background: #ef4444;
+}
+
+.fighter-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fighter-info.text-right {
+  text-align: right;
+}
+
+.fighter-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.fighter-score {
+  font-size: 13px;
+  font-weight: 700;
+  color: #461fe2;
+}
+
+.fighter-badge.rival .fighter-score {
+  color: #ef4444;
+}
+
+.arena-center-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.question-step-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.arena-timer-pill {
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  padding: 4px 14px;
+  border-radius: 33px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.arena-timer-pill.urgent {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+  animation: pulseTimer 0.7s infinite;
+}
+
+@keyframes pulseTimer {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.opponent-status-strip {
+  display: flex;
+  justify-content: center;
+}
+
+.opp-indicator {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 33px;
+}
+
+.opp-indicator.waiting {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.opp-indicator.ready {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+/* Question Banner */
+.arena-question-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 33px;
+  padding: 28px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.q-category-tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: #461fe2;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  padding: 4px 14px;
+  border-radius: 33px;
+}
+
+.arena-question-text {
+  font-size: clamp(17px, 3.8vw, 22px);
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Options Grid */
+.arena-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .arena-options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.arena-opt-btn {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 33px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.arena-opt-btn:hover:not(:disabled) {
+  border-color: #461fe2;
+  background: #fcfbfe;
+}
+
+.opt-number-char {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.opt-text-val {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.opt-icon-status {
+  font-size: 22px;
+}
+
+.opt-icon-status.success {
+  color: #10b981;
+}
+
+.opt-icon-status.error {
+  color: #ef4444;
+}
+
+.arena-opt-btn.is-selected {
+  border-color: #461fe2;
+  background: #f5f3ff;
+}
+
+.arena-opt-btn.is-correct {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.arena-opt-btn.is-correct .opt-number-char {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
+}
+
+.arena-opt-btn.is-wrong {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.arena-opt-btn.is-wrong .opt-number-char {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.arena-opt-btn.is-dimmed {
+  opacity: 0.35;
+}
+
+/* ==================== 4. RESULT VIEW ==================== */
+.battle-result-view {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.result-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 33px;
+  padding: 44px 28px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.result-icon-badge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+
+.result-icon-badge.victory {
+  background: #fef3c7;
+  color: #d97706;
+  border: 2px solid #fde68a;
+}
+
+.result-icon-badge.defeat {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 2px solid #fecaca;
+}
+
+.result-icon-badge.draw {
+  background: #f1f5f9;
+  color: #475569;
+  border: 2px solid #cbd5e1;
+}
+
+.result-subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.result-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.xp-change-pill {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 8px 20px;
+  border-radius: 33px;
+  margin: 4px 0 10px;
+}
+
+.xp-change-pill.positive {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1.5px solid #a7f3d0;
+}
+
+.xp-change-pill.negative {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1.5px solid #fecaca;
+}
+
+.result-score-comparison {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 28px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.comparison-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.comp-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.comp-points {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.comparison-box.you .comp-points {
+  color: #461fe2;
+}
+
+.comparison-box.rival .comp-points {
+  color: #ef4444;
+}
+
+.comp-vs {
+  font-size: 14px;
+  font-weight: 800;
+  color: #94a3b8;
+}
+
+.result-actions-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.result-btn {
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: 33px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.result-btn.primary {
+  background: #461fe2;
+  color: #ffffff;
+  border: 1.5px solid #461fe2;
+}
+
+.result-btn.secondary {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1.5px solid #e2e8f0;
+}

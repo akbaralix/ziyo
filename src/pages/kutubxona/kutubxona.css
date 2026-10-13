@@ -323,6 +323,7 @@
   padding: 10px 16px;
   border-radius: var(--button-border-radius);
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   font-family: "poppins";
   transition: all 0.2s ease;
