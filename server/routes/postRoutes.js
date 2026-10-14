@@ -8,6 +8,7 @@ import {
   deletePost,
   updatePost,
   checkQuizAnswer,
+  reportPost,
 } from "../controllers/postController.js";
 import {
   authMiddleware,
@@ -34,6 +35,9 @@ router.post("/:id/comments", authMiddleware, addComment);
 
 // Viktorina javobini tekshirish (Xavfsiz server tekshiruvi va saqlash)
 router.post("/:id/answer", authMiddleware, checkQuizAnswer);
+
+// Post ustidan shikoyat qilish (Telegram bot 907402803 ga)
+router.post("/:id/report", optionalAuthMiddleware, reportPost);
 
 // Postni o'chirish (Faqat egasi)
 router.delete("/:id", authMiddleware, deletePost);

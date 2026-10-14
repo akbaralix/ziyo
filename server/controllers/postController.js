@@ -1,5 +1,6 @@
 import Post from "../db/Post/Post.js";
 import Comment from "../db/Post/Comment.js";
+import { sendPostReportToAdmin } from "../bot/bot.js";
 
 // 1. Yangi post yaratish
 export const createPost = async (req, res) => {
@@ -501,6 +502,53 @@ export const checkQuizAnswer = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Javobni tekshirishda xatolik yuz berdi.",
+      error: error.message,
+    });
+  }
+};
+
+// 9. Post ustidan shikoyat qilish (Telegram bot orqali 907402803 chatiga)
+export const reportPost = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post topilmadi.",
+      });
+    }
+
+    const reporter = req.user
+      ? {
+          id: req.user._id,
+          name: `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() || "Foydalanuvchi",
+          username: req.user.telegramUsername || "user",
+        }
+      : {
+          id: "mehmon",
+          name: "Mehmon foydalanuvchi",
+          username: "anonim",
+        };
+
+    const sent = await sendPostReportToAdmin({
+      post,
+      reporter,
+      reason: reason?.trim() || "Qoidabuzarlik / Nomaqbul kontent",
+    });
+
+    return res.json({
+      success: true,
+      message: "Shikoyatingiz qabul qilindi va ma'muriyatga yuborildi. Rahmat!",
+      telegramSent: sent,
+    });
+  } catch (error) {
+    console.error("Shikoyat yuborishda xatolik:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Shikoyatni yuborishda xatolik yuz berdi.",
       error: error.message,
     });
   }

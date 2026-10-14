@@ -365,38 +365,360 @@
   font-size: 12px;
 }
 
-.post-action-menyu {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 400px;
-  width: 90%;
+/* =========================
+   POST ACTION MODAL (CHROYLI & ZAMONAVIY)
+========================= */
 
-  backdrop-filter: blur(14px);
-  background-color: #dbe1eadb;
-  padding: 20px;
-  border-radius: 22px;
+.post-action-modal {
+  background: #ffffff;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow:
+    0 25px 60px -15px rgba(15, 23, 42, 0.25),
+    0 0 0 1px rgba(226, 232, 240, 0.8);
+  animation: modalScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
-.post-action-hide-btn {
-  right: 20px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  font-size: 23px;
-  background: none;
+
+@keyframes modalScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
-.post-action-menyu-item button {
-  width: 100%;
-  padding: 13px;
-  background: #f2f2f3;
-  border-radius: 15px;
-  font-size: 16px;
+
+.post-action-modal-header {
+  padding: 18px 20px 14px;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.post-action-modal-title h4 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.post-action-post-snippet {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: #64748b;
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.post-action-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.post-action-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.post-action-list {
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.post-action-row {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.post-action-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  color: white;
+}
+
+.post-action-icon.share {
+  background: #4627dd;
+}
+
+.post-action-icon.bookmark {
+  background: #2dee0b;
+}
+
+.post-action-icon.bookmark.active {
+  background: #cd7c0c;
+}
+
+.post-action-icon.hide {
+  background: #ebe406;
+}
+
+.post-action-icon.edit {
+  background: #0af185;
+}
+
+.post-action-icon.delete {
+  background: #d51919;
+}
+
+.post-action-icon.report {
+  background: #ea580c;
+}
+
+.post-action-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.post-action-text strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.post-action-text span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.post-action-row.danger-action .post-action-text strong {
+  color: #dc2626;
+}
+
+.post-action-row.report-action .post-action-text strong {
+  color: #ea580c;
+}
+
+/* =========================
+   REPORT MODAL (SHIKOYAT)
+========================= */
+
+.report-post-modal {
+  background: #ffffff;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 24px;
+  overflow: hidden;
+
+  animation: modalScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.report-modal-header {
+  padding: 18px 20px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  position: relative;
+}
+
+.report-modal-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.report-modal-header h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.report-target-snippet {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #64748b;
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-modal-close {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.report-modal-body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.report-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.report-reasons-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.report-reason-chip {
+  display: flex;
+  align-items: center;
   gap: 10px;
+  padding: 10px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #334155;
+  transition: all 0.18s ease;
+}
+
+.report-reason-chip input[type="radio"] {
+  accent-color: #dc2626;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.report-reason-chip.active {
+  background: #fef2f2;
+  border-color: #f87171;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.report-textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.report-textarea:focus {
+  border-color: #dc2626;
+}
+
+/* Tugmalar qismi: Qizil yuborish va Bekor qilish */
+.report-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.report-btn-cancel {
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.report-btn-cancel:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.report-btn-danger {
+  padding: 11px 22px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  transition: all 0.2s ease;
+}
+
+.report-btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.45);
+  transform: translateY(-1px);
+}
+
+.report-btn-danger:disabled,
+.report-btn-cancel:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
 }
 @media (max-width: 768px) {
   .post-container {

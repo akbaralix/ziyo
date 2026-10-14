@@ -4,6 +4,7 @@ import {
   FaHeart,
   FaRegComment,
   FaRegBookmark,
+  FaBookmark,
 } from "react-icons/fa";
 import { LuShare2, LuSend, LuPencil, LuTrash2 } from "react-icons/lu";
 import { IoMdClose } from "react-icons/io";
@@ -20,6 +21,7 @@ import {
   submitQuizAnswer,
   deletePost,
   updatePost,
+  reportPost,
 } from "../api/postApi.js";
 import ModalOverlay from "../components/ModalOverlay";
 import "./post.css";
@@ -37,6 +39,29 @@ function Post({
   // Izohlar (Comments) modal holati
   const [activeCommentPost, setActiveCommentPost] = useState(null);
   const [newCommentText, setNewCommentText] = useState("");
+
+  // Saqlangan postlar (Bookmarks)
+  const [savedPostIds, setSavedPostIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("ziyo_saved_post_ids") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  // Yashirilgan postlar (Qiziq emas)
+  const [hiddenPostIds, setHiddenPostIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("ziyo_hidden_post_ids") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  // Shikoyat (Report) modal holati
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("Spam yoki reklama");
+  const [customReason, setCustomReason] = useState("");
 
   // Tahrirlash (Edit) modal holati
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -81,6 +106,7 @@ function Post({
   });
 
   const posts = data?.posts || [];
+  const visiblePosts = posts.filter((p) => !hiddenPostIds.includes(p.id));
 
   // TanStack Query orqali izohlarni olish
   const { data: commentsData, isLoading: commentsLoading } = useQuery({
@@ -288,9 +314,112 @@ function Post({
     setActiveCommentPost(post);
   };
 
+  // Shikoyat yuborish mutatsiyasi
+  const reportMutation = useMutation({
+    mutationFn: ({ postId, reason }) => reportPost(postId, reason),
+    onSuccess: (res) => {
+      setIsReportModalOpen(false);
+      setShowPostAction(false);
+      setSelectedPost(null);
+      setCustomReason("");
+      toast.success(res?.message || "Shikoyatingiz ma'muriyatga yetkazildi.");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Shikoyat yuborishda xatolik yuz berdi.");
+    },
+  });
+
   const handlePostAction = (post) => {
     setSelectedPost(post);
     setShowPostAction(true);
+  };
+
+  // 1. Ulashish (Share)
+  const handleSharePost = async (post) => {
+    if (!post) return;
+    const shareUrl = `${window.location.origin}/#post-${post.id}`;
+    const shareData = {
+      title: post.title || "Ziyo post",
+      text: post.content
+        ? post.content.slice(0, 100)
+        : "Ziyo platformasidagi qiziqarli post",
+      url: shareUrl,
+    };
+
+    if (
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare(shareData)
+    ) {
+      try {
+        await navigator.share(shareData);
+        setShowPostAction(false);
+        return;
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.log("Share xatosi:", err);
+        }
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Post havolasi nusxalandi! 📋");
+    } catch {
+      toast.info("Havola: " + shareUrl);
+    }
+    setShowPostAction(false);
+  };
+
+  // 2. Saqlash / Saqlanganlardan o'chirish (Bookmark)
+  const handleToggleSavePost = (post) => {
+    if (!post) return;
+    const isSaved = savedPostIds.includes(post.id);
+    let nextSaved = [];
+    if (isSaved) {
+      nextSaved = savedPostIds.filter((id) => id !== post.id);
+      toast.info("Post saqlanganlardan olib tashlandi.");
+    } else {
+      nextSaved = [...savedPostIds, post.id];
+      toast.success("Post saqlanganlar ro'yxatiga qo'shildi! 🔖");
+    }
+    setSavedPostIds(nextSaved);
+    localStorage.setItem("ziyo_saved_post_ids", JSON.stringify(nextSaved));
+    setShowPostAction(false);
+  };
+
+  // 3. Qiziq emas (Hide)
+  const handleHidePost = (post) => {
+    if (!post) return;
+    const nextHidden = [...hiddenPostIds, post.id];
+    setHiddenPostIds(nextHidden);
+    localStorage.setItem("ziyo_hidden_post_ids", JSON.stringify(nextHidden));
+    setShowPostAction(false);
+    toast.info("Post yashirildi. Sizga boshqa ko'rsatilmaydi.");
+  };
+
+  // 4. Shikoyat modalini ochish
+  const handleOpenReport = (post) => {
+    setSelectedPost(post);
+    setShowPostAction(false);
+    setReportReason("Spam yoki reklama");
+    setCustomReason("");
+    setIsReportModalOpen(true);
+  };
+
+  // 5. Shikoyatni yuborish
+  const handleSubmitReport = (e) => {
+    e?.preventDefault();
+    if (!selectedPost) return;
+    const finalReason =
+      reportReason === "Boshqa sabab..."
+        ? customReason.trim() || "Boshqa qoidabuzarlik"
+        : reportReason;
+
+    reportMutation.mutate({
+      postId: selectedPost.id,
+      reason: finalReason,
+    });
   };
 
   // Joriy foydalanuvchini aniqlash
@@ -345,7 +474,7 @@ function Post({
             </div>
           ))}
         </div>
-      ) : posts.length === 0 ? (
+      ) : visiblePosts.length === 0 ? (
         <div
           style={{
             textAlign: "center",
@@ -359,7 +488,7 @@ function Post({
           </p>
         </div>
       ) : (
-        posts.map((post) => {
+        visiblePosts.map((post) => {
           const quizState = quizAnswers[post.id] || post.userQuizAnswer;
           return (
             <div key={post.id} className="post-card">
@@ -559,111 +688,260 @@ function Post({
         })
       )}
 
-      {/* ⁝ ACTION MENYU */}
-      {showPostAction && selectedPost && (
-        <div className="post-action-menyu">
-          <button
-            onClick={() => {
-              setShowPostAction(false);
-            }}
-            className="post-action-hide-btn"
-          >
-            <IoMdClose />
-          </button>
+      {/* ⁝ ACTION MENYU MODAL OVERLAY BILAN */}
+      <ModalOverlay
+        isOpen={showPostAction && !!selectedPost}
+        onClose={() => {
+          setShowPostAction(false);
+          setSelectedPost(null);
+        }}
+      >
+        <div className="post-action-modal">
+          <div className="post-action-modal-header">
+            <div className="post-action-modal-title">
+              <h4>Post amallari</h4>
+              <p className="post-action-post-snippet">
+                {selectedPost?.title
+                  ? `"${selectedPost.title.slice(0, 38)}${selectedPost.title.length > 38 ? "..." : ""}"`
+                  : "Amalni tanlang"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPostAction(false);
+                setSelectedPost(null);
+              }}
+              className="post-action-close-btn"
+              aria-label="Yopish"
+            >
+              <IoMdClose />
+            </button>
+          </div>
 
-          {/* AGAR O'Z POSTI BO'LSA: TAHRIRLASH VA O'CHIRISH */}
-          {isSelectedPostOwner && (
-            <>
-              <div className="post-action-menyu-item edit-action">
-                <button onClick={() => handleOpenEdit(selectedPost)}>
-                  <span>
+          <div className="post-action-list">
+            {/* AGAR O'Z POSTI BO'LSA: TAHRIRLASH VA O'CHIRISH */}
+            {isSelectedPostOwner && (
+              <>
+                <button
+                  type="button"
+                  className="post-action-row edit-action"
+                  onClick={() => handleOpenEdit(selectedPost)}
+                >
+                  <span className="post-action-icon edit">
                     <LuPencil />
                   </span>
-                  <p>Tahrirlash</p>
+                  <div className="post-action-text">
+                    <strong>Tahrirlash</strong>
+                    <span>Sarlavha, matn yoki teglarni o'zgartirish</span>
+                  </div>
                 </button>
-              </div>
 
-              <div className="post-action-menyu-item danger-action">
                 <button
+                  type="button"
+                  className="post-action-row danger-action"
                   onClick={() => handleDeletePost(selectedPost)}
                   disabled={deleteMutation.isPending}
                 >
-                  <span>
+                  <span className="post-action-icon delete">
                     <LuTrash2 />
                   </span>
-                  <p>
-                    {deleteMutation.isPending
-                      ? "O'chirilmoqda..."
-                      : "Postni o'chirish"}
-                  </p>
+                  <div className="post-action-text">
+                    <strong>
+                      {deleteMutation.isPending
+                        ? "O'chirilmoqda..."
+                        : "Postni o'chirish"}
+                    </strong>
+                    <span>Postni platformadan butunlay olib tashlash</span>
+                  </div>
                 </button>
-              </div>
-            </>
-          )}
+              </>
+            )}
 
-          {/* UMUMIY AMALLAR */}
-          <div className="post-action-menyu-item">
+            {/* UMUMIY AMALLAR */}
             <button
-              onClick={() => {
-                navigator.clipboard?.writeText(window.location.href);
-                toast.success("Post havolasi nusxalandi!");
-                setShowPostAction(false);
-              }}
+              type="button"
+              className="post-action-row"
+              onClick={() => handleSharePost(selectedPost)}
             >
-              <span>
+              <span className="post-action-icon share">
                 <LuShare2 />
               </span>
-              <p>Ulashish</p>
+              <div className="post-action-text">
+                <strong>Ulashish</strong>
+                <span>Havolani nusxalash yoki ulashish</span>
+              </div>
             </button>
-          </div>
 
-          <div className="post-action-menyu-item">
             <button
-              onClick={() => {
-                toast.success("Post saqlanganlar ro'yxatiga qo'shildi!");
-                setShowPostAction(false);
-              }}
+              type="button"
+              className="post-action-row"
+              onClick={() => handleToggleSavePost(selectedPost)}
             >
-              <span>
-                <FaRegBookmark />
+              <span
+                className={`post-action-icon bookmark ${
+                  selectedPost && savedPostIds.includes(selectedPost.id)
+                    ? "active"
+                    : ""
+                }`}
+              >
+                {selectedPost && savedPostIds.includes(selectedPost.id) ? (
+                  <FaBookmark style={{ color: "#4f46e5" }} />
+                ) : (
+                  <FaRegBookmark />
+                )}
               </span>
-              <p>Saqlash</p>
+              <div className="post-action-text">
+                <strong>
+                  {selectedPost && savedPostIds.includes(selectedPost.id)
+                    ? "Saqlanganlardan o'chirish"
+                    : "Saqlash"}
+                </strong>
+                <span>Keyinroq o'qish uchun saqlab qo'yish</span>
+              </div>
             </button>
-          </div>
 
-          {!isSelectedPostOwner && (
-            <>
-              <div className="post-action-menyu-item">
+            {!isSelectedPostOwner && (
+              <>
                 <button
-                  onClick={() => {
-                    toast.info("Tavsiyalar yangilandi.");
-                    setShowPostAction(false);
-                  }}
+                  type="button"
+                  className="post-action-row"
+                  onClick={() => handleHidePost(selectedPost)}
                 >
-                  <span>
+                  <span className="post-action-icon hide">
                     <IoEyeOffOutline />
                   </span>
-                  <p>Qiziq emas</p>
+                  <div className="post-action-text">
+                    <strong>Qiziq emas</strong>
+                    <span>Ushbu postni lentangizdan yashirish</span>
+                  </div>
                 </button>
-              </div>
 
-              <div className="post-action-menyu-item">
                 <button
-                  onClick={() => {
-                    toast.info("Shikoyatingiz qabul qilindi.");
-                    setShowPostAction(false);
-                  }}
+                  type="button"
+                  className="post-action-row report-action"
+                  onClick={() => handleOpenReport(selectedPost)}
                 >
-                  <span>
+                  <span className="post-action-icon report">
                     <IoAlertCircleOutline />
                   </span>
-                  <p>Shikoyat qilish</p>
+                  <div className="post-action-text">
+                    <strong>Shikoyat qilish</strong>
+                    <span>Qoidabuzarlik haqida ma'muriyatga xabar berish</span>
+                  </div>
                 </button>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
-      )}
+      </ModalOverlay>
+
+      {/* SHIKOYAT YUBORISH MODALI (REPORT MODAL) */}
+      <ModalOverlay
+        isOpen={isReportModalOpen && !!selectedPost}
+        onClose={() => {
+          setIsReportModalOpen(false);
+          setSelectedPost(null);
+        }}
+      >
+        <div className="report-post-modal">
+          <div className="report-modal-header">
+            <div className="report-modal-badge">
+              <IoAlertCircleOutline />
+            </div>
+            <div>
+              <h3>Shikoyat yuborish</h3>
+              <p className="report-target-snippet">
+                Post: <b>"{selectedPost?.title}"</b> (
+                {selectedPost?.user?.name || "Muallif"})
+              </p>
+            </div>
+            <button
+              type="button"
+              className="report-modal-close"
+              onClick={() => {
+                setIsReportModalOpen(false);
+                setSelectedPost(null);
+              }}
+            >
+              <IoMdClose />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmitReport} className="report-modal-body">
+            <label className="report-label">Shikoyat sababini tanlang:</label>
+
+            <div className="report-reasons-grid">
+              {[
+                "Spam yoki reklama",
+                "Haqorat yoki nomaqbul so'zlar",
+                "Noto'g'ri / yolg'on ma'lumot",
+                "Zo'ravonlik yoki tahdid",
+                "Mualliflik huquqi buzilishi",
+                "Boshqa sabab...",
+              ].map((reasonItem) => (
+                <label
+                  key={reasonItem}
+                  className={`report-reason-chip ${
+                    reportReason === reasonItem ? "active" : ""
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="reportReason"
+                    value={reasonItem}
+                    checked={reportReason === reasonItem}
+                    onChange={() => setReportReason(reasonItem)}
+                  />
+                  <span>{reasonItem}</span>
+                </label>
+              ))}
+            </div>
+
+            {reportReason === "Boshqa sabab..." && (
+              <div className="report-custom-field">
+                <textarea
+                  rows={3}
+                  placeholder="Iltimos, sababni batafsilroq yozing..."
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                  className="report-textarea"
+                  required
+                />
+              </div>
+            )}
+
+            {/* QIZIL O'CHIRISH/YUBORISH VA BEKOR QILISH TUGMALARI */}
+            <div className="report-modal-actions">
+              <button
+                type="button"
+                className="report-btn-cancel"
+                onClick={() => {
+                  setIsReportModalOpen(false);
+                  setSelectedPost(null);
+                }}
+                disabled={reportMutation.isPending}
+              >
+                Bekor qilish
+              </button>
+
+              <button
+                type="submit"
+                className="report-btn-danger"
+                disabled={reportMutation.isPending}
+              >
+                {reportMutation.isPending ? (
+                  "Yuborilmoqda..."
+                ) : (
+                  <>
+                    <IoAlertCircleOutline /> Shikoyat yuborish
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </ModalOverlay>
 
       {/* EDIT POST MODAL */}
       <ModalOverlay

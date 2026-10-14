@@ -461,10 +461,13 @@
 
 /* Current user highlighted row */
 .leaderboard-row.current-user-row {
-  background: #aebef5;
-  border-left: 4px solid #2563eb;
+  background: #2c0bb3;
+  border-left: 4px solid #3228e9;
+  color: white !important;
 }
 
+.leaderboard-row.current-user-row.user-realname {
+}
 /* Row Columns */
 .col-rank {
   display: flex;

@@ -85,3 +85,13 @@ export async function deletePost(postId) {
     method: "DELETE",
   });
 }
+
+/**
+ * Post haqida shikoyat yuborish (Telegram bot orqali admin chatga)
+ */
+export async function reportPost(postId, reason) {
+  return await apiClient(`/api/posts/${postId}/report`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+}
