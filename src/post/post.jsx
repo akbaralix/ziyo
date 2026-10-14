@@ -399,6 +399,13 @@ function Post({
                         const isSelected = quizState?.selected === option.id;
                         const isCorrect =
                           quizState?.correctOption === option.id;
+
+                        // Hozirgi tugma bosilganligini va mutation ketayotganini tekshiramiz
+                        const isThisButtonLoading =
+                          quizMutation.isPending &&
+                          quizMutation.variables?.postId === post.id &&
+                          quizMutation.variables?.selectOption === option.id;
+
                         let optionClass = `quiz-option ${quizState ? "disabled" : ""}`;
                         let letterStyle = {};
                         let cardStyle = {};
@@ -425,10 +432,20 @@ function Post({
                               borderColor: "#ef4444",
                             };
                           } else {
-                            cardStyle = {
-                              opacity: 0.7,
-                            };
+                            cardStyle = { opacity: 0.7 };
                           }
+                        }
+
+                        // Agar shu tugma bosilib, serverdan javob kutilayotgan bo'lsa
+                        if (isThisButtonLoading) {
+                          cardStyle = {
+                            borderColor: "#3a10b9",
+                            background: "#f9f8ff",
+                          };
+                          letterStyle = {
+                            background: "#3a10b9",
+                            borderColor: "#3a10b9",
+                          };
                         }
 
                         return (
@@ -443,7 +460,11 @@ function Post({
                               className="quiz-option-letter"
                               style={letterStyle}
                             >
-                              {option.id.toUpperCase()}
+                              {isThisButtonLoading ? (
+                                <span className="quiz-mini-spinner"></span>
+                              ) : (
+                                option.id.toUpperCase()
+                              )}
                             </span>
                             <span className="quiz-option-text">
                               {option.text}

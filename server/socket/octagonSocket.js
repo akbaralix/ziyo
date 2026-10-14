@@ -27,7 +27,12 @@ export function initOctagonSocket(io) {
       // Foydalanuvchini mavjud bo'lsa tozalash
       removeFromQueue(socket.id);
 
-      const userId = user.id || user._id || socket.id;
+      // FIX 1: "me" kabi fallback userId larni socket.id bilan almashtiramiz
+      // Shunda anonim userlar ham bir-biri bilan match bo'ladi
+      const rawUserId = user.id || user._id || "";
+      const userId = (rawUserId && rawUserId !== "me" && rawUserId.length > 5)
+        ? rawUserId
+        : socket.id;
 
       const queueEntry = {
         socketId: socket.id,
@@ -44,18 +49,18 @@ export function initOctagonSocket(io) {
       };
 
       // Navbatda boshqa o'yinchi bormi?
-      // FIX: Uzilgan socket'larni va o'z-o'zi bilan matchni oldini olish
       let opponentEntry = null;
       while (queues[catKey].length > 0) {
         const candidate = queues[catKey].shift();
         clearTimeout(candidate.botTimeout);
 
-        // Uzilgan yoki o'zi bilan match bo'lmasligini tekshirish
-        const isSameUser = candidate.userId && candidate.userId === userId;
+        // Uzilgan socket ni o'tkazib yuborish
         const isDisconnected = !candidate.socket?.connected;
+        // O'z-o'zi bilan match: faqat haqiqiy (real) userId larda tekshiriladi
+        // socket.id farqli bo'lsa — ular turli odamlar
+        const isSameSocket = candidate.socketId === socket.id;
 
-        if (isSameUser || isDisconnected) {
-          // Bu candidate mos emas, keyingisini ko'rish
+        if (isDisconnected || isSameSocket) {
           continue;
         }
 
@@ -71,7 +76,8 @@ export function initOctagonSocket(io) {
         queues[catKey].push(queueEntry);
         socket.emit("octagon:queue_waiting", { category: catKey, queueTime: 0 });
 
-        // 7 soniyada odam topilmasa, Bot bilan ulanadi
+        // FIX 2: Bot timeout 25 soniyaga oshirildi
+        // (real player ulanishi uchun yetarli vaqt)
         queueEntry.botTimeout = setTimeout(() => {
           const idx = queues[catKey].indexOf(queueEntry);
           if (idx !== -1) {
@@ -79,7 +85,7 @@ export function initOctagonSocket(io) {
             const botData = createBotOpponent();
             startBattle(io, catKey, queueEntry, botData, true);
           }
-        }, 7000);
+        }, 25000);
       }
     });
 

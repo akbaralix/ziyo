@@ -199,12 +199,13 @@ export default function OctagonBattle() {
 
     socket.on("connect", () => {
       setConnectionStatus("connected");
-      // FIX: Qayta ulanganda ham navbatga qo'shish
+      // Qayta ulanganda ham navbatga qo'shish
       if (stageRef.current === STAGES.MATCHMAKING) {
         socket.emit("octagon:join_queue", {
           category,
           user: {
-            id: currentUser._id || currentUser.id || "me",
+            // "me" yubormaslik — server socket.id ni fallback sifatida ishlatadi
+            id: currentUser._id || currentUser.id || "",
             firstName: currentUser.firstName || currentUser.name || "Siz",
             lastName: currentUser.lastName || "",
             profilePic: currentUser.profilePic || "",
@@ -298,23 +299,28 @@ export default function OctagonBattle() {
       }
     });
 
-    // --- FIX 4: connect_error — bir necha marta urinib ko'rish, darhol bot mode emas ---
+    // connect_error — bir necha marta urinib ko'rish, darhol bot mode emas
     let connectErrorCount = 0;
     socket.on("connect_error", () => {
       connectErrorCount += 1;
       setConnectionStatus("connecting");
-      // Faqat 3 ta urinishdan so'ng standalone mode'ga o'tish
-      if (connectErrorCount >= 3) {
+      // Faqat 5 ta urinishdan so'ng standalone mode'ga o'tish
+      // (server 25s da bot bilan o'zi match qiladi, shuning uchun
+      //  connect_error faqat server butunlay ishlamasa ishga tushadi)
+      if (connectErrorCount >= 5) {
         startStandaloneBotMode();
       }
     });
 
-    // --- FIX 5: Fallback timer — 15 soniya (server cold start uchun yetarli vaqt) ---
+    // Fallback timer — server bot timeout (25s) dan KEYIN ishga tushadi
+    // Agar server ulangan bo'lsa va real player topilmasa, server 25s da bot
+    // bilan match qiladi va octagon:match_found keladi.
+    // Bu timer faqat server javob bermagan holatda (server dead) kerak.
     const fallbackTimer = setTimeout(() => {
       if (stageRef.current === STAGES.MATCHMAKING) {
         startStandaloneBotMode();
       }
-    }, 15000);
+    }, 30000);
 
     return () => {
       clearTimeout(fallbackTimer);

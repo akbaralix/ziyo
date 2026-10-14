@@ -296,7 +296,25 @@
   color: #1f2937;
   font-family: "poppins";
 }
+/* Kichik yuklanish animatsiyasi (Spinner) */
+.quiz-mini-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: quiz-spin 0.8s linear infinite;
+  display: inline-block;
+}
 
+@keyframes quiz-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 /* =========================
    POST FOOTER
 ========================= */
