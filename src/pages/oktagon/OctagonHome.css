@@ -52,19 +52,12 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.5px;
   color: #461fe2;
   text-transform: uppercase;
   margin-bottom: 2px;
-}
-
-.octagon-title {
-  font-size: 24px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
 }
 
 .octagon-user-stat-badge {

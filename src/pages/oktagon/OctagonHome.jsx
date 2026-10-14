@@ -83,7 +83,6 @@ export default function OctagonHome() {
             <div className="octagon-brand-tag">
               <LuSword /> JONLI 1V1 DUEL
             </div>
-            <h1 className="octagon-title">Ziyo Oktagon</h1>
           </div>
         </div>
 

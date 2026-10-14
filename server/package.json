@@ -19,6 +19,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.4",
     "node-telegram-bot-api": "^2.1.0",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "telegraf": "^4.16.3"
   }
 }
