@@ -93,27 +93,15 @@ export default function OctagonHome() {
         </div>
       </header>
 
-      {/* Hero Banner */}
-      <div className="octagon-hero-banner">
-        <div className="hero-content">
-          <span className="hero-badge">
-            <IoFlame /> Real-vaqt rejimida aql jangi
-          </span>
-          <h2>Raqib bilan 1v1 yuzma-yuz bellashing!</h2>
-          <p>
-            Har bir jangda <strong>10 ta sinxron savol</strong> beriladi. To‘g‘ri va tez
-            topgan g‘olib bo‘ladi. G‘alabaga <strong>+30 XP</strong>, mag‘lubiyatga <strong>-15 XP</strong>.
-          </p>
-        </div>
-      </div>
-
       {/* Discipline Selector */}
       <div className="octagon-section">
         <div className="section-title-wrap">
           <h3 className="section-title">
             <LuBrain /> Jang yo‘nalishini tanlang
           </h3>
-          <span className="section-sub">O‘zingiz kuchli bo‘lgan fanni tanlang</span>
+          <span className="section-sub">
+            O‘zingiz kuchli bo‘lgan fanni tanlang
+          </span>
         </div>
 
         <div className="disciplines-grid">
@@ -155,33 +143,6 @@ export default function OctagonHome() {
         </div>
       </div>
 
-      {/* Rules Box */}
-      <div className="octagon-rules-card">
-        <h4 className="rules-title">
-          <IoShieldCheckmark /> Oktagon qoidalari:
-        </h4>
-        <div className="rules-grid">
-          <div className="rule-item">
-            <span className="rule-num">1</span>
-            <div>
-              <strong>10 ta teng savol:</strong> Ikkala tomon bir vaqtning o‘zida xuddi shu savollarni oladi.
-            </div>
-          </div>
-          <div className="rule-item">
-            <span className="rule-num">2</span>
-            <div>
-              <strong>12 soniya & Tezlik:</strong> Qancha tez javob bersangiz, shuncha ko‘p ball yoziladi.
-            </div>
-          </div>
-          <div className="rule-item">
-            <span className="rule-num">3</span>
-            <div>
-              <strong>XP Stavkalari:</strong> G‘olibga <strong>+30 XP</strong>, mag‘lubiyatda esa <strong>-15 XP</strong>.
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Bottom Launch Action */}
       <div className="octagon-launch-bar">
         <button
@@ -191,6 +152,34 @@ export default function OctagonHome() {
         >
           <IoFlash /> Jangga kirish (1v1)
         </button>
+      </div>
+      <div className="octagon-rules-card">
+        <h4 className="rules-title">
+          <IoShieldCheckmark /> Oktagon qoidalari:
+        </h4>
+        <div className="rules-grid">
+          <div className="rule-item">
+            <span className="rule-num">1</span>
+            <div>
+              <strong>10 ta teng savol:</strong> Ikkala tomon bir vaqtning
+              o‘zida xuddi shu savollarni oladi.
+            </div>
+          </div>
+          <div className="rule-item">
+            <span className="rule-num">2</span>
+            <div>
+              <strong>12 soniya & Tezlik:</strong> Qancha tez javob bersangiz,
+              shuncha ko‘p ball yoziladi.
+            </div>
+          </div>
+          <div className="rule-item">
+            <span className="rule-num">3</span>
+            <div>
+              <strong>XP Stavkalari:</strong> G‘olibga <strong>+30 XP</strong>,
+              mag‘lubiyatda esa <strong>-15 XP</strong>.
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

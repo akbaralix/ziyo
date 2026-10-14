@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import confetti from "canvas-confetti";
@@ -66,11 +66,122 @@ export default function OctagonBattle() {
   // Final Results
   const [finalResult, setFinalResult] = useState(null);
 
+  // Connection status for UI feedback
+  const [connectionStatus, setConnectionStatus] = useState("connecting"); // "connecting" | "connected" | "offline"
+
   const socketRef = useRef(null);
   const timerRef = useRef(null);
   const localQuestionsRef = useRef([]);
 
-  // Socket Connection or Local Engine
+  // --- FIX 1: Ref'lar bilan stale closure muammosini hal qilish ---
+  // "youAre" — "player1" yoki "player2" (socket event'da keladi)
+  const youAreRef = useRef("player1");
+  // standalone mode allaqachon boshlangami?
+  const standaloneModeStartedRef = useRef(false);
+  // stage'ni ref'da ham saqlash (closure uchun)
+  const stageRef = useRef(STAGES.MATCHMAKING);
+  // matchData ref (submit_answer uchun)
+  const matchDataRef = useRef(null);
+  const currentQIndexRef = useRef(0);
+  const timeLeftRef = useRef(12);
+  const hasAnsweredRef = useRef(false);
+  const myScoreRef = useRef(0);
+  const opponentScoreRef = useRef(0);
+
+  // Ref'larni state bilan sinxronlash
+  useEffect(() => { stageRef.current = stage; }, [stage]);
+  useEffect(() => { matchDataRef.current = matchData; }, [matchData]);
+  useEffect(() => { currentQIndexRef.current = currentQIndex; }, [currentQIndex]);
+  useEffect(() => { timeLeftRef.current = timeLeft; }, [timeLeft]);
+  useEffect(() => { hasAnsweredRef.current = hasAnswered; }, [hasAnswered]);
+  useEffect(() => { myScoreRef.current = myScore; }, [myScore]);
+  useEffect(() => { opponentScoreRef.current = opponentScore; }, [opponentScore]);
+
+  // --- FIX 2: Standalone Bot Fallback ---
+  const startStandaloneBotMode = useCallback(() => {
+    // Bir martadan ko'p ishlamasligi uchun guard
+    if (standaloneModeStartedRef.current) return;
+    // Agar allaqachon match topilgan bo'lsa, bot mode kerak emas
+    if (stageRef.current !== STAGES.MATCHMAKING) return;
+
+    standaloneModeStartedRef.current = true;
+
+    setTimeout(() => {
+      // Oxirgi tekshiruv
+      if (stageRef.current !== STAGES.MATCHMAKING) return;
+
+      const bot = {
+        name: "Temur_Pro",
+        xp: Math.floor(Math.random() * 300) + 120,
+        profilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=Temur",
+      };
+      setOpponent(bot);
+      setStage(STAGES.COUNTDOWN);
+      stageRef.current = STAGES.COUNTDOWN;
+      setConnectionStatus("offline");
+
+      const qs = getBattleQuestions(category, 10);
+      localQuestionsRef.current = qs;
+
+      let c = 3;
+      setCountdown(c);
+      const cInt = setInterval(() => {
+        c -= 1;
+        if (c > 0) {
+          setCountdown(c);
+          sfx.playTick();
+        } else {
+          clearInterval(cInt);
+          sfx.playStart();
+          loadLocalQuestion(0);
+        }
+      }, 1000);
+    }, 2500);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category]);
+
+  const loadLocalQuestion = (idx) => {
+    if (idx >= 10) {
+      finishLocalBattle();
+      return;
+    }
+    const q = localQuestionsRef.current[idx];
+    setStage(STAGES.BATTLE);
+    stageRef.current = STAGES.BATTLE;
+    setCurrentQIndex(idx);
+    currentQIndexRef.current = idx;
+    setCurrentQuestion({
+      questionIndex: idx,
+      totalQuestions: 10,
+      text: q.text,
+      options: q.options,
+      correctIndex: q.correctIndex,
+      timeLimit: 12,
+    });
+    setTimeLeft(12);
+    timeLeftRef.current = 12;
+    setSelectedOption(null);
+    setHasAnswered(false);
+    hasAnsweredRef.current = false;
+    setOpponentAnswered(false);
+    setRoundResult(null);
+
+    // Bot simulyatsiyasi
+    const botDelay = Math.floor(Math.random() * 4000) + 3500;
+    setTimeout(() => {
+      setOpponentAnswered(true);
+      const isCorrect = Math.random() < 0.7;
+      if (isCorrect) {
+        setOpponentScore((prev) => {
+          const newVal = prev + 140;
+          opponentScoreRef.current = newVal;
+          return newVal;
+        });
+      }
+    }, botDelay);
+  };
+
+  // Socket Connection
   useEffect(() => {
     const socketUrl =
       import.meta.env.VITE_API_URL || "https://ziyo.onrender.com";
@@ -78,28 +189,40 @@ export default function OctagonBattle() {
     const socket = io(socketUrl, {
       auth: { token },
       transports: ["websocket", "polling"],
-      timeout: 4000,
+      // FIX: timeout va reconnect sozlamalari
+      timeout: 10000,
+      reconnection: true,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 1000,
     });
     socketRef.current = socket;
 
     socket.on("connect", () => {
-      socket.emit("octagon:join_queue", {
-        category,
-        user: {
-          id: currentUser._id || currentUser.id || "me",
-          firstName: currentUser.firstName || currentUser.name || "Siz",
-          lastName: currentUser.lastName || "",
-          profilePic: currentUser.profilePic || "",
-          xp: currentUser.xp || 0,
-        },
-      });
+      setConnectionStatus("connected");
+      // FIX: Qayta ulanganda ham navbatga qo'shish
+      if (stageRef.current === STAGES.MATCHMAKING) {
+        socket.emit("octagon:join_queue", {
+          category,
+          user: {
+            id: currentUser._id || currentUser.id || "me",
+            firstName: currentUser.firstName || currentUser.name || "Siz",
+            lastName: currentUser.lastName || "",
+            profilePic: currentUser.profilePic || "",
+            xp: currentUser.xp || 0,
+          },
+        });
+      }
     });
 
     // Raqib topildi
     socket.on("octagon:match_found", (data) => {
+      // FIX: youAre ni ref'da saqlash (player1 yoki player2)
+      youAreRef.current = data.youAre || "player1";
       setMatchData(data);
+      matchDataRef.current = data;
       setOpponent(data.opponent);
       setStage(STAGES.COUNTDOWN);
+      stageRef.current = STAGES.COUNTDOWN;
 
       // 3 soniya countdown
       let count = 3;
@@ -119,11 +242,15 @@ export default function OctagonBattle() {
     // Savol kelishi
     socket.on("octagon:question", (qData) => {
       setStage(STAGES.BATTLE);
+      stageRef.current = STAGES.BATTLE;
       setCurrentQIndex(qData.questionIndex);
+      currentQIndexRef.current = qData.questionIndex;
       setCurrentQuestion(qData);
       setTimeLeft(qData.timeLimit || 12);
+      timeLeftRef.current = qData.timeLimit || 12;
       setSelectedOption(null);
       setHasAnswered(false);
+      hasAnsweredRef.current = false;
       setOpponentAnswered(false);
       setRoundResult(null);
     });
@@ -133,17 +260,26 @@ export default function OctagonBattle() {
       setOpponentAnswered(true);
     });
 
-    // Raund yakuni
+    // --- FIX 3: Raund yakuni — youAre asosida to'g'ri score ---
     socket.on("octagon:round_result", (rData) => {
       setStage(STAGES.ROUND_RESULT);
+      stageRef.current = STAGES.ROUND_RESULT;
       setRoundResult(rData);
-      setMyScore(rData.player1.score);
-      setOpponentScore(rData.player2.score);
+
+      const isPlayer1 = youAreRef.current !== "player2";
+      const myNewScore = isPlayer1 ? rData.player1.score : rData.player2.score;
+      const oppNewScore = isPlayer1 ? rData.player2.score : rData.player1.score;
+
+      setMyScore(myNewScore);
+      myScoreRef.current = myNewScore;
+      setOpponentScore(oppNewScore);
+      opponentScoreRef.current = oppNewScore;
     });
 
     // Jang yakuni
     socket.on("octagon:battle_finished", (fData) => {
       setStage(STAGES.GAME_OVER);
+      stageRef.current = STAGES.GAME_OVER;
       setFinalResult(fData);
 
       // LocalStorage XP ni yangilash
@@ -162,89 +298,31 @@ export default function OctagonBattle() {
       }
     });
 
-    // Serverga ulanishda xatolik bo'lsa (Stand-alone local bot mode)
+    // --- FIX 4: connect_error — bir necha marta urinib ko'rish, darhol bot mode emas ---
+    let connectErrorCount = 0;
     socket.on("connect_error", () => {
-      startStandaloneBotMode();
-    });
-
-    // Agar 4 soniyada connect bo'lmasa ham fallback
-    const fallbackTimer = setTimeout(() => {
-      if (!socket.connected) {
+      connectErrorCount += 1;
+      setConnectionStatus("connecting");
+      // Faqat 3 ta urinishdan so'ng standalone mode'ga o'tish
+      if (connectErrorCount >= 3) {
         startStandaloneBotMode();
       }
-    }, 4500);
+    });
+
+    // --- FIX 5: Fallback timer — 15 soniya (server cold start uchun yetarli vaqt) ---
+    const fallbackTimer = setTimeout(() => {
+      if (stageRef.current === STAGES.MATCHMAKING) {
+        startStandaloneBotMode();
+      }
+    }, 15000);
 
     return () => {
       clearTimeout(fallbackTimer);
       clearInterval(timerRef.current);
       socket.disconnect();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category]);
-
-  // Standalone Bot Fallback (Har qanday holatda to'xtovsiz ishlashi uchun)
-  const startStandaloneBotMode = () => {
-    if (stage !== STAGES.MATCHMAKING) return;
-
-    setTimeout(() => {
-      const bot = {
-        name: "Temur_Pro",
-        xp: Math.floor(Math.random() * 300) + 120,
-        profilePic: "https://api.dicebear.com/7.x/bottts/svg?seed=Temur",
-      };
-      setOpponent(bot);
-      setStage(STAGES.COUNTDOWN);
-
-      const qs = getBattleQuestions(category, 10);
-      localQuestionsRef.current = qs;
-
-      let c = 3;
-      setCountdown(c);
-      const cInt = setInterval(() => {
-        c -= 1;
-        if (c > 0) {
-          setCountdown(c);
-          sfx.playTick();
-        } else {
-          clearInterval(cInt);
-          sfx.playStart();
-          loadLocalQuestion(0);
-        }
-      }, 1000);
-    }, 2500);
-  };
-
-  const loadLocalQuestion = (idx) => {
-    if (idx >= 10) {
-      finishLocalBattle();
-      return;
-    }
-    const q = localQuestionsRef.current[idx];
-    setStage(STAGES.BATTLE);
-    setCurrentQIndex(idx);
-    setCurrentQuestion({
-      questionIndex: idx,
-      totalQuestions: 10,
-      text: q.text,
-      options: q.options,
-      correctIndex: q.correctIndex,
-      timeLimit: 12,
-    });
-    setTimeLeft(12);
-    setSelectedOption(null);
-    setHasAnswered(false);
-    setOpponentAnswered(false);
-    setRoundResult(null);
-
-    // Bot simulyatsiyasi
-    const botDelay = Math.floor(Math.random() * 4000) + 3500;
-    setTimeout(() => {
-      setOpponentAnswered(true);
-      const isCorrect = Math.random() < 0.7;
-      if (isCorrect) {
-        setOpponentScore((prev) => prev + 140);
-      }
-    }, botDelay);
-  };
 
   // Savol taymeri
   useEffect(() => {
@@ -262,55 +340,72 @@ export default function OctagonBattle() {
       }, 1000);
     }
     return () => clearInterval(timerRef.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, currentQIndex]);
 
   const handleTimeExpire = () => {
-    if (!hasAnswered) {
+    if (!hasAnsweredRef.current) {
       handleAnswerSelect(-1); // time expired
     }
   };
 
   // Javob tanlash
   const handleAnswerSelect = (optionIndex) => {
-    if (hasAnswered) return;
+    if (hasAnsweredRef.current) return;
     setHasAnswered(true);
+    hasAnsweredRef.current = true;
     setSelectedOption(optionIndex);
 
+    const currentSocket = socketRef.current;
+    const currentMatchData = matchDataRef.current;
+
     // Agar socket ulangan bo'lsa
-    if (socketRef.current?.connected && matchData?.roomId) {
-      socketRef.current.emit("octagon:submit_answer", {
-        roomId: matchData.roomId,
-        questionIndex: currentQIndex,
+    if (currentSocket?.connected && currentMatchData?.roomId) {
+      currentSocket.emit("octagon:submit_answer", {
+        roomId: currentMatchData.roomId,
+        questionIndex: currentQIndexRef.current,
         answerIndex: optionIndex,
-        timeRemaining: timeLeft,
+        timeRemaining: timeLeftRef.current,
       });
     } else {
       // Local bot mode
-      const isCorrect = optionIndex === currentQuestion?.correctIndex;
-      const points = isCorrect ? 100 + timeLeft * 10 : 0;
-      if (isCorrect) {
-        sfx.playCorrect();
-        setMyScore((prev) => prev + points);
-      } else {
-        sfx.playWrong();
-      }
+      setCurrentQuestion((cq) => {
+        const isCorrect = optionIndex === cq?.correctIndex;
+        const points = isCorrect ? 100 + timeLeftRef.current * 10 : 0;
+        if (isCorrect) {
+          sfx.playCorrect();
+          setMyScore((prev) => {
+            const newVal = prev + points;
+            myScoreRef.current = newVal;
+            return newVal;
+          });
+        } else {
+          sfx.playWrong();
+        }
 
-      setRoundResult({
-        correctIndex: currentQuestion?.correctIndex,
+        setRoundResult({ correctIndex: cq?.correctIndex });
+        setStage(STAGES.ROUND_RESULT);
+        stageRef.current = STAGES.ROUND_RESULT;
+
+        setTimeout(() => {
+          loadLocalQuestion(currentQIndexRef.current + 1);
+        }, 2000);
+
+        return cq;
       });
-      setStage(STAGES.ROUND_RESULT);
-
-      setTimeout(() => {
-        loadLocalQuestion(currentQIndex + 1);
-      }, 2000);
     }
   };
 
   // Local game over
   const finishLocalBattle = () => {
     setStage(STAGES.GAME_OVER);
-    const win = myScore > opponentScore;
-    const draw = myScore === opponentScore;
+    stageRef.current = STAGES.GAME_OVER;
+
+    const finalMy = myScoreRef.current;
+    const finalOpp = opponentScoreRef.current;
+
+    const win = finalMy > finalOpp;
+    const draw = finalMy === finalOpp;
     const xp = win ? 30 : draw ? 10 : -15;
 
     // XP update
@@ -323,8 +418,8 @@ export default function OctagonBattle() {
     const payload = {
       result: win ? "victory" : draw ? "draw" : "defeat",
       xpChange: xp,
-      yourScore: myScore,
-      opponentScore: opponentScore,
+      yourScore: finalMy,
+      opponentScore: finalOpp,
       opponent: opponent || { name: "Raqib" },
     };
     setFinalResult(payload);
@@ -364,8 +459,17 @@ export default function OctagonBattle() {
             </span>
             <h2 className="matchmaking-title">Raqib qidirilmoqda...</h2>
             <p className="matchmaking-desc">
-              Tizim sizga munosib raqibni qidirmoqda. Bir necha soniya kuting.
+              {connectionStatus === "connecting"
+                ? "Serverga ulanilmoqda..."
+                : "Tizim sizga munosib raqibni qidirmoqda. Bir necha soniya kuting."}
             </p>
+
+            {/* Connection status indicator */}
+            <div className={`connection-dot ${connectionStatus}`} style={{
+              width: 10, height: 10, borderRadius: "50%", margin: "8px auto",
+              background: connectionStatus === "connected" ? "#22c55e"
+                : connectionStatus === "offline" ? "#ef4444" : "#f59e0b",
+            }} />
 
             <button
               type="button"
@@ -457,7 +561,7 @@ export default function OctagonBattle() {
               </span>
             ) : (
               <span className="opp-indicator waiting">
-                💭 {opponent?.name || "Raqib"} o‘ylamoqda...
+                💭 {opponent?.name || "Raqib"} o'ylamoqda...
               </span>
             )}
           </div>
@@ -523,9 +627,9 @@ export default function OctagonBattle() {
             <span className="result-subtitle">Oktagon dueli yakunlandi</span>
             <h1 className="result-title">
               {finalResult.result === "victory"
-                ? "G‘alaba! Qoyilmaqom! 🏆"
+                ? "G'alaba! Qoyilmaqom! 🏆"
                 : finalResult.result === "defeat"
-                ? "Mag‘lubiyat! Keyingi safar yutasiz!"
+                ? "Mag'lubiyat! Keyingi safar yutasiz!"
                 : "Durang! Teng kurash!"}
             </h1>
 

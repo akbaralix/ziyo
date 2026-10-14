@@ -281,7 +281,7 @@ function Post({
   };
 
   const handleOpenComments = (post) => {
-    if (post.userQuizAnswer === null) {
+    if (post.type === "quiz" && !post.userQuizAnswer && !quizAnswers[post.id]) {
       toast.warning("Avval  javob bering");
       return;
     }
@@ -315,19 +315,35 @@ function Post({
   return (
     <div className="post-container">
       {loading ? (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "40px 20px",
-            color: "#6b7280",
-            background: "#ffffff",
-            borderRadius: "16px",
-            border: "1px solid #e5e7eb",
-          }}
-        >
-          <p style={{ fontSize: "15px", fontWeight: "500", color: "#4b5563" }}>
-            Postlar yuklanmoqda... ⏳
-          </p>
+        <div className="posts-loader-container">
+          {[1, 2, 3].map((n) => (
+            <div key={n} className="post-skeleton-card">
+              {/* Header */}
+              <div className="post-skeleton-header">
+                <div className="post-skeleton-avatar"></div>
+                <div className="post-skeleton-user-info">
+                  <div className="post-skeleton-line short"></div>
+                  <div className="post-skeleton-line shortest"></div>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="post-skeleton-content">
+                <div className="post-skeleton-line medium"></div>
+                <div className="post-skeleton-line long"></div>
+                <div className="post-skeleton-line long"></div>
+              </div>
+
+              {/* Footer */}
+              <div className="post-skeleton-footer">
+                <div className="post-skeleton-actions-group">
+                  <div className="post-skeleton-action-btn"></div>
+                  <div className="post-skeleton-action-btn"></div>
+                </div>
+                <div className="post-skeleton-line shortest"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : posts.length === 0 ? (
         <div
@@ -390,13 +406,13 @@ function Post({
                         if (quizState) {
                           if (isCorrect) {
                             cardStyle = {
-                              borderColor: "#10b981",
-                              background: "#ecfdf5",
+                              borderColor: "#3210b9",
+                              background: "#f1ecfd",
                             };
                             letterStyle = {
-                              background: "#10b981",
+                              background: "#3a10b9",
                               color: "#fff",
-                              borderColor: "#10b981",
+                              borderColor: "#7f5ed7",
                             };
                           } else if (isSelected && !quizState.isCorrect) {
                             cardStyle = {
@@ -445,36 +461,13 @@ function Post({
                           gap: "8px",
                         }}
                       >
-                        <div
-                          style={{
-                            padding: "8px 14px",
-                            borderRadius: "10px",
-                            fontSize: "13px",
-                            fontWeight: "600",
-                            backgroundColor: quizState.isCorrect
-                              ? "#ecfdf5"
-                              : "#fef2f2",
-                            color: quizState.isCorrect ? "#047857" : "#b91c1c",
-                            border: `1px solid ${
-                              quizState.isCorrect ? "#a7f3d0" : "#fecaca"
-                            }`,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                          }}
-                        >
-                          {quizState.isCorrect
-                            ? "✅ To'g'ri javob berdingiz! (+10 XP)"
-                            : "❌ Noto'g'ri javob berdingiz."}
-                        </div>
-
                         {quizState.explanation && (
                           <div
                             style={{
                               padding: "10px 14px",
                               borderRadius: "10px",
-                              background: "#eff6ff",
-                              color: "#1e40af",
+                              background: "#f3efff",
+                              color: "#311eaf",
                               fontSize: "13px",
                               border: "1px solid #dbeafe",
                             }}
@@ -503,7 +496,7 @@ function Post({
                         key={tag}
                         style={{
                           fontSize: "13px",
-                          color: "#3e59df",
+                          color: "#593edf",
                           fontWeight: "500",
                         }}
                       >

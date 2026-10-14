@@ -27,12 +27,14 @@ export function initOctagonSocket(io) {
       // Foydalanuvchini mavjud bo'lsa tozalash
       removeFromQueue(socket.id);
 
+      const userId = user.id || user._id || socket.id;
+
       const queueEntry = {
         socketId: socket.id,
         socket,
-        userId: user.id || user._id || socket.userId,
+        userId,
         user: {
-          id: user.id || user._id || socket.userId,
+          id: userId,
           name: `${user.firstName || user.name || "O'yinchi"} ${user.lastName || ""}`.trim(),
           profilePic: user.profilePic || "",
           xp: Number(user.xp) || 0,
@@ -42,12 +44,28 @@ export function initOctagonSocket(io) {
       };
 
       // Navbatda boshqa o'yinchi bormi?
-      if (queues[catKey].length > 0) {
-        const opponent = queues[catKey].shift();
-        clearTimeout(opponent.botTimeout);
+      // FIX: Uzilgan socket'larni va o'z-o'zi bilan matchni oldini olish
+      let opponentEntry = null;
+      while (queues[catKey].length > 0) {
+        const candidate = queues[catKey].shift();
+        clearTimeout(candidate.botTimeout);
 
-        // Ikkala odam o'rtasida jang boshlash
-        startBattle(io, catKey, queueEntry, opponent);
+        // Uzilgan yoki o'zi bilan match bo'lmasligini tekshirish
+        const isSameUser = candidate.userId && candidate.userId === userId;
+        const isDisconnected = !candidate.socket?.connected;
+
+        if (isSameUser || isDisconnected) {
+          // Bu candidate mos emas, keyingisini ko'rish
+          continue;
+        }
+
+        opponentEntry = candidate;
+        break;
+      }
+
+      if (opponentEntry) {
+        // Real opponent topildi — jang boshlash
+        startBattle(io, catKey, queueEntry, opponentEntry);
       } else {
         // Navbatga qo'shish
         queues[catKey].push(queueEntry);
@@ -231,6 +249,8 @@ function sendQuestion(io, battle) {
 
   battle.player1.currentAnswer = null;
   battle.player2.currentAnswer = null;
+  // FIX: Har yangi savol uchun roundEnded flagini reset qilish
+  battle.roundEnded = false;
 
   const questionPayload = {
     roomId: battle.roomId,
@@ -267,6 +287,8 @@ function simulateBotAnswer(io, battle, questionIndex) {
   const delay = Math.floor(Math.random() * 4000) + 3000;
   setTimeout(() => {
     if (battle.status !== "active" || battle.currentQuestionIndex !== questionIndex) return;
+    // FIX: Raund allaqachon tugagan bo'lsa bot javob bermaydi
+    if (battle.roundEnded) return;
 
     // 72% ehtimollik bilan to'g'ri javob
     const isBotCorrect = Math.random() < 0.72;
@@ -301,10 +323,15 @@ function simulateBotAnswer(io, battle, questionIndex) {
 
 // Raund yakunini tekshirish
 function checkRoundEnd(io, battle, isTimeout = false) {
+  // FIX: Bir raundda faqat bir marta ishlaydi
+  if (battle.roundEnded) return;
+
   const p1Answered = battle.player1.currentAnswer !== null;
   const p2Answered = battle.player2.currentAnswer !== null;
 
   if ((p1Answered && p2Answered) || isTimeout) {
+    // Darhol flagni o'rnatish — parallel chaqiruvlarni bloklash uchun
+    battle.roundEnded = true;
     clearTimeout(battle.roundTimer);
 
     const qIdx = battle.currentQuestionIndex;
