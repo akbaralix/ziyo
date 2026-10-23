@@ -23,6 +23,7 @@ import {
 } from "react-icons/io5";
 import { FaBookOpen, FaGlasses } from "react-icons/fa";
 import { BOOKS_DATA } from "./booksData";
+import { saveReadingProgress } from "../../api/userApi";
 import "./kutubxona.css";
 
 // PDF.js worker sozlamalari (Local bundle worker)
@@ -202,6 +203,47 @@ function Kutubxona() {
           ...prev,
           [activeBook.id]: currentPage,
         }));
+
+        // Hozir o'qiyotgan kitob ma'lumotlarini localStorage ga ham saqlash
+        const currentReadingObj = {
+          bookId: activeBook.id,
+          title: activeBook.title,
+          author: activeBook.author,
+          img: activeBook.img,
+          pages: activeBook.pages,
+          currentPage: currentPage,
+          updatedAt: new Date().toISOString(),
+        };
+        localStorage.setItem("ziyo_current_reading_book", JSON.stringify(currentReadingObj));
+
+        // Agar kitob oxirgi betigacha o'qilgan bo'lsa
+        if (currentPage >= (activeBook.pages || totalPages)) {
+          try {
+            const finStr = localStorage.getItem("ziyo_finished_books") || "[]";
+            const finList = JSON.parse(finStr);
+            if (!finList.some((b) => b.bookId === activeBook.id)) {
+              finList.push({
+                bookId: activeBook.id,
+                title: activeBook.title,
+                author: activeBook.author,
+                img: activeBook.img,
+                pages: activeBook.pages,
+                finishedAt: new Date().toISOString(),
+              });
+              localStorage.setItem("ziyo_finished_books", JSON.stringify(finList));
+            }
+          } catch {}
+        }
+
+        // Serverga saqlash
+        saveReadingProgress({
+          bookId: activeBook.id,
+          title: activeBook.title,
+          author: activeBook.author,
+          img: activeBook.img,
+          pages: activeBook.pages || totalPages || 100,
+          currentPage: currentPage,
+        }).catch(() => {});
       }
     }
   }, [pdfDoc, currentPage, zoomScale, renderPage, activeBook]);

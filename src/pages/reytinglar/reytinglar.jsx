@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   GoTrophy,
@@ -34,6 +35,20 @@ const CATEGORIES = [
 ];
 
 function Reytinglar() {
+  const navigate = useNavigate();
+
+  const handleUserClick = (targetUser) => {
+    if (!targetUser) return;
+    const uName =
+      targetUser.username ||
+      targetUser.telegramUsername ||
+      targetUser.id ||
+      targetUser._id;
+    if (uName) {
+      navigate(`/@${uName.replace(/^@/, "")}`);
+    }
+  };
+
   const [timeframe, setTimeframe] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
   const [searchQuery, setSearchQuery] = useState("");
@@ -187,7 +202,12 @@ function Reytinglar() {
           <div className="podium-container">
             {/* 2nd Place (Chapda) */}
             {top2 && (
-              <div className="podium-item podium-second">
+              <div
+                className="podium-item podium-second"
+                style={{ cursor: "pointer" }}
+                onClick={() => handleUserClick(top2)}
+                title={`${top2.name} profilini ko'rish`}
+              >
                 <div className="podium-user-card">
                   <div className="podium-avatar-wrapper rank-2">
                     <img
@@ -214,7 +234,12 @@ function Reytinglar() {
 
             {/* 1st Place (O'rtada - Eng baland) */}
             {top1 && (
-              <div className="podium-item podium-first">
+              <div
+                className="podium-item podium-first"
+                style={{ cursor: "pointer" }}
+                onClick={() => handleUserClick(top1)}
+                title={`${top1.name} profilini ko'rish`}
+              >
                 <div className="crown-icon">
                   <FaCrown />
                 </div>
@@ -246,7 +271,12 @@ function Reytinglar() {
 
             {/* 3rd Place (O'ngda) */}
             {top3 && (
-              <div className="podium-item podium-third">
+              <div
+                className="podium-item podium-third"
+                style={{ cursor: "pointer" }}
+                onClick={() => handleUserClick(top3)}
+                title={`${top3.name} profilini ko'rish`}
+              >
                 <div className="podium-user-card">
                   <div className="podium-avatar-wrapper rank-3">
                     <img
@@ -306,7 +336,12 @@ function Reytinglar() {
                     <span className="rank-circle">#{user.rank}</span>
                   </div>
 
-                  <div className="col-user">
+                  <div
+                    className="col-user"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleUserClick(user)}
+                    title={`${user.name} profilini ko'rish`}
+                  >
                     <div className="user-avatar-box">
                       <img
                         src={user.profilePic || userPic}

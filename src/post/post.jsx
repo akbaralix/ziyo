@@ -10,6 +10,7 @@ import { LuShare2, LuSend, LuPencil, LuTrash2 } from "react-icons/lu";
 import { IoMdClose } from "react-icons/io";
 import { IoEyeOffOutline, IoAlertCircleOutline } from "react-icons/io5";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import user from "../assets/user.jpg";
@@ -30,8 +31,22 @@ function Post({
   selectedCategory = "Barchasi",
   searchQuery = "",
   onlyMyPosts = false,
+  userId = null,
 }) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const handleUserClick = (targetUser) => {
+    if (!targetUser) return;
+    const uName =
+      targetUser.username ||
+      targetUser.telegramUsername ||
+      targetUser.id ||
+      targetUser._id;
+    if (uName) {
+      navigate(`/@${uName.replace(/^@/, "")}`);
+    }
+  };
   const [showPostAction, setShowPostAction] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState({});
@@ -95,12 +110,13 @@ function Post({
   };
   // TanStack Query orqali postlarni keshdan tezkor olish
   const { data, isLoading: loading } = useQuery({
-    queryKey: ["posts", selectedCategory, searchQuery, onlyMyPosts],
+    queryKey: ["posts", selectedCategory, searchQuery, onlyMyPosts, userId],
     queryFn: () =>
       fetchPosts({
         category: selectedCategory,
         search: searchQuery,
         onlyMyPosts,
+        userId,
       }),
     staleTime: 1000 * 60 * 5,
   });
@@ -493,7 +509,19 @@ function Post({
           return (
             <div key={post.id} className="post-card">
               <div className="post-header">
-                <div className="post-user-info">
+                <div
+                  className="post-user-info"
+                  onClick={() =>
+                    handleUserClick(
+                      post.user || {
+                        id: post.author,
+                        name: "Foydalanuvchi",
+                      },
+                    )
+                  }
+                  style={{ cursor: "pointer" }}
+                  title="Foydalanuvchi profilini ko'rish"
+                >
                   <img
                     src={post.user?.profilePic || user}
                     alt={post.user?.name || "User"}
@@ -1079,13 +1107,21 @@ function Post({
                 {commentsList.map((c) => (
                   <div key={c.id} className="comment-item">
                     <img
-                      src={c.user?.profilePic || logo}
+                      src={c.user?.profilePic || user}
                       alt="User"
                       className="comment-avatar"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => handleUserClick(c.user)}
+                      title="Profilni ko'rish"
                     />
                     <div className="comment-content-box">
                       <div className="comment-user-header">
-                        <span className="comment-author-name">
+                        <span
+                          className="comment-author-name"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => handleUserClick(c.user)}
+                          title="Profilni ko'rish"
+                        >
                           {c.user?.name || "Foydalanuvchi"}
                         </span>
                         <span className="comment-date">

@@ -80,6 +80,10 @@ function Router() {
         path="/profil"
         element={token ? <Profil /> : <Navigate to="/login" replace />}
       />
+      <Route
+        path="/profil/:username"
+        element={token ? <Profil /> : <Navigate to="/login" replace />}
+      />
 
       <Route path="/create" element={<Navigate to="/yaratish" replace />} />
 
@@ -135,6 +139,12 @@ function Router() {
       <Route path="/live/:pin" element={<LivePlayer />} />
       <Route path="/quiz/live" element={<LivePlayer />} />
       <Route path="/quiz/live/:pin" element={<LivePlayer />} />
+
+      {/* /username orqali foydalanuvchi profiliga o'tish */}
+      <Route
+        path="/:username"
+        element={token ? <Profil /> : <Navigate to="/login" replace />}
+      />
 
       {/* 404 - Boshqa sahifalar */}
       <Route

@@ -14,6 +14,12 @@ export async function fetchPosts(params = {}) {
   if (params.onlyMyPosts) {
     query.append("onlyMyPosts", "true");
   }
+  if (params.userId) {
+    query.append("userId", params.userId);
+  }
+  if (params.authorId) {
+    query.append("authorId", params.authorId);
+  }
 
   const endpoint = `/api/posts${query.toString() ? `?${query.toString()}` : ""}`;
   return await apiClient(endpoint, { method: "GET" });

@@ -1,5 +1,7 @@
+import mongoose from "mongoose";
 import Post from "../db/Post/Post.js";
 import Comment from "../db/Post/Comment.js";
+import User from "../db/User/User.js";
 import { sendPostReportToAdmin } from "../bot/bot.js";
 
 // 1. Yangi post yaratish
@@ -98,12 +100,46 @@ export const createPost = async (req, res) => {
 // 2. Barcha postlarni olish (Filtrlash va Like holati bilan, xavfsiz quiz)
 export const getPosts = async (req, res) => {
   try {
-    const { category, search, onlyMyPosts } = req.query;
+    const { category, search, onlyMyPosts, userId, authorId } = req.query;
     const currentUserId = req.user?._id;
 
     const filter = {};
 
-    if (onlyMyPosts === "true") {
+    const targetUserId = userId || authorId;
+    if (targetUserId) {
+      const cleanUserStr = String(targetUserId).replace(/^@/, "").trim();
+      let targetUserObjectId = null;
+
+      if (
+        mongoose.Types.ObjectId.isValid(cleanUserStr) &&
+        cleanUserStr.length === 24
+      ) {
+        targetUserObjectId = new mongoose.Types.ObjectId(cleanUserStr);
+      } else {
+        try {
+          const foundUser = await User.findOne({
+            $or: [
+              { telegramUsername: new RegExp(`^${cleanUserStr}$`, "i") },
+              { telegramId: cleanUserStr },
+            ],
+          });
+          if (foundUser) {
+            targetUserObjectId = foundUser._id;
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (targetUserObjectId) {
+        filter.$or = [
+          { author: targetUserObjectId },
+          { "user.id": targetUserObjectId },
+        ];
+      } else {
+        filter.author = new mongoose.Types.ObjectId();
+      }
+    } else if (onlyMyPosts === "true") {
       if (!currentUserId) {
         return res.json({ success: true, posts: [] });
       }

@@ -1,7 +1,9 @@
 import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import OTP from "../db/OTP/otp.js";
 import User from "../db/User/User.js";
+import Post from "../db/Post/Post.js";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "ziyo_secret_jwt_key_super_secure_2026_ziyo_app";
@@ -299,6 +301,141 @@ export const updateProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Profilni yangilashda xatolik yuz berdi.",
+      error: error.message,
+    });
+  }
+};
+
+// 6. Boshqa foydalanuvchi profilini olish (ID yoki username orqali)
+export const getUserProfileById = async (req, res) => {
+  try {
+    const { idOrUsername } = req.params;
+    if (!idOrUsername) {
+      return res.status(400).json({
+        success: false,
+        message: "Foydalanuvchi identifikatori ko'rsatilmadi.",
+      });
+    }
+
+    let user = null;
+    const cleanUsername = idOrUsername.replace(/^@/, "").trim();
+
+    if (mongoose.Types.ObjectId.isValid(cleanUsername) && cleanUsername.length === 24) {
+      user = await User.findById(cleanUsername);
+    }
+
+    if (!user) {
+      const usernameRegex = new RegExp(`^${cleanUsername}$`, "i");
+      user = await User.findOne({
+        $or: [
+          { telegramUsername: usernameRegex },
+          { telegramId: cleanUsername },
+        ],
+      });
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Foydalanuvchi topilmadi.",
+      });
+    }
+
+    const rank = await calculateUserRank(user);
+    const userObj = user.toObject ? user.toObject() : { ...user };
+    userObj.rank = rank;
+
+    // Ushbu foydalanuvchining postlar sonini hisoblash
+    const postCount = await Post.countDocuments({
+      $or: [
+        { author: user._id },
+        { "user.id": user._id.toString() },
+        { "user.username": user.telegramUsername },
+      ],
+    });
+    userObj.postCount = postCount;
+
+    return res.json({
+      success: true,
+      user: userObj,
+    });
+  } catch (error) {
+    console.error("getUserProfileById xatosi:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Foydalanuvchi ma'lumotlarini olishda xatolik yuz berdi.",
+      error: error.message,
+    });
+  }
+};
+
+// 7. Kitob o'qish sahifasi / progressini yangilash
+export const updateReadingProgress = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Avtorizatsiyadan o'tilmagan.",
+      });
+    }
+
+    const { bookId, title, author, img, pages, currentPage } = req.body;
+    if (!bookId) {
+      return res.status(400).json({
+        success: false,
+        message: "Kitob ma'lumoti to'liq emas.",
+      });
+    }
+
+    const totalPages = Number(pages) || 100;
+    const curPage = Math.min(Math.max(Number(currentPage) || 1, 1), totalPages);
+
+    user.readingBook = {
+      bookId,
+      title: title || user.readingBook?.title || "Kitob",
+      author: author || user.readingBook?.author || "",
+      img: img || user.readingBook?.img || "",
+      pages: totalPages,
+      currentPage: curPage,
+      updatedAt: new Date(),
+    };
+
+    // Agar oxirgi betga yetsa yoki tugatilgan bo'lsa
+    if (curPage >= totalPages) {
+      if (!Array.isArray(user.finishedBooks)) {
+        user.finishedBooks = [];
+      }
+      const alreadyFinished = user.finishedBooks.some((b) => b.bookId === bookId);
+      if (!alreadyFinished) {
+        user.finishedBooks.push({
+          bookId,
+          title: title || "Kitob",
+          author: author || "",
+          img: img || "",
+          pages: totalPages,
+          finishedAt: new Date(),
+        });
+        user.readBooks = (user.readBooks || 0) + 1;
+        user.xp = (user.xp || 0) + 50; // Kitob tugatgani uchun +50 XP!
+      }
+    }
+
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: "Kitob mutolaasi saqlandi",
+      readingBook: user.readingBook,
+      finishedBooks: user.finishedBooks,
+      readBooks: user.readBooks,
+      xp: user.xp,
+    });
+  } catch (error) {
+    console.error("updateReadingProgress xatosi:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Kitob progressini yangilashda xatolik yuz berdi.",
       error: error.message,
     });
   }

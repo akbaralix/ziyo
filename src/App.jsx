@@ -20,7 +20,6 @@ function App() {
 
   const showNavbar = !NO_NAVBAR_PAGES.includes(location.pathname) && !isQuizFullScreen;
 
-
   return (
     <div className="app-layout">
       <ToastContainer

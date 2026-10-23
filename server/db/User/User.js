@@ -57,6 +57,25 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    readingBook: {
+      bookId: { type: String, default: "" },
+      title: { type: String, default: "" },
+      author: { type: String, default: "" },
+      img: { type: String, default: "" },
+      pages: { type: Number, default: 0 },
+      currentPage: { type: Number, default: 1 },
+      updatedAt: { type: Date, default: Date.now },
+    },
+    finishedBooks: [
+      {
+        bookId: { type: String, default: "" },
+        title: { type: String, default: "" },
+        author: { type: String, default: "" },
+        img: { type: String, default: "" },
+        pages: { type: Number, default: 0 },
+        finishedAt: { type: Date, default: Date.now },
+      },
+    ],
   },
 
   { timestamps: true },

@@ -291,7 +291,7 @@ function Create() {
             className={`type-btn ${postType === "post" ? "active" : ""}`}
             onClick={() => setPostType("post")}
           >
-            <img src="public/post-create.webp" alt="" />
+            <img src="/post-create.webp" alt="" />
             <span>Maqola / Post</span>
           </button>
 
@@ -300,7 +300,7 @@ function Create() {
             className={`type-btn ${postType === "quiz" ? "active" : ""}`}
             onClick={() => setPostType("quiz")}
           >
-            <img src="public/test-create.webp" alt="" />
+            <img src="/test-create.webp" alt="" />
             <span>Viktorina / Test</span>
           </button>
 
@@ -309,7 +309,7 @@ function Create() {
             className={`type-btn ${postType === "fact" ? "active" : ""}`}
             onClick={() => setPostType("fact")}
           >
-            <img src="public/fact-create.webp" alt="" />
+            <img src="/fact-create.webp" alt="" />
             <span>Qiziqarli fakt</span>
           </button>
 
@@ -325,8 +325,7 @@ function Create() {
             }}
             onClick={() => navigate("/oyinlar")}
           >
-            <img src="public/ziyo-game.webp" alt="" />{" "}
-            <span>Ziyo O'yinlari</span>
+            <img src="/ziyo-game.webp" alt="" /> <span>Ziyo O'yinlari</span>
           </button>
         </div>
       </div>
