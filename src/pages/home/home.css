@@ -139,7 +139,7 @@
 
 .post-sort-btn {
   padding: 7px 14px;
-  border-radius: 12px;
+  border-radius: 22px;
   background: #ffffff;
   border: 1.5px solid #e5e7eb;
   width: fit-content;
@@ -155,7 +155,7 @@
 }
 
 .post-sort-btn.active {
-  border-color: #5d1fe2;
+  border-color: #461fe2;
   background: #f2eefa;
   color: #531fe2;
 }

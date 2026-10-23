@@ -70,11 +70,6 @@ function Login() {
 
   const pollingRef = useRef(null);
 
-  // Agar allaqachon login qilingan bo'lsa, home sahifasiga o'tkazish
-  if (token) {
-    return <Navigate to="/" replace />;
-  }
-
   // Pollingni tozalash
   const stopPolling = () => {
     if (pollingRef.current) {
@@ -312,6 +307,10 @@ function Login() {
       });
     }
   }, [showSuccessModal]);
+  // Agar allaqachon login qilingan bo'lsa, home sahifasiga o'tkazish
+  if (token) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="login-card">

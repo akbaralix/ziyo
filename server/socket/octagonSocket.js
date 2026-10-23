@@ -2,12 +2,26 @@ import User from "../db/User/User.js";
 import { getBattleQuestions } from "./octagonQuestions.js";
 
 const queues = {
-  matematika: [],
+  "matematika:oson": [],
+  "matematika:qiyin": [],
+  "matematika:murakkab": [],
   tarix: [],
   "ingliz-tili": [],
 };
 
 const activeBattles = new Map();
+
+function getXpChanges(difficulty = "oson") {
+  switch (difficulty) {
+    case "murakkab":
+      return { win: 60, lose: -40, draw: 20 };
+    case "qiyin":
+      return { win: 40, lose: -25, draw: 15 };
+    case "oson":
+    default:
+      return { win: 30, lose: -15, draw: 10 };
+  }
+}
 
 const BOT_NAMES = [
   { name: "Jasur_Pro", pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Jasur" },
@@ -20,9 +34,12 @@ const BOT_NAMES = [
 export function initOctagonSocket(io) {
   io.on("connection", (socket) => {
     // 1. Matchmaking Queuega qo'shilish
-    socket.on("octagon:join_queue", async ({ category = "matematika", user = {} }) => {
+    socket.on("octagon:join_queue", async ({ category = "matematika", difficulty = "oson", user = {} }) => {
       const catKey = normalizeCategory(category);
-      if (!queues[catKey]) queues[catKey] = [];
+      const diffKey = ["oson", "qiyin", "murakkab"].includes(difficulty) ? difficulty : "oson";
+      const qKey = catKey === "matematika" ? `matematika:${diffKey}` : catKey;
+
+      if (!queues[qKey]) queues[qKey] = [];
 
       // Foydalanuvchini mavjud bo'lsa tozalash
       removeFromQueue(socket.id);
@@ -45,13 +62,14 @@ export function initOctagonSocket(io) {
           xp: Number(user.xp) || 0,
         },
         category: catKey,
+        difficulty: diffKey,
         joinedAt: Date.now(),
       };
 
       // Navbatda boshqa o'yinchi bormi?
       let opponentEntry = null;
-      while (queues[catKey].length > 0) {
-        const candidate = queues[catKey].shift();
+      while (queues[qKey].length > 0) {
+        const candidate = queues[qKey].shift();
         clearTimeout(candidate.botTimeout);
 
         // Uzilgan socket ni o'tkazib yuborish
@@ -70,20 +88,20 @@ export function initOctagonSocket(io) {
 
       if (opponentEntry) {
         // Real opponent topildi — jang boshlash
-        startBattle(io, catKey, queueEntry, opponentEntry);
+        startBattle(io, catKey, queueEntry, opponentEntry, false, diffKey);
       } else {
         // Navbatga qo'shish
-        queues[catKey].push(queueEntry);
-        socket.emit("octagon:queue_waiting", { category: catKey, queueTime: 0 });
+        queues[qKey].push(queueEntry);
+        socket.emit("octagon:queue_waiting", { category: catKey, difficulty: diffKey, queueTime: 0 });
 
         // FIX 2: Bot timeout 25 soniyaga oshirildi
         // (real player ulanishi uchun yetarli vaqt)
         queueEntry.botTimeout = setTimeout(() => {
-          const idx = queues[catKey].indexOf(queueEntry);
+          const idx = queues[qKey].indexOf(queueEntry);
           if (idx !== -1) {
-            queues[catKey].splice(idx, 1);
+            queues[qKey].splice(idx, 1);
             const botData = createBotOpponent();
-            startBattle(io, catKey, queueEntry, botData, true);
+            startBattle(io, catKey, queueEntry, botData, true, diffKey);
           }
         }, 25000);
       }
@@ -181,13 +199,14 @@ function createBotOpponent() {
 }
 
 // Jangni boshlash
-function startBattle(io, category, player1, player2, isBotBattle = false) {
+function startBattle(io, category, player1, player2, isBotBattle = false, difficulty = "oson") {
   const roomId = `battle_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-  const questions = getBattleQuestions(category, 10); // 10 ta savol
+  const questions = getBattleQuestions(category, 10, difficulty); // 10 ta savol
 
   const battle = {
     roomId,
     category,
+    difficulty,
     questions,
     currentQuestionIndex: 0,
     status: "active",
@@ -221,6 +240,7 @@ function startBattle(io, category, player1, player2, isBotBattle = false) {
   const matchData = {
     roomId,
     category,
+    difficulty,
     totalQuestions: 10,
     player1: { ...battle.player1.user, score: 0 },
     player2: { ...battle.player2.user, score: 0 },
@@ -381,21 +401,23 @@ async function finishBattle(io, battle) {
   const p1Score = battle.player1.score;
   const p2Score = battle.player2.score;
 
+  const xpConfig = getXpChanges(battle.difficulty);
+
   let p1Result = "draw";
   let p2Result = "draw";
-  let p1XpChange = 10;
-  let p2XpChange = 10;
+  let p1XpChange = xpConfig.draw;
+  let p2XpChange = xpConfig.draw;
 
   if (p1Score > p2Score) {
     p1Result = "victory";
     p2Result = "defeat";
-    p1XpChange = 30; // G'olibga +30 XP
-    p2XpChange = -15; // Mag'lubga -15 XP
+    p1XpChange = xpConfig.win; // G'olibga win XP
+    p2XpChange = xpConfig.lose; // Mag'lubga lose XP
   } else if (p2Score > p1Score) {
     p1Result = "defeat";
     p2Result = "victory";
-    p1XpChange = -15;
-    p2XpChange = 30;
+    p1XpChange = xpConfig.lose;
+    p2XpChange = xpConfig.win;
   }
 
   // Bazada XP yangilash
@@ -426,6 +448,7 @@ async function finishBattle(io, battle) {
     opponent: battle.player2.user,
     answers: battle.player1.answers,
     questions: battle.questions,
+    difficulty: battle.difficulty,
   };
 
   io.to(battle.player1.socketId).emit("octagon:battle_finished", p1FinalPayload);
@@ -439,6 +462,7 @@ async function finishBattle(io, battle) {
       opponent: battle.player1.user,
       answers: battle.player2.answers,
       questions: battle.questions,
+      difficulty: battle.difficulty,
     };
     io.to(battle.player2.socketId).emit("octagon:battle_finished", p2FinalPayload);
   }
@@ -451,31 +475,33 @@ async function handlePlayerForfeit(io, battle, forfeitSocketId) {
   battle.status = "finished";
   clearTimeout(battle.roundTimer);
 
+  const xpConfig = getXpChanges(battle.difficulty);
   const isPlayer1 = battle.player1.socketId === forfeitSocketId;
   const winner = isPlayer1 ? battle.player2 : battle.player1;
   const loser = isPlayer1 ? battle.player1 : battle.player2;
 
-  // G'olibga avtomatik +30 XP
+  // G'olibga avtomatik win XP
   if (!winner.isBot && winner.userId) {
     try {
-      await User.findByIdAndUpdate(winner.userId, { $inc: { xp: 30 } });
+      await User.findByIdAndUpdate(winner.userId, { $inc: { xp: xpConfig.win } });
     } catch {}
   }
 
   if (!loser.isBot && loser.userId) {
     try {
-      await User.findByIdAndUpdate(loser.userId, { $inc: { xp: -15 } });
+      await User.findByIdAndUpdate(loser.userId, { $inc: { xp: xpConfig.lose } });
     } catch {}
   }
 
   if (!winner.isBot) {
     io.to(winner.socketId).emit("octagon:battle_finished", {
       result: "victory",
-      xpChange: 30,
+      xpChange: xpConfig.win,
       yourScore: winner.score,
       opponentScore: 0,
       opponent: loser.user,
       forfeit: true,
+      difficulty: battle.difficulty,
       message: "Raqib o'yindan chiqib ketdi. Siz g'olib bo'ldingiz! 🏆",
     });
   }

@@ -341,14 +341,14 @@
 .next-stemp-btn {
   padding: 14px;
   border-radius: 33px;
-  background: #2563eb;
+  background: var(--button-bg);
   color: white;
   font-size: 16px;
+  font-family: "poppins";
+  font-weight: 500;
   border: none;
-  cursor: pointer;
   margin-top: 8px;
   transition: 0.2s ease;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .next-stemp-btn:disabled {
@@ -452,7 +452,7 @@
   padding: 12px;
   border: none;
   border-radius: var(--button-border-radius);
-  background: #f8f8f8;
+  background: none;
   color: #475569;
   font-size: 14px;
   font-weight: 500;

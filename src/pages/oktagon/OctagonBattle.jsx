@@ -30,6 +30,10 @@ const STAGES = {
 export default function OctagonBattle() {
   const [searchParams] = useSearchParams();
   const category = searchParams.get("category") || "matematika";
+  const difficulty =
+    searchParams.get("difficulty") ||
+    localStorage.getItem("octagon_math_difficulty") ||
+    "oson";
   const navigate = useNavigate();
 
   // Foydalanuvchi
@@ -120,7 +124,7 @@ export default function OctagonBattle() {
       stageRef.current = STAGES.COUNTDOWN;
       setConnectionStatus("offline");
 
-      const qs = getBattleQuestions(category, 10);
+      const qs = getBattleQuestions(category, 10, difficulty);
       localQuestionsRef.current = qs;
 
       let c = 3;
@@ -138,7 +142,7 @@ export default function OctagonBattle() {
       }, 1000);
     }, 2500);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
+  }, [category, difficulty]);
 
   const loadLocalQuestion = (idx) => {
     if (idx >= 10) {
@@ -203,6 +207,7 @@ export default function OctagonBattle() {
       if (stageRef.current === STAGES.MATCHMAKING) {
         socket.emit("octagon:join_queue", {
           category,
+          difficulty: category === "matematika" ? difficulty : "oson",
           user: {
             // "me" yubormaslik — server socket.id ni fallback sifatida ishlatadi
             id: currentUser._id || currentUser.id || "",
@@ -328,7 +333,7 @@ export default function OctagonBattle() {
       socket.disconnect();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
+  }, [category, difficulty]);
 
   // Savol taymeri
   useEffect(() => {
@@ -412,7 +417,20 @@ export default function OctagonBattle() {
 
     const win = finalMy > finalOpp;
     const draw = finalMy === finalOpp;
-    const xp = win ? 30 : draw ? 10 : -15;
+
+    const diffXpMap = {
+      murakkab: { win: 60, lose: -40, draw: 20 },
+      qiyin: { win: 40, lose: -25, draw: 15 },
+      oson: { win: 30, lose: -15, draw: 10 },
+    };
+    const xpConfig =
+      (category === "matematika" ? diffXpMap[difficulty] : null) || {
+        win: 30,
+        lose: -15,
+        draw: 10,
+      };
+
+    const xp = win ? xpConfig.win : draw ? xpConfig.draw : xpConfig.lose;
 
     // XP update
     try {
@@ -427,6 +445,7 @@ export default function OctagonBattle() {
       yourScore: finalMy,
       opponentScore: finalOpp,
       opponent: opponent || { name: "Raqib" },
+      difficulty: category === "matematika" ? difficulty : undefined,
     };
     setFinalResult(payload);
 
@@ -462,13 +481,37 @@ export default function OctagonBattle() {
 
             <span className="matchmaking-tag">
               <IoFlame /> {category.toUpperCase()} ARENASI
+              {category === "matematika" && (
+                <span className={`diff-tag-pill diff-${difficulty}`}>
+                  • {difficulty === "murakkab"
+                    ? "MURAKKAB"
+                    : difficulty === "qiyin"
+                    ? "QIYIN"
+                    : "OSON"}
+                </span>
+              )}
             </span>
             <h2 className="matchmaking-title">Raqib qidirilmoqda...</h2>
             <p className="matchmaking-desc">
               {connectionStatus === "connecting"
                 ? "Serverga ulanilmoqda..."
+                : category === "matematika"
+                ? `Tizim sizga "${difficulty}" darajani tanlagan munosib raqibni qidirmoqda.`
                 : "Tizim sizga munosib raqibni qidirmoqda. Bir necha soniya kuting."}
             </p>
+
+            {category === "matematika" && (
+              <div className="matchmaking-stakes-pill">
+                🏆 Yutsa:{" "}
+                <strong>
+                  +{difficulty === "murakkab" ? 60 : difficulty === "qiyin" ? 40 : 30} XP
+                </strong>{" "}
+                | 💔 Yutqazsa:{" "}
+                <strong>
+                  -{difficulty === "murakkab" ? 40 : difficulty === "qiyin" ? 25 : 15} XP
+                </strong>
+              </div>
+            )}
 
             {/* Connection status indicator */}
             <div className={`connection-dot ${connectionStatus}`} style={{

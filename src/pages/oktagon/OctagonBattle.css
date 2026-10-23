@@ -5,7 +5,6 @@
 .octagon-battle-page {
   min-height: 100vh;
   min-height: 100dvh;
-  background-color: #f8fafc;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -101,7 +100,7 @@
 
 .matchmaking-title {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 500;
   color: #0f172a;
   margin: 0;
 }
@@ -112,6 +111,40 @@
   margin: 0 0 14px;
   line-height: 1.5;
   max-width: 320px;
+}
+
+.diff-tag-pill {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.diff-tag-pill.diff-oson {
+  color: #059669;
+  background: #ecfdf5;
+}
+
+.diff-tag-pill.diff-qiyin {
+  color: #d97706;
+  background: #fffbeb;
+}
+
+.diff-tag-pill.diff-murakkab {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.matchmaking-stakes-pill {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #334155;
+  margin-bottom: 12px;
+  display: inline-block;
 }
 
 .matchmaking-cancel-btn {
@@ -421,12 +454,6 @@
   gap: 12px;
 }
 
-@media (max-width: 640px) {
-  .arena-options-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .arena-opt-btn {
   background: #ffffff;
   border: 2px solid #e2e8f0;
@@ -444,6 +471,92 @@
 .arena-opt-btn:hover:not(:disabled) {
   border-color: #461fe2;
   background: #fcfbfe;
+}
+@media (max-width: 640px) {
+  .arena-options-grid {
+    grid-template-columns: 1fr;
+  }
+  .arena-top-header {
+    padding: 8px 12px;
+    border-radius: 28px;
+    gap: 8px;
+  }
+  .fighter-badge {
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+  .fighter-badge.rival {
+    justify-content: flex-end;
+  }
+  .fighter-avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .fighter-info {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .fighter-name {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 80px;
+  }
+  .fighter-score {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .arena-center-status {
+    flex-shrink: 0;
+    gap: 2px;
+  }
+  .question-step-badge {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  .arena-timer-pill {
+    padding: 3px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .arena-opt-btn:hover:not(:disabled) {
+    border: 2px solid #e2e8f0;
+    background: #fcfbfe;
+  }
+}
+
+@media (max-width: 400px) {
+  .arena-top-header {
+    padding: 6px 10px;
+    border-radius: 24px;
+    gap: 6px;
+  }
+  .fighter-badge {
+    gap: 6px;
+  }
+  .fighter-avatar {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    font-size: 13px;
+  }
+  .fighter-name {
+    font-size: 11px;
+    max-width: 65px;
+  }
+  .fighter-score {
+    font-size: 11px;
+  }
+  .arena-timer-pill {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
 }
 
 .opt-number-char {
@@ -521,10 +634,7 @@
 }
 
 .result-card {
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
   border-radius: 33px;
-  padding: 44px 28px;
   width: 100%;
   max-width: 480px;
   text-align: center;
@@ -574,7 +684,7 @@
 
 .result-title {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 500;
   color: #0f172a;
   margin: 0;
 }

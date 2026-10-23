@@ -2,100 +2,206 @@
 // OKTAGON QUESTIONS GENERATOR & POOL
 // ====================================================
 
-// 1. Dinamik Matematika Generator (Cheksiz, yodlab bo'lmaydigan savollar)
-export function generateMathQuestions(count = 10) {
+// 1. Oson daraja generatorlari: 1000 gacha qo'shish, ayirish, ko'paytirish, bo'lish
+const osonGenerators = [
+  // Qo'shish: a + b (natija 1000 gacha)
+  () => {
+    const a = Math.floor(Math.random() * 450) + 20;
+    const b = Math.floor(Math.random() * (980 - a)) + 15;
+    const ans = a + b;
+    return makeMultipleChoice(`${a} + ${b} = ?`, ans);
+  },
+  // Ayirish: a - b (natija 1000 gacha, musbat)
+  () => {
+    const a = Math.floor(Math.random() * 850) + 100;
+    const b = Math.floor(Math.random() * (a - 15)) + 10;
+    const ans = a - b;
+    return makeMultipleChoice(`${a} − ${b} = ?`, ans);
+  },
+  // Ko'paytirish: a * b (natija 1000 gacha)
+  () => {
+    const a = Math.floor(Math.random() * 35) + 6;
+    const maxB = Math.min(45, Math.floor(980 / a));
+    const b = Math.floor(Math.random() * Math.max(3, maxB - 2)) + 3;
+    const ans = a * b;
+    return makeMultipleChoice(`${a} × ${b} = ?`, ans);
+  },
+  // Bo'lish: a / b (qoldiqsiz butun bo'lish, a 1000 gacha)
+  () => {
+    const b = Math.floor(Math.random() * 20) + 2;
+    const quotient = Math.floor(Math.random() * Math.min(50, Math.floor(980 / b))) + 4;
+    const a = b * quotient;
+    return makeMultipleChoice(`${a} ÷ ${b} = ?`, quotient);
+  },
+  // Aralash qo'shish va ayirish: a + b - c (1000 gacha)
+  () => {
+    const a = Math.floor(Math.random() * 350) + 50;
+    const b = Math.floor(Math.random() * 300) + 30;
+    const c = Math.floor(Math.random() * Math.min(250, a + b - 20)) + 10;
+    const ans = a + b - c;
+    return makeMultipleChoice(`${a} + ${b} − ${c} = ?`, ans);
+  },
+  // Bo'lish va qo'shish: a / b + c (1000 gacha)
+  () => {
+    const b = Math.floor(Math.random() * 10) + 2;
+    const mult = Math.floor(Math.random() * 25) + 5;
+    const a = b * mult;
+    const c = Math.floor(Math.random() * 150) + 15;
+    const ans = a / b + c;
+    return makeMultipleChoice(`${a} ÷ ${b} + ${c} = ?`, ans);
+  },
+  // Ko'paytirish va ayirish: a * b - c (1000 gacha)
+  () => {
+    const a = Math.floor(Math.random() * 25) + 5;
+    const b = Math.floor(Math.random() * 15) + 4;
+    const prod = a * b;
+    const c = Math.floor(Math.random() * Math.min(60, prod - 5)) + 5;
+    const ans = prod - c;
+    return makeMultipleChoice(`${a} × ${b} − ${c} = ?`, ans);
+  },
+];
+
+// 2. Qiyin daraja generatorlari: Qavsli ifodalar, amallar tartibi, foizlar, kvadratlar, tenglamalar
+const qiyinGenerators = [
+  // Qavsli ifoda: (a - b) * c
+  () => {
+    const b = Math.floor(Math.random() * 35) + 10;
+    const a = b + Math.floor(Math.random() * 45) + 10;
+    const c = Math.floor(Math.random() * 14) + 4;
+    const ans = (a - b) * c;
+    return makeMultipleChoice(`(${a} − ${b}) × ${c} = ?`, ans);
+  },
+  // Qavsli qo'shish va bo'lish: (a + b) / c
+  () => {
+    const c = Math.floor(Math.random() * 9) + 3;
+    const mult = Math.floor(Math.random() * 35) + 12;
+    const sum = c * mult;
+    const a = Math.floor(Math.random() * (sum - 20)) + 10;
+    const b = sum - a;
+    return makeMultipleChoice(`(${a} + ${b}) ÷ ${c} = ?`, mult);
+  },
+  // Amallar tartibi: a + b * c - d
+  () => {
+    const a = Math.floor(Math.random() * 80) + 20;
+    const b = Math.floor(Math.random() * 18) + 4;
+    const c = Math.floor(Math.random() * 12) + 3;
+    const d = Math.floor(Math.random() * 45) + 10;
+    const ans = a + b * c - d;
+    return makeMultipleChoice(`${a} + ${b} × ${c} − ${d} = ?`, ans);
+  },
+  // Kvadrat va ayirish: a² - b
+  () => {
+    const a = Math.floor(Math.random() * 18) + 12; // 12..29
+    const b = Math.floor(Math.random() * 60) + 15;
+    const ans = a * a - b;
+    return makeMultipleChoice(`${a}² − ${b} = ?`, ans);
+  },
+  // Foiz topish
+  () => {
+    const pList = [15, 20, 25, 30, 40, 60, 75];
+    const p = pList[Math.floor(Math.random() * pList.length)];
+    const base = (Math.floor(Math.random() * 16) + 4) * 50; // 200..1000
+    const ans = (base * p) / 100;
+    return makeMultipleChoice(`${base} sonining ${p}% qismi nechaga teng?`, ans);
+  },
+  // Chiziqli tenglama: ax + b = c
+  () => {
+    const x = Math.floor(Math.random() * 20) + 4;
+    const a = Math.floor(Math.random() * 8) + 2;
+    const b = Math.floor(Math.random() * 35) + 5;
+    const c = a * x + b;
+    return makeMultipleChoice(`Agar ${a}x + ${b} = ${c} bo'lsa, x = ?`, x);
+  },
+  // Qo'shaloq ko'paytma: a * b - c * d
+  () => {
+    const a = Math.floor(Math.random() * 18) + 7;
+    const b = Math.floor(Math.random() * 14) + 5;
+    const c = Math.floor(Math.random() * 10) + 3;
+    const d = Math.floor(Math.random() * 8) + 2;
+    const ans = a * b - c * d;
+    return makeMultipleChoice(`${a} × ${b} − ${c} × ${d} = ?`, ans);
+  },
+];
+
+// 3. Murakkab daraja generatorlari: Ildizlar, kublar, ko'p bosqichli algebra, manfiy sonlar
+const murakkabGenerators = [
+  // Ildiz va kvadrat: √a + b²
+  () => {
+    const perfectSquares = [64, 81, 100, 121, 144, 169, 196, 225, 256, 289, 324, 400];
+    const a = perfectSquares[Math.floor(Math.random() * perfectSquares.length)];
+    const b = Math.floor(Math.random() * 14) + 8; // 8..21
+    const ans = Math.round(Math.sqrt(a)) + b * b;
+    return makeMultipleChoice(`√${a} + ${b}² = ?`, ans);
+  },
+  // Murakkab tenglama: a(x + b) = c
+  () => {
+    const x = Math.floor(Math.random() * 18) + 3;
+    const a = Math.floor(Math.random() * 6) + 3;
+    const b = Math.floor(Math.random() * 12) + 2;
+    const c = a * (x + b);
+    return makeMultipleChoice(`Agar ${a}(x + ${b}) = ${c} bo'lsa, x = ?`, x);
+  },
+  // Kub va kvadrat ayirmasi: a³ - b²
+  () => {
+    const a = Math.floor(Math.random() * 5) + 4; // 4..8
+    const b = Math.floor(Math.random() * 12) + 4;
+    const ans = a * a * a - b * b;
+    return makeMultipleChoice(`${a}³ − ${b}² = ?`, ans);
+  },
+  // 3 bosqichli qavsli ifoda: (a² - b) ÷ c + d × e
+  () => {
+    const c = Math.floor(Math.random() * 7) + 2;
+    const mult = Math.floor(Math.random() * 12) + 4;
+    const a = Math.floor(Math.random() * 8) + 12; // 12..19
+    const b = a * a - c * mult;
+    const d = Math.floor(Math.random() * 11) + 3;
+    const e = Math.floor(Math.random() * 8) + 3;
+    const ans = mult + d * e;
+    return makeMultipleChoice(`(${a}² − ${b}) ÷ ${c} + ${d} × ${e} = ?`, ans);
+  },
+  // Ildiz ostida yig'indi va ko'paytirish: √(a + b) × c - d
+  () => {
+    const root = Math.floor(Math.random() * 9) + 11; // 11..19
+    const sum = root * root;
+    const a = Math.floor(Math.random() * (sum - 30)) + 15;
+    const b = sum - a;
+    const c = Math.floor(Math.random() * 9) + 4;
+    const d = Math.floor(Math.random() * 35) + 10;
+    const ans = root * c - d;
+    return makeMultipleChoice(`√(${a} + ${b}) × ${c} − ${d} = ?`, ans);
+  },
+  // Manfiy sonlar amali: (-a) * b + c * d
+  () => {
+    const a = Math.floor(Math.random() * 14) + 5;
+    const b = Math.floor(Math.random() * 10) + 4;
+    const c = Math.floor(Math.random() * 16) + 6;
+    const d = Math.floor(Math.random() * 12) + 5;
+    const ans = -a * b + c * d;
+    return makeMultipleChoice(`(−${a}) × ${b} + ${c} × ${d} = ?`, ans);
+  },
+  // Chiziqli tenglamadan x ni topish: a(x - b) = c
+  () => {
+    const x = Math.floor(Math.random() * 15) + 6;
+    const a = Math.floor(Math.random() * 6) + 3;
+    const b = Math.floor(Math.random() * 10) + 2;
+    const c = a * (x - b);
+    return makeMultipleChoice(`Agar ${a}(x − ${b}) = ${c} bo'lsa, x = ?`, x);
+  },
+];
+
+// Dinamik Matematika Generator
+export function generateMathQuestions(count = 10, difficulty = "oson") {
   const questions = [];
-
-  const generators = [
-    // Qo'shish va ko'paytirish: a + b * c
-    () => {
-      const a = Math.floor(Math.random() * 40) + 10;
-      const b = Math.floor(Math.random() * 12) + 3;
-      const c = Math.floor(Math.random() * 9) + 2;
-      const ans = a + b * c;
-      const text = `${a} + ${b} × ${c} = ?`;
-      return makeMultipleChoice(text, ans);
-    },
-
-    // Qavsli ifoda: (a - b) * c
-    () => {
-      const b = Math.floor(Math.random() * 20) + 5;
-      const a = b + Math.floor(Math.random() * 30) + 5;
-      const c = Math.floor(Math.random() * 8) + 3;
-      const ans = (a - b) * c;
-      const text = `(${a} − ${b}) × ${c} = ?`;
-      return makeMultipleChoice(text, ans);
-    },
-
-    // Bo'lish va qo'shish: a / b + c
-    () => {
-      const b = Math.floor(Math.random() * 8) + 2;
-      const multiplier = Math.floor(Math.random() * 15) + 3;
-      const a = b * multiplier;
-      const c = Math.floor(Math.random() * 50) + 10;
-      const ans = a / b + c;
-      const text = `${a} ÷ ${b} + ${c} = ?`;
-      return makeMultipleChoice(text, ans);
-    },
-
-    // Kvadrat hisoblash: a^2 - b
-    () => {
-      const a = Math.floor(Math.random() * 16) + 5; // 5..20
-      const b = Math.floor(Math.random() * 30) + 5;
-      const ans = a * a - b;
-      const text = `${a}² − ${b} = ?`;
-      return makeMultipleChoice(text, ans);
-    },
-
-    // Foiz topish: a ning b% i
-    () => {
-      const percentages = [10, 20, 25, 50, 75];
-      const p = percentages[Math.floor(Math.random() * percentages.length)];
-      const baseOptions = [40, 60, 80, 100, 120, 160, 200, 240, 300, 400];
-      const base = baseOptions[Math.floor(Math.random() * baseOptions.length)];
-      const ans = (base * p) / 100;
-      const text = `${base} sonining ${p}% qismi nechaga teng?`;
-      return makeMultipleChoice(text, ans);
-    },
-
-    // Tenglama: x + a = b yoki x * a = b
-    () => {
-      const x = Math.floor(Math.random() * 25) + 4;
-      const a = Math.floor(Math.random() * 9) + 2;
-      const b = x * a;
-      const text = `Agar ${a}x = ${b} bo'lsa, x = ?`;
-      return makeMultipleChoice(text, x);
-    },
-
-    // Qo'shaloq ko'paytirish: a * b - c * d
-    () => {
-      const a = Math.floor(Math.random() * 9) + 2;
-      const b = Math.floor(Math.random() * 9) + 2;
-      const c = Math.floor(Math.random() * 5) + 2;
-      const d = Math.floor(Math.random() * 5) + 2;
-      const ans = a * b - c * d;
-      const text = `${a} × ${b} − ${c} × ${d} = ?`;
-      return makeMultipleChoice(text, ans);
-    },
-
-    // Mantiqiy ketma-ketlik
-    () => {
-      const start = Math.floor(Math.random() * 10) + 2;
-      const step = Math.floor(Math.random() * 6) + 3;
-      const s1 = start;
-      const s2 = s1 + step;
-      const s3 = s2 + step;
-      const s4 = s3 + step;
-      const ans = s4 + step;
-      const text = `Ketma-ketlikni davom ettiring: ${s1}, ${s2}, ${s3}, ${s4}, ... ?`;
-      return makeMultipleChoice(text, ans);
-    },
-  ];
+  let generators = osonGenerators;
+  if (difficulty === "qiyin") {
+    generators = qiyinGenerators;
+  } else if (difficulty === "murakkab") {
+    generators = murakkabGenerators;
+  }
 
   while (questions.length < count) {
     const fn = generators[Math.floor(Math.random() * generators.length)];
     const q = fn();
-    // Takrorlanmaslikni tekshirish
     if (!questions.some((item) => item.text === q.text)) {
       questions.push(q);
     }
@@ -108,17 +214,22 @@ function makeMultipleChoice(questionText, correctAnswer) {
   const distractors = new Set();
   const correctNum = Number(correctAnswer);
 
-  const deltas = [-10, 10, -5, 5, -2, 2, -1, 1, -3, 3, -4, 4];
-  while (distractors.size < 3) {
+  const deltas = [-10, 10, -5, 5, -2, 2, -1, 1, -3, 3, -4, 4, -15, 15, -20, 20];
+  let attempts = 0;
+  while (distractors.size < 3 && attempts < 50) {
+    attempts++;
     const delta = deltas[Math.floor(Math.random() * deltas.length)];
     const fake = correctNum + delta;
-    if (fake !== correctNum && fake >= 0) {
+    if (fake !== correctNum) {
       distractors.add(fake);
     }
   }
 
+  while (distractors.size < 3) {
+    distractors.add(correctNum + distractors.size + 1);
+  }
+
   const allOptions = [String(correctNum), ...Array.from(distractors).map(String)];
-  // Shuffled options
   const shuffled = shuffleArray(allOptions);
   const correctIndex = shuffled.indexOf(String(correctNum));
 
@@ -289,9 +400,9 @@ const ENGLISH_BANK = [
 ];
 
 // Fan bo'yicha 10 ta savolni tayyorlab berish
-export function getBattleQuestions(category = "matematika", count = 10) {
+export function getBattleQuestions(category = "matematika", count = 10, difficulty = "oson") {
   if (category === "matematika") {
-    return generateMathQuestions(count);
+    return generateMathQuestions(count, difficulty);
   }
 
   let bank = HISTORY_BANK;

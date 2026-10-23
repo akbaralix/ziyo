@@ -23,6 +23,7 @@ import {
 
 import { FaDiamond } from "react-icons/fa6";
 import { toast } from "react-toastify";
+import ModalOverlay from "../../components/ModalOverlay";
 import {
   createQuizGame,
   getQuizGameById,
@@ -632,82 +633,81 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
         </button>
       </div>
 
-      {aiQuizOpen && (
-        <div className="aiQuiz-backdrop" onClick={() => setAiQuizOpen(false)}>
-          <div
-            className="aiQuiz-container"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="aiQuiz-header">
-              <div className="aiQuiz-title-group">
-                <span className="aiQuiz-spark-icon">
-                  <IoSparkles />
-                </span>
-                <div>
-                  <h2>AI yordamida test yaratish</h2>
-                  <p className="aiQuiz-subtitle">
-                    Mavzu va savollar sonini kiriting, promptni nusxalang va olingan JSON natijasini yuklang.
-                  </p>
+      <ModalOverlay isOpen={aiQuizOpen} onClose={() => setAiQuizOpen(false)}>
+        <div
+          className="aiQuiz-container"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="aiQuiz-header">
+            <div className="aiQuiz-title-group">
+              <span className="aiQuiz-spark-icon">
+                <IoSparkles />
+              </span>
+              <div>
+                <h2>AI yordamida test yaratish</h2>
+                <p className="aiQuiz-subtitle">
+                  Mavzu va savollar sonini kiriting, promptni nusxalang va olingan JSON natijasini yuklang.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="aiQuiz-close-btn"
+              onClick={() => setAiQuizOpen(false)}
+            >
+              <IoClose />
+            </button>
+          </div>
+
+          <div className="aiQuiz-body">
+            {/* 1-Qadam: Prompt */}
+            <div className="ai-step-card">
+              <div className="ai-step-title">1-Qadam: AI uchun prompt tayyorlash</div>
+              <div className="ai-inputs-row">
+                <div className="ai-input-field flex-2">
+                  <label>Mavzu nomi</label>
+                  <input
+                    type="text"
+                    placeholder="Masalan: Fizika qonunlari, Tarix, Ingliz tili..."
+                    value={aiTopic}
+                    onChange={(e) => setAiTopic(e.target.value)}
+                  />
+                </div>
+                <div className="ai-input-field flex-1">
+                  <label>Savollar soni</label>
+                  <input
+                    type="number"
+                    min={8}
+                    max={25}
+                    value={aiCount}
+                    onChange={(e) => setAiCount(Number(e.target.value))}
+                  />
                 </div>
               </div>
-              <button
-                type="button"
-                className="aiQuiz-close-btn"
-                onClick={() => setAiQuizOpen(false)}
-              >
-                <IoClose />
-              </button>
+
+              <div className="prompt-display-box">
+                <label>Tayyor prompt (Nusxa oling):</label>
+                <pre className="prompt-pre">{getAiPrompt()}</pre>
+                <button
+                  type="button"
+                  className="copy-prompt-btn"
+                  onClick={handleCopyAiPrompt}
+                >
+                  <IoCopyOutline /> Promptni nusxalash
+                </button>
+              </div>
             </div>
 
-            <div className="aiQuiz-body">
-              {/* 1-Qadam: Prompt */}
-              <div className="ai-step-card">
-                <div className="ai-step-title">1-Qadam: AI uchun prompt tayyorlash</div>
-                <div className="ai-inputs-row">
-                  <div className="ai-input-field flex-2">
-                    <label>Mavzu nomi</label>
-                    <input
-                      type="text"
-                      placeholder="Masalan: Fizika qonunlari, Tarix, Ingliz tili..."
-                      value={aiTopic}
-                      onChange={(e) => setAiTopic(e.target.value)}
-                    />
-                  </div>
-                  <div className="ai-input-field flex-1">
-                    <label>Savollar soni</label>
-                    <input
-                      type="number"
-                      min={8}
-                      max={25}
-                      value={aiCount}
-                      onChange={(e) => setAiCount(Number(e.target.value))}
-                    />
-                  </div>
-                </div>
-
-                <div className="prompt-display-box">
-                  <label>Tayyor prompt (Nusxa oling):</label>
-                  <pre className="prompt-pre">{getAiPrompt()}</pre>
-                  <button
-                    type="button"
-                    className="copy-prompt-btn"
-                    onClick={handleCopyAiPrompt}
-                  >
-                    <IoCopyOutline /> Promptni nusxalash
-                  </button>
-                </div>
-              </div>
-
-              {/* 2-Qadam: JSON */}
-              <div className="ai-step-card">
-                <div className="ai-step-title">2-Qadam: Olingan JSON natijasini joylash</div>
-                <p className="ai-step-desc">
-                  ChatGPT yoki Gemini qaytargan JSON kodini quyidagi maydonga tashlang:
-                </p>
-                <textarea
-                  className="ai-json-textarea"
-                  rows={6}
-                  placeholder={`[
+            {/* 2-Qadam: JSON */}
+            <div className="ai-step-card">
+              <div className="ai-step-title">2-Qadam: Olingan JSON natijasini joylash</div>
+              <p className="ai-step-desc">
+                ChatGPT yoki Gemini qaytargan JSON kodini quyidagi maydonga tashlang:
+              </p>
+              <textarea
+                className="ai-json-textarea"
+                rows={6}
+                placeholder={`[
   {
     "text": "Savol matni",
     "options": ["A", "B", "C", "D"],
@@ -715,31 +715,30 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
     "explanation": "To'g'ri javob izohi"
   }
 ]`}
-                  value={aiJsonInput}
-                  onChange={(e) => setAiJsonInput(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="aiQuiz-footer">
-              <button
-                type="button"
-                className="aiQuiz-cancel-btn"
-                onClick={() => setAiQuizOpen(false)}
-              >
-                Bekor qilish
-              </button>
-              <button
-                type="button"
-                className="aiQuiz-submit-btn"
-                onClick={handleImportAiJson}
-              >
-                <IoCheckmark /> JSON’dan testlarni yuklash
-              </button>
+                value={aiJsonInput}
+                onChange={(e) => setAiJsonInput(e.target.value)}
+              />
             </div>
           </div>
+
+          <div className="aiQuiz-footer">
+            <button
+              type="button"
+              className="aiQuiz-cancel-btn"
+              onClick={() => setAiQuizOpen(false)}
+            >
+              Bekor qilish
+            </button>
+            <button
+              type="button"
+              className="aiQuiz-submit-btn"
+              onClick={handleImportAiJson}
+            >
+              <IoCheckmark /> JSON’dan testlarni yuklash
+            </button>
+          </div>
         </div>
-      )}
+      </ModalOverlay>
     </div>
   );
 }

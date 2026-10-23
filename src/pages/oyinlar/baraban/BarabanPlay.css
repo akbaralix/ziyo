@@ -16,6 +16,78 @@
   transition: none !important;
 }
 
+/* Base button & modal styles */
+.baraban-circle-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 33px;
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: #334155;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.baraban-primary-btn {
+  background: #461fe2;
+  color: #ffffff;
+  border: 1.5px solid #461fe2;
+  border-radius: 33px;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+.baraban-secondary-btn {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 33px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+.baraban-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.modal-close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 33px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #64748b;
+  cursor: pointer;
+}
+
 /* Play Header */
 .baraban-play-header {
   display: flex;
@@ -99,6 +171,11 @@
 
 .wheel-stage {
   margin-bottom: 24px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
 }
 
 .play-controls-box {
@@ -353,4 +430,179 @@
   justify-content: center;
   padding: 14px;
   font-size: 15px;
+}
+
+/* ========================================================
+   Mobile Responsiveness
+   ======================================================== */
+@media (max-width: 768px) {
+  .baraban-play-page {
+    padding: 16px 14px 60px;
+  }
+
+  .baraban-play-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .play-header-left {
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .baraban-circle-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 18px;
+  }
+
+  .play-title {
+    font-size: 18px;
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+
+  .play-meta-tags {
+    gap: 6px;
+  }
+
+  .play-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+
+  .play-header-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .play-header-actions .baraban-secondary-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .play-wheel-box {
+    padding: 20px 14px;
+    border-radius: 28px;
+  }
+
+  .wheel-stage {
+    margin-bottom: 18px;
+  }
+
+  .big-spin-btn {
+    width: 100%;
+    max-width: 360px;
+    padding: 14px 20px;
+    font-size: 15px;
+    justify-content: center;
+  }
+
+  .sidebar-card {
+    padding: 16px 14px;
+    border-radius: 28px;
+  }
+
+  .play-names-list {
+    max-height: 180px;
+    gap: 6px;
+  }
+
+  .play-name-pill {
+    font-size: 12px;
+    padding: 5px 12px;
+  }
+
+  .winner-modal-card {
+    padding: 20px 16px;
+    border-radius: 28px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .winner-trophy-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+  }
+
+  .winner-name-highlight {
+    font-size: 26px;
+    word-break: break-word;
+    margin: 4px 0 12px;
+  }
+
+  .winner-question-card {
+    padding: 14px 12px;
+    border-radius: 24px;
+  }
+
+  .question-main-text {
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .play-opt-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    gap: 10px;
+    border-radius: 24px;
+  }
+
+  .opt-char {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    font-size: 11px;
+  }
+
+  .winner-next-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .baraban-play-page {
+    padding: 12px 10px 50px;
+  }
+
+  .play-header-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .play-title {
+    font-size: 17px;
+  }
+
+  .play-wheel-box {
+    padding: 16px 8px;
+    border-radius: 24px;
+  }
+
+  .big-spin-btn {
+    padding: 13px 16px;
+    font-size: 14px;
+  }
+
+  .sidebar-card {
+    padding: 14px 12px;
+    border-radius: 24px;
+  }
+
+  .winner-modal-card {
+    padding: 16px 12px;
+    border-radius: 24px;
+  }
+
+  .winner-name-highlight {
+    font-size: 22px;
+  }
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaBook,
@@ -15,6 +15,7 @@ import {
   IoClose,
   IoCheckmark,
 } from "react-icons/io5";
+import { MdAddAPhoto } from "react-icons/md";
 import { GoTrophy } from "react-icons/go";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -25,6 +26,7 @@ import "./profil.css";
 import { getUserProfile, updateProfile } from "../../api/userApi.js";
 import { logout } from "../../api/authApi.js";
 import { fetchPosts } from "../../api/postApi.js";
+import { getRatings } from "../../api/ratingApi.js";
 import {
   getMyQuizGames,
   createGameSession,
@@ -32,6 +34,13 @@ import {
 } from "../../api/quizApi.js";
 
 import userPic from "../../assets/user.jpg";
+
+const images = Object.values(
+  import.meta.glob("../../assets/user/*.{png,jpg,jpeg,webp}", {
+    eager: true,
+    import: "default",
+  }),
+);
 
 function Profil() {
   const navigate = useNavigate();
@@ -42,12 +51,25 @@ function Profil() {
   const [editName, setEditName] = useState("");
   const [editLastName, setEditLastName] = useState(""); // 👈 Familiya uchun alohida state qo'shildi
   const [editBio, setEditBio] = useState("");
+  const [editProfilePic, setEditProfilePic] = useState("");
+
+  // Profil rasmini tanlash modali (login.jsx kabi)
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const photoContainerRef = useRef(null);
 
   // TanStack Query orqali profil ma'lumotlarini keshdan olish
   const { data: profileResponse } = useQuery({
     queryKey: ["userProfile"],
     queryFn: getUserProfile,
     staleTime: 1000 * 60 * 5,
+  });
+
+  // TanStack Query orqali barcha foydalanuvchilar reytingini olish (real rank uchun)
+  const { data: ratingsResponse } = useQuery({
+    queryKey: ["ratings", "all", "Barchasi"],
+    queryFn: () => getRatings({ timeframe: "all", category: "Barchasi" }),
+    staleTime: 1000 * 60 * 2,
   });
 
   // TanStack Query orqali faqat o'zimning postlarim sonini hisoblash
@@ -95,6 +117,55 @@ function Profil() {
     }
   };
 
+  // Scroll qilinganda qoq markazdagi rasmni aniqlash
+  const handlePhotoScroll = () => {
+    if (!photoContainerRef.current) return;
+    const container = photoContainerRef.current;
+
+    const containerCenter = container.scrollLeft + container.offsetWidth / 2;
+    const buttons = container.querySelectorAll(".profile-img-btn");
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    buttons.forEach((btn, index) => {
+      const btnCenter = btn.offsetLeft + btn.offsetWidth / 2;
+      const distance = Math.abs(containerCenter - btnCenter);
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = index;
+      }
+    });
+
+    setActivePhotoIndex(closestIndex);
+  };
+
+  useEffect(() => {
+    if (isPhotoModalOpen) {
+      const idx = images.findIndex((img) => img === editProfilePic);
+      if (idx !== -1) {
+        setActivePhotoIndex(idx);
+        requestAnimationFrame(() => {
+          if (photoContainerRef.current) {
+            const buttons =
+              photoContainerRef.current.querySelectorAll(".profile-img-btn");
+            if (buttons[idx]) {
+              buttons[idx].scrollIntoView({
+                behavior: "auto",
+                inline: "center",
+                block: "nearest",
+              });
+            }
+          }
+        });
+      } else {
+        requestAnimationFrame(() => {
+          handlePhotoScroll();
+        });
+      }
+    }
+  }, [isPhotoModalOpen]);
+
   // Foydalanuvchi ma'lumotlarini shakllantirish
   const u = profileResponse?.user;
   const fullName =
@@ -108,16 +179,79 @@ function Profil() {
           return "Foydalanuvchi";
         })();
 
+  // Foydalanuvchining reytingdagi aniq o'rnini hisoblash
+  const computedRank = useMemo(() => {
+    const list = ratingsResponse?.ratings;
+    const myId =
+      u?._id?.toString() ||
+      (() => {
+        try {
+          const zu = JSON.parse(localStorage.getItem("ziyo_user"));
+          return zu?._id || zu?.id;
+        } catch {
+          return null;
+        }
+      })();
+
+    const myUsername =
+      u?.telegramUsername ||
+      (() => {
+        try {
+          const zu = JSON.parse(localStorage.getItem("ziyo_user"));
+          return zu?.telegramUsername;
+        } catch {
+          return null;
+        }
+      })();
+
+    if (Array.isArray(list) && list.length > 0) {
+      // 1. Ro'yxatdan ID yoki username bo'yicha qidiramiz
+      const idx = list.findIndex(
+        (r) =>
+          (myId &&
+            (String(r.id) === String(myId) ||
+              String(r._id) === String(myId))) ||
+          (myUsername && r.username === myUsername),
+      );
+
+      if (idx !== -1) {
+        return idx + 1;
+      }
+
+      // 2. Agar topilmasa, foydalanuvchining XP siga qarab nechanchi o'rinda ekanini hisoblaymiz
+      const myXp = u?.xp || 0;
+      const higherCount = list.filter((r) => (r.xp || 0) > myXp).length;
+      return higherCount + 1;
+    }
+
+    // 3. Agar backend hisoblab bergan bo'lsa
+    if (u?.rank && typeof u.rank === "number" && u.rank > 0) {
+      return u.rank;
+    }
+
+    return 1;
+  }, [ratingsResponse, u]);
+
   const profileData = {
     name: fullName,
     username: u?.telegramUsername || "user",
-    profilePic: u?.profilePic,
+    profilePic:
+      u?.profilePic ||
+      (() => {
+        try {
+          const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+          if (p && p.profilePic) return p.profilePic;
+          const zu = JSON.parse(localStorage.getItem("ziyo_user"));
+          if (zu && zu.profilePic) return zu.profilePic;
+        } catch {}
+        return "";
+      })(),
     bio: u?.bio,
     studyPlace: u?.studyPlace || "institut",
     course: u?.course || "1-kurs",
     level: (u?.xp || 0) > 1000 ? "Usta 🌟" : "Bilimdon ⚡",
     levelNum: Math.floor((u?.xp || 0) / 100) + 1,
-    rank: u?.rank || 1,
+    rank: computedRank,
     xp: u?.xp || 0,
     readBooks: u?.readBooks || 0,
     solvedQuizzes: u?.solvedQuizzes || 0,
@@ -129,14 +263,33 @@ function Profil() {
     onSuccess: (res) => {
       if (res?.user) {
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
-        localStorage.setItem(
-          "ziyo_user_profile",
-          JSON.stringify({
-            name: `${res.user.firstName || ""} ${res.user.lastName || ""}`.trim(),
-            username: res.user.telegramUsername,
-            bio: res.user.bio,
-          }),
-        );
+
+        try {
+          const existingZiyoUser =
+            JSON.parse(localStorage.getItem("ziyo_user")) || {};
+          localStorage.setItem(
+            "ziyo_user",
+            JSON.stringify({
+              ...existingZiyoUser,
+              ...res.user,
+            }),
+          );
+        } catch {}
+
+        try {
+          const existingProfile =
+            JSON.parse(localStorage.getItem("ziyo_user_profile")) || {};
+          localStorage.setItem(
+            "ziyo_user_profile",
+            JSON.stringify({
+              ...existingProfile,
+              name: `${res.user.firstName || ""} ${res.user.lastName || ""}`.trim(),
+              username: res.user.telegramUsername,
+              bio: res.user.bio,
+              profilePic: res.user.profilePic,
+            }),
+          );
+        } catch {}
       }
       setIsEditModalOpen(false);
       toast.success("Profil muvaffaqiyatli yangilandi!");
@@ -147,10 +300,11 @@ function Profil() {
   });
 
   const handleOpenEdit = () => {
-    const parts = profileData.name.split(" ");
+    const parts = (profileData.name || "").split(" ");
     setEditName(parts[0] || "");
     setEditLastName(parts.slice(1).join(" ") || "");
     setEditBio(profileData.bio || "");
+    setEditProfilePic(profileData.profilePic || images[0] || userPic);
     setIsEditModalOpen(true);
   };
 
@@ -165,6 +319,7 @@ function Profil() {
       firstName: editName.trim(),
       lastName: editLastName.trim(),
       bio: editBio.trim(),
+      profilePic: editProfilePic,
     });
   };
 
@@ -218,9 +373,14 @@ function Profil() {
 
         <div className="profile-header-body">
           <div className="profile-avatar-container">
-            <div className="profile-avatar-wrapper">
+            <div
+              className="profile-avatar-wrapper"
+              onClick={handleOpenEdit}
+              style={{ cursor: "pointer" }}
+              title="Profil rasmini almashtirish"
+            >
               <img
-                src={`https://eduziyo.web.app${profileData.profilePic || userPic}`}
+                src={profileData.profilePic || userPic}
                 alt="Profil rasmi"
                 className="profile-avatar-img"
               />
@@ -328,7 +488,7 @@ function Profil() {
       {activeTab === "posts" && (
         <div className="profile-posts-section">
           <div className="profile-posts-header">
-            <h3 className="profile-section-title">Chop etilgan bilimlar</h3>
+            <h3 className="profile-section-title">Postlar</h3>
             <button
               type="button"
               className="create-new-inline-btn"
@@ -444,6 +604,7 @@ function Profil() {
       <ModalOverlay
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
+        className="edit-profile-modal-overlay"
       >
         <div className="edit-modal">
           <div className="edit-modal-header">
@@ -458,6 +619,38 @@ function Profil() {
           </div>
 
           <form onSubmit={handleSaveProfile} className="edit-profile-form">
+            {/* Profil rasmini o'zgartirish bloki (login.jsx kabi) */}
+            <div className="edit-avatar-section">
+              <div
+                className="profil-set-img"
+                onClick={() => setIsPhotoModalOpen(true)}
+                title="Profil rasmini almashtirish"
+              >
+                <img
+                  src={editProfilePic || userPic}
+                  alt="Profil rasmi"
+                />
+                <button
+                  type="button"
+                  className="profil-set-img-badge"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsPhotoModalOpen(true);
+                  }}
+                  title="Rasmni tanlash"
+                >
+                  <MdAddAPhoto />
+                </button>
+              </div>
+              <button
+                type="button"
+                className="edit-change-photo-btn"
+                onClick={() => setIsPhotoModalOpen(true)}
+              >
+                <MdAddAPhoto /> Rasmni o'zgartirish
+              </button>
+            </div>
+
             <div className="form-field">
               <label>Ism</label>
               <input
@@ -506,6 +699,52 @@ function Profil() {
               </button>
             </div>
           </form>
+        </div>
+      </ModalOverlay>
+
+      {/* PROFIL RASMINI TANLASH MODALI (login.jsx kabi) */}
+      <ModalOverlay
+        isOpen={isPhotoModalOpen}
+        onClose={() => setIsPhotoModalOpen(false)}
+        className="photo-carousel-modal-overlay"
+      >
+        <div className="profile-carousel-container">
+          <div className="profile-carousel-header">
+            <h3>Profil rasmini tanlang</h3>
+            <button
+              type="button"
+              className="close-modal-btn"
+              onClick={() => setIsPhotoModalOpen(false)}
+            >
+              <IoClose />
+            </button>
+          </div>
+
+          <div className="profile-carousel-wrapper">
+            <div
+              className="profile-all-img"
+              ref={photoContainerRef}
+              onScroll={handlePhotoScroll}
+            >
+              {images.map((image, index) => {
+                const isActive = index === activePhotoIndex;
+                const isSelected = editProfilePic === image;
+                return (
+                  <button
+                    key={image}
+                    type="button"
+                    className={`profile-img-btn ${isActive ? "active-profile" : ""} ${isSelected ? "selected-profile" : ""}`}
+                    onClick={() => {
+                      setEditProfilePic(image);
+                      setIsPhotoModalOpen(false);
+                    }}
+                  >
+                    <img src={image} alt={`Profil rasmi ${index + 1}`} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </ModalOverlay>
     </div>

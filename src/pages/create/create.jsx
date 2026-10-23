@@ -54,7 +54,7 @@ function Create() {
 
   // Post form state
   const [postType, setPostType] = useState("post"); // 'post' | 'quiz' | 'fact'
-  const [category, setCategory] = useState("Dasturlash");
+  const [category, setCategory] = useState("Barchasi");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
 
@@ -291,7 +291,7 @@ function Create() {
             className={`type-btn ${postType === "post" ? "active" : ""}`}
             onClick={() => setPostType("post")}
           >
-            <span className="type-icon">📝</span>
+            <img src="public/post-create.webp" alt="" />
             <span>Maqola / Post</span>
           </button>
 
@@ -300,7 +300,7 @@ function Create() {
             className={`type-btn ${postType === "quiz" ? "active" : ""}`}
             onClick={() => setPostType("quiz")}
           >
-            <span className="type-icon">🧠</span>
+            <img src="public/test-create.webp" alt="" />
             <span>Viktorina / Test</span>
           </button>
 
@@ -309,7 +309,7 @@ function Create() {
             className={`type-btn ${postType === "fact" ? "active" : ""}`}
             onClick={() => setPostType("fact")}
           >
-            <span className="type-icon">💡</span>
+            <img src="public/fact-create.webp" alt="" />
             <span>Qiziqarli fakt</span>
           </button>
 
@@ -325,7 +325,7 @@ function Create() {
             }}
             onClick={() => navigate("/oyinlar")}
           >
-            <span className="type-icon">🎮</span>
+            <img src="public/ziyo-game.webp" alt="" />{" "}
             <span>Ziyo O'yinlari</span>
           </button>
         </div>
@@ -456,9 +456,6 @@ function Create() {
                       onClick={() => setCorrectOption(opt.id)}
                     >
                       <IoCheckmark />
-                      {correctOption === opt.id
-                        ? "To'g'ri javob"
-                        : "To'g'ri qilish"}
                     </button>
                     {quizOptions.length > 2 && (
                       <button

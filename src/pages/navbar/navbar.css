@@ -166,7 +166,7 @@
 }
 
 .mobil-nav-link {
-  color: #242424;
+  color: #323131;
   text-decoration: none;
   display: flex;
   flex-direction: column;
@@ -179,8 +179,8 @@
   justify-content: center;
 }
 .mobil-nav-link.active {
-  color: rgb(24, 24, 24);
-  font-weight: 800;
+  color: rgb(19, 19, 19);
+  font-weight: 900;
 }
 @media (max-width: 768px) {
   .navbar {

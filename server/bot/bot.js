@@ -19,9 +19,13 @@ export async function sendPostReportToAdmin({ post, reporter, reason = "" }) {
   }
 
   const postAuthor = post?.user?.name || "Noma'lum muallif";
-  const authorUsername = post?.user?.username ? `@${post.user.username}` : "username yo'q";
+  const authorUsername = post?.user?.username
+    ? `@${post.user.username}`
+    : "username yo'q";
   const reporterName = reporter?.name || "Anonim foydalanuvchi";
-  const reporterUsername = reporter?.username ? `@${reporter.username}` : "username yo'q";
+  const reporterUsername = reporter?.username
+    ? `@${reporter.username}`
+    : "username yo'q";
   const reporterId = reporter?.id || "Noma'lum";
 
   const messageText =
@@ -85,8 +89,10 @@ export default function startBot() {
     // /start komandasi
     bot.command("start", async (ctx) => {
       const telegramId = String(ctx.from?.id || ctx.message?.from?.id);
-      const firstName = ctx.from?.first_name || ctx.message?.from?.first_name || "";
-      const lastName = ctx.from?.last_name || ctx.message?.from?.last_name || "";
+      const firstName =
+        ctx.from?.first_name || ctx.message?.from?.first_name || "";
+      const lastName =
+        ctx.from?.last_name || ctx.message?.from?.last_name || "";
       const username = ctx.from?.username || ctx.message?.from?.username || "";
 
       let tokenParam = typeof ctx.match === "string" ? ctx.match.trim() : null;
@@ -159,11 +165,14 @@ export default function startBot() {
 
         await bot.telegram.sendMessage(
           ADMIN_CHAT_ID,
-          `✅ Telegram bot orqali tasdiqlandi: ${telegramId} (${firstName})`,
+          `✅ Telegram bot orqali tasdiqlandi: <a href="tg://user?id=${telegramId}">${firstName}</a>`,
+          { parse_mode: "HTML" },
         );
       } catch (err) {
         console.error("Bot start xatosi:", err);
-        await ctx.reply("❌ Xatolik yuz berdi. Iltimos, sayt orqali qaytadan urinib ko‘ring.");
+        await ctx.reply(
+          "❌ Xatolik yuz berdi. Iltimos, sayt orqali qaytadan urinib ko‘ring.",
+        );
       }
     });
 
@@ -173,7 +182,9 @@ export default function startBot() {
       try {
         const post = await Post.findById(postId);
         if (!post) {
-          await ctx.answerCbQuery("Ushbu post allaqachon o'chirilgan yoki topilmadi.");
+          await ctx.answerCbQuery(
+            "Ushbu post allaqachon o'chirilgan yoki topilmadi.",
+          );
           await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
           return;
         }

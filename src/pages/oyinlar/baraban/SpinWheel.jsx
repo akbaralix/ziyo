@@ -246,6 +246,8 @@ const SpinWheel = forwardRef(function SpinWheel(
         justifyContent: "center",
         position: "relative",
         userSelect: "none",
+        width: "100%",
+        maxWidth: "100%",
       }}
     >
       <canvas

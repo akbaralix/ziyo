@@ -328,19 +328,7 @@
   font-family: inherit;
 }
 
-/* AI Modal Backdrop & Card */
-.aiQuiz-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 16px;
-  box-sizing: border-box;
-}
-
+/* AI Modal Card */
 .aiQuiz-container {
   background-color: #ffffff;
   border: 1.5px solid #e2e8f0;
@@ -919,5 +907,157 @@
   .meta-item {
     flex: 1;
     justify-content: space-between;
+  }
+
+  /* aiQuiz Mobile Modal Styles */
+  .aiQuiz-container {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .aiQuiz-header {
+    padding: 14px 16px;
+    gap: 10px;
+  }
+
+  .aiQuiz-title-group {
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .aiQuiz-spark-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    font-size: 18px;
+    border-radius: 20px;
+  }
+
+  .aiQuiz-header h2 {
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .aiQuiz-subtitle {
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  .aiQuiz-close-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    font-size: 15px;
+  }
+
+  .aiQuiz-body {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+
+  .ai-step-card {
+    padding: 14px 12px;
+    border-radius: 20px;
+    gap: 8px;
+  }
+
+  .ai-step-title {
+    font-size: 12.5px;
+  }
+
+  .ai-inputs-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .ai-input-field label {
+    font-size: 11.5px;
+  }
+
+  .ai-input-field input {
+    padding: 9px 14px;
+    font-size: 13px;
+    border-radius: 24px;
+    width: 100%;
+  }
+
+  .prompt-display-box {
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .prompt-pre {
+    padding: 10px 12px;
+    font-size: 11px;
+    max-height: 100px;
+    border-radius: 14px;
+  }
+
+  .copy-prompt-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 14px;
+    font-size: 12.5px;
+    border-radius: 24px;
+  }
+
+  .ai-step-desc {
+    font-size: 11.5px;
+  }
+
+  .ai-json-textarea {
+    padding: 10px 12px;
+    font-size: 12px;
+    border-radius: 14px;
+  }
+
+  .aiQuiz-footer {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .aiQuiz-cancel-btn,
+  .aiQuiz-submit-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 14px;
+    font-size: 13px;
+    border-radius: 24px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .aiQuiz-container {
+    border-radius: 22px;
+    max-height: 96vh;
+  }
+
+  .aiQuiz-header {
+    padding: 12px 12px;
+  }
+
+  .aiQuiz-header h2 {
+    font-size: 14px;
+  }
+
+  .aiQuiz-subtitle {
+    font-size: 11px;
+  }
+
+  .aiQuiz-body {
+    padding: 12px 12px;
+    gap: 10px;
+  }
+
+  .ai-step-card {
+    padding: 12px 10px;
+    border-radius: 18px;
+  }
+
+  .aiQuiz-footer {
+    padding: 10px 12px;
   }
 }

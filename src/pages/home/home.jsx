@@ -22,15 +22,67 @@ function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [quickPin, setQuickPin] = useState("");
 
-  const [xp, setXp] = useState(0);
+  const getStoredXp = () => {
+    try {
+      const u = JSON.parse(localStorage.getItem("ziyo_user") || "{}");
+      if (u?.xp !== undefined && u?.xp !== null) return u.xp;
+      if (u?.points !== undefined && u?.points !== null) return u.points;
+      const p = JSON.parse(localStorage.getItem("ziyo_user_profile") || "{}");
+      if (p?.xp !== undefined && p?.xp !== null) return p.xp;
+      if (p?.points !== undefined && p?.points !== null) return p.points;
+    } catch {}
+    return 0;
+  };
+
+  const [xp, setXp] = useState(getStoredXp);
 
   useEffect(() => {
-    const getXp = async () => {
-      const data = await getUserProfile();
-      setXp(data.xp);
+    let isMounted = true;
+
+    const fetchRealXp = async () => {
+      try {
+        const data = await getUserProfile();
+        const realXp =
+          data?.user?.xp ??
+          data?.xp ??
+          data?.user?.points ??
+          data?.points;
+
+        if (realXp !== undefined && realXp !== null && isMounted) {
+          setXp(realXp);
+
+          try {
+            const currentU = JSON.parse(localStorage.getItem("ziyo_user") || "{}");
+            localStorage.setItem(
+              "ziyo_user",
+              JSON.stringify({ ...currentU, ...(data?.user || {}), xp: realXp })
+            );
+          } catch {}
+        }
+      } catch (err) {
+        console.error("Foydalanuvchi ballini yuklashda xatolik:", err);
+        if (isMounted) {
+          setXp(getStoredXp());
+        }
+      }
     };
 
-    getXp();
+    fetchRealXp();
+
+    const handleStorageChange = () => {
+      if (isMounted) {
+        setXp(getStoredXp());
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", fetchRealXp);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", fetchRealXp);
+    };
   }, []);
 
   const handleQuickJoin = (e) => {
@@ -96,9 +148,9 @@ function Home() {
             </button>
           </div>
           <span className="header-divider" />
-          <div className="user-pointes">
+          <div className="user-pointes" title="To'plangan ballar">
             <GoTrophy />
-            <span>{xp || 0}</span>
+            <span>{Number(xp || 0).toLocaleString()}</span>
           </div>
         </div>
       </div>

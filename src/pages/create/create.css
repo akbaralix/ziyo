@@ -101,8 +101,8 @@
   color: #181824;
 }
 
-.type-icon {
-  font-size: 20px;
+.type-btn img {
+  width: 30px;
   display: flex;
   align-items: center;
 }
@@ -161,9 +161,9 @@
 }
 
 .category-chip.selected {
-  background: #f8f8f8;
-  border-color: #a09e9e;
-  color: #212121;
+  background: #f1eaff;
+  border-color: #8471f1;
+  color: #4608cc;
 }
 
 .category-chip-icon {
@@ -348,17 +348,17 @@
 }
 
 .quiz-option-input-row.correct .quiz-option-badge {
-  background: #3566c7;
+  background: var(--button-bg);
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
   color: #ffffff;
 }
 
 .correct-check-btn {
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 50%;
   background: #f8f8f8;
   color: #212121;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 23px;
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -367,17 +367,18 @@
 }
 
 .correct-check-btn.is-correct {
-  background: #3566c7;
+  background: var(--button-bg);
   color: #fff;
 }
 
 .delete-option-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
   background: #f8f8f8;
   color: #f13131;
-  font-size: 18px;
+  font-size: 23px;
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
@@ -624,11 +625,6 @@
   }
   .quiz-option-input-row {
     /* flex-wrap: wrap; */
-  }
-
-  .correct-check-btn {
-    font-size: 12px;
-    padding: 6px 10px;
   }
 }
 

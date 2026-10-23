@@ -120,7 +120,7 @@
   cursor: pointer;
   overflow: hidden;
 }
-.book-img {
+.book-cover img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -417,9 +417,9 @@
   gap: 6px;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
-  padding: 8px 14px;
-  border-radius: 10px;
-  font-size: 13px;
+  padding: 9px;
+  border-radius: 50%;
+  font-size: 20px;
   font-weight: 600;
   color: #334155;
   cursor: pointer;
@@ -796,7 +796,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #2563eb;
+  background: var(--button-bg);
   color: #ffffff;
   border: none;
   padding: 8px 14px;
@@ -846,6 +846,6 @@
   }
 
   .books-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   }
 }

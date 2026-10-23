@@ -96,13 +96,16 @@ export const checkTelegramSession = async (req, res) => {
       await session.save();
 
       const jwtToken = generateJwtToken(user);
+      const rank = await calculateUserRank(user);
+      const userObj = user.toObject ? user.toObject() : { ...user };
+      userObj.rank = rank;
 
       return res.json({
         success: true,
         verified: true,
         isNewUser: false,
         token: jwtToken,
-        user,
+        user: userObj,
       });
     }
 
@@ -188,12 +191,15 @@ export const registerTelegramUser = async (req, res) => {
     await user.save();
 
     const jwtToken = generateJwtToken(user);
+    const rank = await calculateUserRank(user);
+    const userObj = user.toObject ? user.toObject() : { ...user };
+    userObj.rank = rank;
 
     return res.status(201).json({
       success: true,
       message: "Muvaffaqiyatli ro'yxatdan o'tdingiz!",
       token: jwtToken,
-      user,
+      user: userObj,
     });
   } catch (error) {
     console.error("Register telegram user xatosi:", error);
@@ -205,12 +211,55 @@ export const registerTelegramUser = async (req, res) => {
   }
 };
 
+// Foydalanuvchining real reytingdagi o'rnini (rank) hisoblash
+export const calculateUserRank = async (user) => {
+  if (!user) return 1;
+  try {
+    const higherCount = await User.countDocuments({
+      $or: [
+        { xp: { $gt: user.xp || 0 } },
+        {
+          xp: user.xp || 0,
+          solvedQuizzes: { $gt: user.solvedQuizzes || 0 },
+        },
+        {
+          xp: user.xp || 0,
+          solvedQuizzes: user.solvedQuizzes || 0,
+          readBooks: { $gt: user.readBooks || 0 },
+        },
+        {
+          xp: user.xp || 0,
+          solvedQuizzes: user.solvedQuizzes || 0,
+          readBooks: user.readBooks || 0,
+          createdAt: { $lt: user.createdAt },
+        },
+      ],
+    });
+    return higherCount + 1;
+  } catch (err) {
+    console.error("calculateUserRank xatosi:", err);
+    return 1;
+  }
+};
+
 // 4. Joriy tizimga kirgan foydalanuvchi ma'lumotlarini olish (JWT orqali)
 export const getMe = async (req, res) => {
   try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Avtorizatsiyadan o'tilmagan.",
+      });
+    }
+
+    const rank = await calculateUserRank(user);
+    const userObj = user.toObject ? user.toObject() : { ...user };
+    userObj.rank = rank;
+
     return res.json({
       success: true,
-      user: req.user,
+      user: userObj,
     });
   } catch (error) {
     return res.status(500).json({
@@ -237,10 +286,14 @@ export const updateProfile = async (req, res) => {
 
     await user.save();
 
+    const rank = await calculateUserRank(user);
+    const userObj = user.toObject ? user.toObject() : { ...user };
+    userObj.rank = rank;
+
     return res.json({
       success: true,
       message: "Profil muvaffaqiyatli yangilandi",
-      user,
+      user: userObj,
     });
   } catch (error) {
     return res.status(500).json({

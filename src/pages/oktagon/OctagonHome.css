@@ -297,3 +297,232 @@
 .octagon-start-btn:hover {
   opacity: 0.92;
 }
+
+/* ---------------- DISCIPLINE SETTINGS & DIFFICULTY ---------------- */
+.discipline-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.discipline-diff-chip {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 33px;
+  letter-spacing: 0.2px;
+}
+
+.discipline-settings-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1.5px solid #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.discipline-settings-btn:hover {
+  background: #e2e8f0;
+  color: #461fe2;
+  transform: rotate(35deg);
+}
+
+/* ---------------- DIFFICULTY SETTINGS MODAL ---------------- */
+.octagon-settings-modal-overlay {
+  z-index: 10000 !important;
+}
+
+.octagon-settings-modal {
+  background: #ffffff;
+  border-radius: 28px;
+  width: 100%;
+  max-width: 480px;
+  padding: 24px;
+  box-sizing: border-box;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-title-icon {
+  font-size: 22px;
+  color: #461fe2;
+}
+
+.settings-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.settings-modal-desc {
+  margin: -4px 0 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.difficulty-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.diff-option-card {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diff-option-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.diff-option-card.active {
+  background: #fafafa;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.diff-option-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.diff-option-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.diff-badge-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 33px;
+}
+
+.diff-option-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.diff-radio-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.diff-radio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.diff-option-desc {
+  margin: 0;
+  font-size: 12.5px;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.diff-xp-stakes {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.diff-xp-win {
+  color: #059669;
+}
+
+.diff-xp-lose {
+  color: #dc2626;
+}
+
+.settings-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.save-diff-btn {
+  background: #461fe2;
+  color: #ffffff;
+  border: none;
+  padding: 11px 24px;
+  border-radius: 33px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.save-diff-btn:hover {
+  opacity: 0.92;
+}
+
+@media (max-width: 600px) {
+  .octagon-settings-modal {
+    max-width: 100%;
+    border-radius: 22px;
+    padding: 20px 16px;
+  }
+  .diff-xp-stakes {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
