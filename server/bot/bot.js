@@ -100,13 +100,23 @@ export default function startBot() {
       try {
         if (!tokenParam) {
           const existingUser = await User.findOne({ telegramId });
-          if (existingUser) {
-            await ctx.reply(
-              `Assalomu alaykum, <b>${existingUser.firstName} ${existingUser.lastName}</b>! 👋\n\n` +
-                `Siz Ziyo platformasidan ro‘yxatdan o‘tgansiz. Tizimga kirish uchun sayt orqali "Telegram orqali kirish" tugmasini bosing.`,
-              { parse_mode: "HTML" },
-            );
-          } else {
+        if (existingUser) {
+  await ctx.reply(
+    `Assalomu alaykum, <b>${existingUser.firstName} ${existingUser.lastName}</b>! 👋\n\n` +
+      `Siz Ziyo platformasidan ro‘yxatdan o‘tgansiz. Tizimga kirish uchun quyidagi tugmani bosing.`,
+    {
+      parse_mode: "HTML",
+      ...Markup.inlineKeyboard([
+        [
+          Markup.button.webApp(
+            "🚀 Ziyo platformasiga kirish",
+            "https://eduziyo.web.app"
+          ),
+        ],
+      ]),
+    }
+  );
+} else {
             await ctx.reply(
               `Assalomu alaykum, <b>${firstName}</b>! 👋\n\n` +
                 `Ziyo platformasining rasmiy botiga xush kelibsiz. Sayt orqali kirish uchun platformadagi "Telegram orqali kirish" tugmasini bosing.`,
