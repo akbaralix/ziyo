@@ -39,13 +39,23 @@ function Reytinglar() {
 
   const handleUserClick = (targetUser) => {
     if (!targetUser) return;
-    const uName =
-      targetUser.username ||
-      targetUser.telegramUsername ||
-      targetUser.id ||
-      targetUser._id;
-    if (uName) {
-      navigate(`/@${uName.replace(/^@/, "")}`);
+
+    // 1. Agar haqiqiy telegram username bo'lsa (va "user" bo'lmasa)
+    const tg = targetUser.telegramUsername || targetUser.username;
+    if (tg && tg !== "user" && tg.trim() !== "" && !tg.startsWith("user_")) {
+      navigate(`/@${tg.replace(/^@/, "").trim()}`);
+      return;
+    }
+
+    // 2. Aks holda uning aniq MongoDB ID si!
+    const uid = targetUser._id || targetUser.id;
+    if (uid) {
+      navigate(`/@${String(uid)}`);
+      return;
+    }
+
+    if (tg) {
+      navigate(`/@${tg.replace(/^@/, "").trim()}`);
     }
   };
 

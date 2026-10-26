@@ -488,38 +488,6 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
 
         {/* Main Content Area: Question Editor */}
         <main className="builder-main-content">
-          {/* Top Options: Timer & Points */}
-          <div className="question-meta-bar">
-            <div className="meta-item">
-              <FaClock className="meta-icon" />
-              <span>Vaqt:</span>
-              <select
-                value={currentQ.timeLimit}
-                onChange={(e) => handleTimeLimitChange(e.target.value)}
-                className="meta-select"
-              >
-                <option value={10}>10 soniya</option>
-                <option value={20}>20 soniya</option>
-                <option value={30}>30 soniya</option>
-                <option value={60}>60 soniya</option>
-              </select>
-            </div>
-
-            <div className="meta-item">
-              <FaAward className="meta-icon award" />
-              <span>Ball:</span>
-              <select
-                value={currentQ.points}
-                onChange={(e) => handlePointsChange(e.target.value)}
-                className="meta-select"
-              >
-                <option value={50}>50 ball</option>
-                <option value={100}>100 ball (Standart)</option>
-                <option value={200}>200 ball (2x)</option>
-              </select>
-            </div>
-          </div>
-
           {/* Question Text Box */}
           <div className="question-input-card">
             <label className="question-input-label">
@@ -579,7 +547,36 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
               );
             })}
           </div>
+          <div className="question-meta-bar">
+            <div className="meta-item">
+              <FaClock className="meta-icon" />
+              <span>Vaqt:</span>
+              <select
+                value={currentQ.timeLimit}
+                onChange={(e) => handleTimeLimitChange(e.target.value)}
+                className="meta-select"
+              >
+                <option value={10}>10 soniya</option>
+                <option value={20}>20 soniya</option>
+                <option value={30}>30 soniya</option>
+                <option value={60}>60 soniya</option>
+              </select>
+            </div>
 
+            <div className="meta-item">
+              <FaAward className="meta-icon award" />
+              <span>Ball:</span>
+              <select
+                value={currentQ.points}
+                onChange={(e) => handlePointsChange(e.target.value)}
+                className="meta-select"
+              >
+                <option value={50}>50 ball</option>
+                <option value={100}>100 ball </option>
+                <option value={200}>200 ball (2x)</option>
+              </select>
+            </div>
+          </div>
           {/* Question Explanation Box */}
           <div className="question-explanation-card">
             <label className="explanation-label">
@@ -634,10 +631,7 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
       </div>
 
       <ModalOverlay isOpen={aiQuizOpen} onClose={() => setAiQuizOpen(false)}>
-        <div
-          className="aiQuiz-container"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="aiQuiz-container" onClick={(e) => e.stopPropagation()}>
           <div className="aiQuiz-header">
             <div className="aiQuiz-title-group">
               <span className="aiQuiz-spark-icon">
@@ -646,7 +640,8 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
               <div>
                 <h2>AI yordamida test yaratish</h2>
                 <p className="aiQuiz-subtitle">
-                  Mavzu va savollar sonini kiriting, promptni nusxalang va olingan JSON natijasini yuklang.
+                  Mavzu va savollar sonini kiriting, promptni nusxalang va
+                  olingan JSON natijasini yuklang.
                 </p>
               </div>
             </div>
@@ -662,7 +657,9 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
           <div className="aiQuiz-body">
             {/* 1-Qadam: Prompt */}
             <div className="ai-step-card">
-              <div className="ai-step-title">1-Qadam: AI uchun prompt tayyorlash</div>
+              <div className="ai-step-title">
+                1-Qadam: AI uchun prompt tayyorlash
+              </div>
               <div className="ai-inputs-row">
                 <div className="ai-input-field flex-2">
                   <label>Mavzu nomi</label>
@@ -700,9 +697,12 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
 
             {/* 2-Qadam: JSON */}
             <div className="ai-step-card">
-              <div className="ai-step-title">2-Qadam: Olingan JSON natijasini joylash</div>
+              <div className="ai-step-title">
+                2-Qadam: Olingan JSON natijasini joylash
+              </div>
               <p className="ai-step-desc">
-                ChatGPT yoki Gemini qaytargan JSON kodini quyidagi maydonga tashlang:
+                ChatGPT yoki Gemini qaytargan JSON kodini quyidagi maydonga
+                tashlang:
               </p>
               <textarea
                 className="ai-json-textarea"

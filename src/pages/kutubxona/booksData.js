@@ -39,7 +39,7 @@ export const BOOKS_DATA = [
     id: "sariq-devni-minib",
     title: "Sariq devni minib",
     author: "Xudoyberdi To'xtaboyev",
-    img: "public/booksimg/sariq-devni-minib.jpg",
+    img: "/booksimg/sariq-devni-minib.jpg",
     category: "Sarguzasht",
     year: "1968",
     pages: 240,
@@ -56,7 +56,7 @@ export const BOOKS_DATA = [
     id: "dunyoning-ishlari",
     title: "Dunyoning ishlari",
     author: "O'tkir Hoshimov",
-    img: "public/booksimg/Dunyoning ishlari.jpg",
+    img: "/booksimg/Dunyoning ishlari.jpg",
     category: "Badiiy adabiyot",
     year: "1982",
     pages: 210,
@@ -73,6 +73,7 @@ export const BOOKS_DATA = [
     id: "atom-odatlari",
     title: "Atom odatlari",
     author: "James Clear",
+    img: "/booksimg/atom-odatlari.jpg",
     category: "Rivojlanish",
     year: "2018",
     pages: 320,
@@ -84,21 +85,5 @@ export const BOOKS_DATA = [
       "Mayda o'zgarishlar orqali ulkan natijalarga erishish va yaxshi odatlarni shakllantirish bo'yicha dunyo bo'yicha eng mashhur qo'llanma.",
     pdfUrl: utganKunlarPdf, // fallback
     featured: true,
-  },
-  {
-    id: "toza-kod",
-    title: "Clean Code (Toza kod)",
-    author: "Robert C. Martin",
-    category: "Dasturlash",
-    year: "2008",
-    pages: 464,
-    rating: 4.9,
-    readersCount: 870,
-    coverColor: "linear-gradient(135deg, #0f172a 0%, #334155 100%)",
-    badge: "IT & Dasturlash",
-    description:
-      "Har bir dasturchi o'qishi shart bo'lgan kodlash madaniyati, refaktoring va sifatli dasturiy ta'minot yaratish san'ati.",
-    pdfUrl: utganKunlarPdf, // fallback
-    featured: false,
   },
 ];

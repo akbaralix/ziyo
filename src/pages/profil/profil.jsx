@@ -14,6 +14,7 @@ import {
   IoBookmarkOutline,
   IoGridOutline,
   IoClose,
+  IoArrowBack,
   IoCheckmark,
   IoShareSocialOutline,
   IoArrowBackOutline,
@@ -41,6 +42,21 @@ import {
 } from "../../api/quizApi.js";
 
 import userPic from "../../assets/user.jpg";
+
+const formatAvatarUrl = (pic) => {
+  if (!pic) return userPic;
+  if (
+    pic.startsWith("http://") ||
+    pic.startsWith("https://") ||
+    pic.startsWith("data:")
+  ) {
+    return pic;
+  }
+  if (!pic.startsWith("/")) {
+    return `/${pic}`;
+  }
+  return pic;
+};
 
 const images = Object.values(
   import.meta.glob("../../assets/user/*.{png,jpg,jpeg,webp}", {
@@ -73,10 +89,17 @@ function Profil() {
     if (!cleanUsername || cleanUsername === "me") return true;
     const myTg = currentLoggedUser?.telegramUsername;
     const myId = currentLoggedUser?._id || currentLoggedUser?.id;
-    return Boolean(
-      (myTg && myTg.toLowerCase() === cleanUsername.toLowerCase()) ||
-      (myId && String(myId) === cleanUsername)
-    );
+
+    if (myId && String(myId) === cleanUsername) return true;
+    if (
+      myTg &&
+      myTg !== "user" &&
+      myTg.toLowerCase() === cleanUsername.toLowerCase()
+    ) {
+      return true;
+    }
+
+    return false;
   }, [cleanUsername, currentLoggedUser]);
 
   const [activeTab, setActiveTab] = useState("posts"); // 'posts' | 'quizzes' | 'saved'
@@ -100,12 +123,13 @@ function Profil() {
   });
 
   // 2. TanStack Query: Boshqa foydalanuvchi profilini olish (agar !isMe bo'lsa)
-  const { data: otherProfileResponse, isLoading: isOtherProfileLoading } = useQuery({
-    queryKey: ["otherUserProfile", cleanUsername],
-    queryFn: () => getUserProfileById(cleanUsername),
-    enabled: !isMe && Boolean(cleanUsername),
-    staleTime: 1000 * 60 * 2,
-  });
+  const { data: otherProfileResponse, isLoading: isOtherProfileLoading } =
+    useQuery({
+      queryKey: ["otherUserProfile", cleanUsername],
+      queryFn: () => getUserProfileById(cleanUsername),
+      enabled: !isMe && Boolean(cleanUsername),
+      staleTime: 1000 * 60 * 2,
+    });
 
   const isLoadingProfile = isMe ? isMyProfileLoading : isOtherProfileLoading;
 
@@ -123,8 +147,8 @@ function Profil() {
   const targetUserIdentifier = isMe
     ? null
     : u?._id
-    ? String(u._id)
-    : cleanUsername;
+      ? String(u._id)
+      : cleanUsername;
 
   const { data: postsCountResponse } = useQuery({
     queryKey: ["postsCount", isMe ? "my" : targetUserIdentifier],
@@ -132,7 +156,7 @@ function Profil() {
       fetchPosts(
         isMe
           ? { onlyMyPosts: true }
-          : { userId: targetUserIdentifier, authorId: targetUserIdentifier }
+          : { userId: targetUserIdentifier, authorId: targetUserIdentifier },
       ),
     enabled: Boolean(isMe || targetUserIdentifier),
     staleTime: 1000 * 60 * 3,
@@ -254,7 +278,8 @@ function Profil() {
     }
 
     const list = ratingsResponse?.ratings;
-    const targetUserId = u?._id?.toString() || (isMe ? currentLoggedUser?._id : null);
+    const targetUserId =
+      u?._id?.toString() || (isMe ? currentLoggedUser?._id : null);
     const targetUsername = u?.telegramUsername || cleanUsername;
 
     if (Array.isArray(list) && list.length > 0) {
@@ -263,7 +288,7 @@ function Profil() {
           (targetUserId &&
             (String(r.id) === String(targetUserId) ||
               String(r._id) === String(targetUserId))) ||
-          (targetUsername && r.username === targetUsername)
+          (targetUsername && r.username === targetUsername),
       );
 
       if (idx !== -1) return idx + 1;
@@ -284,8 +309,11 @@ function Profil() {
 
   const profileData = {
     name: fullName,
-    username: u?.telegramUsername || cleanUsername || "user",
-    profilePic: u?.profilePic || userPic,
+    username:
+      u?.telegramUsername ||
+      (cleanUsername.length === 24 ? "us" : cleanUsername) ||
+      "user",
+    profilePic: formatAvatarUrl(u?.profilePic),
     bio:
       u?.bio ||
       (isMe
@@ -358,7 +386,7 @@ function Profil() {
             JSON.parse(localStorage.getItem("ziyo_user")) || {};
           localStorage.setItem(
             "ziyo_user",
-            JSON.stringify({ ...existingZiyoUser, ...res.user })
+            JSON.stringify({ ...existingZiyoUser, ...res.user }),
           );
         } catch {}
       }
@@ -454,6 +482,9 @@ function Profil() {
                 src={profileData.profilePic || userPic}
                 alt="Profil rasmi"
                 className="profile-avatar-img"
+                onError={(e) => {
+                  e.target.src = userPic;
+                }}
               />
               <span className="profile-online-badge" title="Onlayn" />
             </div>
@@ -525,15 +556,6 @@ function Profil() {
                     >
                       <IoShareSocialOutline />
                       <span>Ulashish</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="profile-btn btn-logout"
-                      onClick={() => navigate(-1)}
-                      title="Ortga qaytish"
-                    >
-                      <IoArrowBackOutline />
-                      <span>Ortga</span>
                     </button>
                   </>
                 )}
@@ -730,14 +752,24 @@ function Profil() {
           </div>
 
           {!isMe && isLoadingProfile ? (
-            <div style={{ textAlign: "center", padding: "40px 0", color: "#64748b" }}>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "40px 0",
+                color: "#64748b",
+              }}
+            >
               Postlar yuklanmoqda...
             </div>
           ) : (
             <Post
-              key={isMe ? "my-posts" : `user-posts-${targetUserIdentifier || "none"}`}
+              key={
+                isMe
+                  ? "my-posts"
+                  : `user-posts-${u?._id || cleanUsername || "none"}`
+              }
               onlyMyPosts={isMe}
-              userId={isMe ? null : targetUserIdentifier}
+              userId={isMe ? null : String(u?._id || cleanUsername)}
             />
           )}
         </div>
@@ -851,14 +883,14 @@ function Profil() {
         >
           <div className="edit-modal">
             <div className="edit-modal-header">
-              <h3>Profilni tahrirlash</h3>
               <button
                 type="button"
                 className="close-modal-btn"
                 onClick={() => setIsEditModalOpen(false)}
               >
-                <IoClose />
+                <IoArrowBack />
               </button>
+              <h3>Profilni tahrirlash</h3>
             </div>
 
             <form onSubmit={handleSaveProfile} className="edit-profile-form">

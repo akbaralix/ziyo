@@ -1,14 +1,19 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { IoArrowBack } from "react-icons/io5";
 import { toast } from "react-toastify";
-import "./oyinlar.css";
+import quiz from "../../assets/game/quiz.jpg";
+import octagon from "../../assets/game/octagon.jpg";
+import baraban from "../../assets/game/baraban.jpg";
+import puzzle from "../../assets/game/puzzle.jpg";
+import arvoh from "../../assets/game/arvoh.jpg";
 
+import "./oyinlar.css";
 const gamesList = [
   {
     id: "quiz",
     title: "Ziyo Quiz",
     href: "/quiz/builder",
+    bgimg: quiz,
     description:
       "O‘quvchilar uchun savol-javob o‘yinlarini yarating va bilimlarini sinovdan o‘tkazing.",
     icon: "💡",
@@ -19,6 +24,7 @@ const gamesList = [
     id: "oktagon",
     title: "Oktagon (1v1 Duel)",
     href: "/oktagon",
+    bgimg: octagon,
     description:
       "Jonli 1v1 aql jangi! Matematika, Tarix va Ingliz tilida raqib bilan 10 ta savol bo‘yicha bellashing, XP to‘plang.",
     icon: "⚔️",
@@ -29,6 +35,7 @@ const gamesList = [
     id: "baraban",
     title: "Aylanuvchi Baraban",
     href: "/oyinlar/baraban/create",
+    bgimg: baraban,
     description:
       "Qatnashchilarni aylana barabanda tasodifiy tanlash va ularga test savollarini berish o'yini.",
     icon: "🎡",
@@ -39,6 +46,7 @@ const gamesList = [
     id: "puzzle",
     title: "So‘z Topishmoq",
     href: null,
+    bgimg: puzzle,
     description:
       "Harflardan so‘zlar yasash va lug‘at boyligini oshirish uchun topshiriqlar.",
     icon: "🔠",
@@ -46,8 +54,9 @@ const gamesList = [
     isReady: false,
   },
   {
-    id: "matching",
-    title: "Moslashtirish",
+    id: "arvoh",
+    title: "Arvoh",
+    bgimg: arvoh,
     href: null,
     description:
       "Tushunchalar va ularning ta’riflarini bir-biriga mos kelishini ta’minlang.",
@@ -82,10 +91,6 @@ function Oyinlar() {
           </button>
           <div>
             <h1 className="ziyo-hub-title">O‘yin yaratish markazi</h1>
-            <p className="ziyo-hub-subtitle">
-              Ta’lim jarayonini qiziqarli qilish uchun o‘zingizga mos o‘yin turini
-              tanlang va uni osongina yarating.
-            </p>
           </div>
         </div>
       </header>
@@ -93,6 +98,9 @@ function Oyinlar() {
       <div className="ziyo-games-grid">
         {gamesList.map((game) => (
           <div className="ziyo-game-card" key={game.id}>
+            <div className="game-imge">
+              <img src={game.bgimg} alt="" />
+            </div>
             <div className="ziyo-game-top">
               <span className="ziyo-game-category">{game.category}</span>
               <span className="ziyo-game-icon">{game.icon}</span>
@@ -100,7 +108,6 @@ function Oyinlar() {
 
             <div className="ziyo-game-content">
               <h3 className="ziyo-game-title">{game.title}</h3>
-              <p className="ziyo-game-desc">{game.description}</p>
             </div>
 
             <button

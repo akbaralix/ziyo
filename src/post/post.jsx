@@ -36,15 +36,31 @@ function Post({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const handleUserClick = (targetUser) => {
-    if (!targetUser) return;
-    const uName =
-      targetUser.username ||
-      targetUser.telegramUsername ||
-      targetUser.id ||
-      targetUser._id;
-    if (uName) {
-      navigate(`/@${uName.replace(/^@/, "")}`);
+  const handleUserClick = (targetUser, authorId = null) => {
+    if (!targetUser && !authorId) return;
+
+    // 1. Agar haqiqiy telegram username bo'lsa (va "user" bo'lmasa)
+    const tg = targetUser?.telegramUsername || targetUser?.username;
+    if (tg && tg !== "user" && tg.trim() !== "" && !tg.startsWith("user_")) {
+      navigate(`/@${tg.replace(/^@/, "").trim()}`);
+      return;
+    }
+
+    // 2. Aks holda uning aniq MongoDB ID si!
+    const uid =
+      targetUser?._id ||
+      targetUser?.id ||
+      authorId ||
+      targetUser?.userId;
+
+    if (uid) {
+      navigate(`/@${String(uid)}`);
+      return;
+    }
+
+    // 3. Oxirgi chora
+    if (tg) {
+      navigate(`/@${tg.replace(/^@/, "").trim()}`);
     }
   };
   const [showPostAction, setShowPostAction] = useState(false);
@@ -511,14 +527,7 @@ function Post({
               <div className="post-header">
                 <div
                   className="post-user-info"
-                  onClick={() =>
-                    handleUserClick(
-                      post.user || {
-                        id: post.author,
-                        name: "Foydalanuvchi",
-                      },
-                    )
-                  }
+                  onClick={() => handleUserClick(post.user, post.author)}
                   style={{ cursor: "pointer" }}
                   title="Foydalanuvchi profilini ko'rish"
                 >
@@ -1111,7 +1120,7 @@ function Post({
                       alt="User"
                       className="comment-avatar"
                       style={{ cursor: "pointer" }}
-                      onClick={() => handleUserClick(c.user)}
+                      onClick={() => handleUserClick(c.user, c.user?.id || c.author)}
                       title="Profilni ko'rish"
                     />
                     <div className="comment-content-box">
@@ -1119,7 +1128,7 @@ function Post({
                         <span
                           className="comment-author-name"
                           style={{ cursor: "pointer" }}
-                          onClick={() => handleUserClick(c.user)}
+                          onClick={() => handleUserClick(c.user, c.user?.id || c.author)}
                           title="Profilni ko'rish"
                         >
                           {c.user?.name || "Foydalanuvchi"}

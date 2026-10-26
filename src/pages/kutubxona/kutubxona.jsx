@@ -214,7 +214,10 @@ function Kutubxona() {
           currentPage: currentPage,
           updatedAt: new Date().toISOString(),
         };
-        localStorage.setItem("ziyo_current_reading_book", JSON.stringify(currentReadingObj));
+        localStorage.setItem(
+          "ziyo_current_reading_book",
+          JSON.stringify(currentReadingObj),
+        );
 
         // Agar kitob oxirgi betigacha o'qilgan bo'lsa
         if (currentPage >= (activeBook.pages || totalPages)) {
@@ -230,7 +233,10 @@ function Kutubxona() {
                 pages: activeBook.pages,
                 finishedAt: new Date().toISOString(),
               });
-              localStorage.setItem("ziyo_finished_books", JSON.stringify(finList));
+              localStorage.setItem(
+                "ziyo_finished_books",
+                JSON.stringify(finList),
+              );
             }
           } catch {}
         }
@@ -406,7 +412,6 @@ function Kutubxona() {
                       onClick={() => handleOpenBook(book)}
                     >
                       <img src={book.img} alt="" />
-                      <div className="book-spine" />
                       <div className="book-cover-content">
                         <span className="book-badge">{book.badge}</span>
                         <h3 className="book-cover-title">{book.title}</h3>
@@ -416,10 +421,6 @@ function Kutubxona() {
                           <span>•</span>
                           <span>{book.year}</span>
                         </div>
-                      </div>
-                      <div className="book-cover-overlay">
-                        <FaBookOpen className="read-icon" />
-                        <span>Mutolaa qilish</span>
                       </div>
                     </div>
 
@@ -474,14 +475,6 @@ function Kutubxona() {
                             {lastPage ? "Davom ettirish" : "O'qishni boshlash"}
                           </span>
                         </button>
-                        <a
-                          href={book.pdfUrl}
-                          download={`${book.title}.pdf`}
-                          className="download-book-btn"
-                          title="Yuklab olish"
-                        >
-                          <IoDownloadOutline />
-                        </a>
                       </div>
                     </div>
                   </div>
@@ -510,7 +503,6 @@ function Kutubxona() {
                 title="Chiqish"
               >
                 <IoCloseOutline />
-                <span className="hide-mobile">Kutubxonaga qaytish</span>
               </button>
 
               <div className="reader-book-info">

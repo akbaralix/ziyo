@@ -604,15 +604,6 @@
   color: #475569;
 }
 
-.meta-icon {
-  color: #3b82f6;
-  font-size: 15px;
-}
-
-.meta-icon.award {
-  color: #f59e0b;
-}
-
 .meta-select {
   border: 1px solid #cbd5e1;
   border-radius: 20px;
@@ -687,8 +678,8 @@
 }
 
 .option-edit-card.is-correct {
-  background: #f0fdf4;
-  border-color: #86efac;
+  background: #f4f0fd;
+  border-color: #8d86ef;
   border-left-width: 6px;
 }
 
@@ -739,8 +730,8 @@
 }
 
 .correct-toggle-btn.active {
-  background: #10b981;
-  border-color: #10b981;
+  background: #4510b9;
+  border-color: #715bef;
   color: #ffffff;
 }
 
@@ -871,6 +862,7 @@
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
+    scrollbar-width: none;
     gap: 8px;
     padding-bottom: 6px;
     -webkit-overflow-scrolling: touch;
