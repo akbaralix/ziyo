@@ -11,6 +11,18 @@ export async function updateProfile(data) {
 }
 
 /**
+ * Username mavjudligini real vaqtda tekshirish
+ */
+export async function checkUsernameAvailability(username) {
+  return await apiClient(
+    `/api/auth/check-username/${encodeURIComponent(username)}`,
+    {
+      method: "GET",
+    },
+  );
+}
+
+/**
  * Profil ma'lumotlarini olish (O'zimniki)
  */
 export async function getUserProfile() {

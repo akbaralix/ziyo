@@ -1,13 +1,24 @@
+/* ==========================================================================
+   Login Page Styles
+   ========================================================================== */
+
+/* --- Card Container --- */
 .login-card {
   width: 100%;
+  height: 100%;
   max-width: 440px;
+  max-height: 600px;
   padding: 30px 24px;
+  overflow: auto;
+
+  scrollbar-width: none;
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  position: absolute;
 }
 
+/* --- Header & Branding --- */
 .login-header {
   text-align: center;
 }
@@ -22,22 +33,22 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
+  border-radius: var(--radius-lg);
 }
 
 .login-header h2 {
-  font-size: 24px;
-  color: #1e293b;
+  font-size: var(--font-3xl);
+  color: var(--text-primary);
   margin-bottom: 6px;
+  font-weight: 700;
 }
 
 .login-header p {
-  color: #64748b;
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: var(--font-base);
 }
 
+/* --- Action Buttons Section --- */
 .login-action {
   display: flex;
   flex-direction: column;
@@ -51,63 +62,70 @@
   align-items: center;
   justify-content: center;
   padding: 13px 18px;
-  border-radius: 33px;
-  font-size: 15px;
-
-  transition: all 0.2s ease;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-md);
+  transition: all var(--transition-fast);
 }
 
 .btn-telegram {
   background-color: #229ed9 !important;
-  color: #ffffff !important;
+  color: var(--text-white) !important;
   border: none !important;
 }
 
+.btn-telegram:hover {
+  background-color: #1d8ec3 !important;
+}
+
 .btn-google {
-  background-color: #99b7f3;
-  color: #fafafa;
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-google:hover {
+  background-color: var(--bg-hover);
 }
 
 .login-action button svg {
   font-size: 20px;
 }
 
-/* Telegram login section */
+/* --- Telegram Login Screen --- */
 .telegram-login {
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.telegram-login img {
-  border-radius: 50%;
-}
-.telegram-login h2 {
-  font-size: 22px;
-  font-weight: 500;
-  color: #1e293b;
-  margin: 10px 0 8px;
-}
-
-.telegram-login p {
-  font-size: 14px;
-  color: #64748b;
-  line-height: 1.5;
-  margin-bottom: 20px;
-}
 
 .telegram-login img {
   width: 110px;
   height: 110px;
+  border-radius: var(--radius-full);
   margin-bottom: 4px;
+}
+
+.telegram-login h2 {
+  font-size: var(--font-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 10px 0 8px;
+}
+
+.telegram-login p {
+  font-size: var(--font-base);
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 20px;
 }
 
 .login-tg-btn {
   padding: 14px 20px;
   border-radius: var(--button-border-radius);
-  font-size: 17px;
+  font-size: var(--button-font-size);
   background: #229ed9;
-  color: #ffffff;
+  color: var(--text-white);
   border: none;
   width: 100%;
   gap: 10px;
@@ -115,7 +133,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: background-color var(--transition-fast);
 }
 
 .login-tg-btn:hover:not(:disabled) {
@@ -127,7 +145,7 @@
   cursor: not-allowed;
 }
 
-/* Spinner and waiting */
+/* --- Waiting / Polling Status --- */
 .waiting-status-box {
   display: flex;
   align-items: center;
@@ -135,11 +153,11 @@
   gap: 10px;
   margin-top: 18px;
   padding: 12px 16px;
-  background-color: #f0f9ff;
-  border: 1px solid #7dd3fc;
-  border-radius: 22px;
-  color: #0369a1;
-  font-size: 13px;
+  background-color: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-xl);
+  color: var(--color-info-dark);
+  font-size: var(--font-sm);
   font-weight: 500;
 }
 
@@ -157,26 +175,26 @@
   }
 }
 
-/* Step badges & headers */
+/* --- Step Badges & Subtitles --- */
 .step-badge {
   display: inline-block;
   align-self: flex-start;
   padding: 4px 10px;
-  background: #e0f2fe;
-  color: #0284c7;
-  font-size: 12px;
+  background: var(--color-info-bg);
+  color: var(--color-info-dark);
+  font-size: var(--font-xs);
   font-weight: 600;
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   margin-bottom: 8px;
 }
 
 .step-subtitle {
-  font-size: 13px;
-  color: #64748b;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
   margin: -4px 0 16px;
 }
 
-/* Form Styles */
+/* --- Multi-step Registration Form --- */
 .user-login-info {
   display: flex;
   flex-direction: column;
@@ -185,50 +203,67 @@
 
 .user-login-info h2,
 .user-study h2 {
-  font-size: 20px;
+  font-size: var(--font-xl);
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
   margin: 0;
 }
+
 .profil-set-img {
-  background-color: #f8f8f8f8;
-  border-radius: 50%;
+  background-color: var(--bg-muted);
+  border-radius: var(--radius-full);
   height: 100px;
   width: 100px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
+
 .profil-set-img img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   object-fit: cover;
 }
+
 .profil-set-img button {
   position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
   font-size: 15px;
-  background: none;
-  background: #4f46e5;
+  background-color: var(--primary);
+  color: var(--text-white);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid var(--bg-card);
+  transition: background-color var(--transition-fast);
 }
+
+.profil-set-img button:hover {
+  background-color: var(--primary-hover);
+}
+
+/* --- Profile Picture Selection Modal --- */
 .profile-carousel-container {
-  background: #ffffff;
+  background: var(--bg-card);
   padding: 30px 20px;
-  border-radius: 24px;
+  border-radius: var(--radius-2xl);
   max-width: 420px;
   width: 90%;
   text-align: center;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-xl);
 }
 
 .profile-carousel-container h3 {
   margin-bottom: 25px;
-  font-size: 20px;
-  color: #1f2937;
+  font-size: var(--font-xl);
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -260,8 +295,8 @@
   flex: 0 0 auto;
   scroll-snap-align: center;
   transition:
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform var(--transition-normal),
+    opacity var(--transition-normal);
   opacity: 0.55;
   transform: scale(0.75);
 }
@@ -269,10 +304,10 @@
 .profile-img-btn img {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   object-fit: cover;
   border: 3px solid transparent;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
 }
 
 .profile-img-btn.active-profile {
@@ -282,18 +317,11 @@
 }
 
 .profile-img-btn.active-profile img {
-  border-color: #4f46e5;
-  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+  border-color: var(--primary);
+  box-shadow: 0 10px 25px rgba(70, 31, 226, 0.35);
 }
-.profile-all-img button {
-  background: none;
-}
-.profile-all-img img {
-  border-radius: 50%;
-  width: 150px;
-  height: 150px;
-  object-fit: cover;
-}
+
+/* --- Floating Label Inputs --- */
 .login-form {
   position: relative;
   display: flex;
@@ -302,18 +330,21 @@
 
 .login-form input {
   padding: 14px 16px;
-  border-radius: 14px;
-  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
   outline: none;
-  font-size: 15px;
+  font-size: var(--font-md);
   font-family: inherit;
-  transition: 0.2s border-color ease;
-  background: #f8fafc;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
 }
 
 .login-form input:focus {
-  background: #f0f2f5;
-  border-color: #229ed9;
+  background: var(--bg-main);
+  border-color: var(--primary);
 }
 
 .login-form label {
@@ -322,33 +353,40 @@
   top: 50%;
   transform: translateY(-50%);
   padding: 0 4px;
-  background: #f8fafc;
-  color: #94a3b8;
-  font-size: 14px;
+  background: var(--bg-subtle);
+  color: var(--text-light);
+  font-size: var(--font-base);
   pointer-events: none;
-  transition: 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .login-form input:focus + label,
 .login-form input:not(:placeholder-shown) + label {
   top: 0;
-  font-size: 11px;
-  color: #229ed9;
-  background: #f0f2f5;
+  font-size: var(--font-xs);
+  color: var(--primary);
+  background: var(--bg-main);
   font-weight: 600;
 }
 
+/* --- Next Step Button --- */
 .next-stemp-btn {
   padding: 14px;
-  border-radius: 33px;
-  background: var(--button-bg);
-  color: white;
-  font-size: 16px;
-  font-family: "poppins";
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--text-white);
+  font-size: var(--font-lg);
   font-weight: 500;
   border: none;
   margin-top: 8px;
-  transition: 0.2s ease;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.next-stemp-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
 }
 
 .next-stemp-btn:disabled {
@@ -357,6 +395,7 @@
   box-shadow: none;
 }
 
+/* --- Study Education Level Choices --- */
 .user-study {
   display: flex;
   flex-direction: column;
@@ -368,16 +407,20 @@
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 16px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: #ffffff;
+  transition: all var(--transition-fast);
+  background: var(--bg-card);
+}
+
+.study-option:hover {
+  border-color: var(--border-hover);
 }
 
 .study-option.active-study {
-  border-color: #2563eb;
-  background: #eff6ff;
+  border-color: var(--primary);
+  background: var(--primary-light);
 }
 
 .study-emoji {
@@ -386,18 +429,18 @@
 
 .study-info h4 {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--font-md);
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .study-info p {
   margin: 2px 0 0;
-  font-size: 12px;
-  color: #64748b;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
 }
 
-/* Study Courses Grid */
+/* --- Study Course / Grade Grid --- */
 .study-curses {
   width: 100%;
   display: flex;
@@ -414,35 +457,40 @@
 .study-curses-grid h3 {
   grid-column: 1 / -1;
   margin: 0 0 10px;
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 700;
   text-align: center;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .study-curses-grid button {
   height: 52px;
-  border: 1.5px solid #e2e8f0;
-  font-family: "poppins";
-  border-radius: 14px;
-  background: #ffffff;
-  color: #1e293b;
-  font-size: 15px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: var(--font-md);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
+}
+
+.study-curses-grid button:hover {
+  border-color: var(--border-hover);
+  background-color: var(--bg-hover);
 }
 
 .study-curses-grid button.active-course {
-  border-color: #2563eb;
-  background: #2563eb;
-  color: #ffffff;
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--text-white);
 }
 
 .study-curses-grid button:active {
   transform: scale(0.97);
 }
 
+/* --- Back Button --- */
 .back-login-btn {
   display: flex;
   align-items: center;
@@ -451,21 +499,28 @@
   width: 100%;
   padding: 12px;
   border: none;
-  border-radius: var(--button-border-radius);
+  border-radius: var(--radius-pill);
   background: none;
-  color: #475569;
-  font-size: 14px;
+  color: var(--text-secondary);
+  font-size: var(--font-base);
   font-weight: 500;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition:
+    color var(--transition-fast),
+    background-color var(--transition-fast);
   margin-top: 14px;
 }
 
-/* Alert Messages */
+.back-login-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-hover);
+}
+
+/* --- Alerts & Notifications --- */
 .login-alert {
   padding: 10px 14px;
-  border-radius: 12px;
-  font-size: 13px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-sm);
   font-weight: 500;
   margin-bottom: 14px;
   display: flex;
@@ -474,13 +529,13 @@
 }
 
 .login-alert.error {
-  background: #fef2f2;
-  color: #b91c1c;
-  border: 1px solid #fecaca;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-dark);
+  border: 1px solid var(--color-danger-border);
 }
 
 .login-alert.success {
-  background: #ecfdf5;
-  color: #047857;
-  border: 1px solid #a7f3d0;
+  background: var(--color-success-bg);
+  color: var(--color-success-dark);
+  border: 1px solid var(--color-success-border);
 }

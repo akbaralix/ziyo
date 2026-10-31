@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { MdNotificationsNone } from "react-icons/md";
 import Post from "../../post/post";
 import {
@@ -12,15 +11,40 @@ import {
 import { getUserProfile } from "../../api/userApi";
 import { GoTrophy } from "react-icons/go";
 import { LuAtom } from "react-icons/lu";
-import { FaPlay, FaGamepad } from "react-icons/fa";
 
 import "./home.css";
 
+const CATEGORIES = [
+  {
+    name: "Barchasi",
+    icon: <IoGridOutline />,
+    iconBG: "#16A34A",
+  },
+  {
+    name: "Fizika",
+    icon: <LuAtom />,
+    iconBG: "#0284C7",
+  },
+  {
+    name: "Matematika",
+    icon: <IoCalculatorOutline />,
+    iconBG: "#4F46E5",
+  },
+  {
+    name: "Mantiqiy savollar",
+    icon: <IoExtensionPuzzleOutline />,
+    iconBG: "#D97706",
+  },
+  {
+    name: "Qiziqarli faktlar",
+    icon: <IoBulbOutline />,
+    iconBG: "#9333EA",
+  },
+];
+
 function Home() {
-  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
   const [searchQuery, setSearchQuery] = useState("");
-  const [quickPin, setQuickPin] = useState("");
 
   const getStoredXp = () => {
     try {
@@ -30,7 +54,9 @@ function Home() {
       const p = JSON.parse(localStorage.getItem("ziyo_user_profile") || "{}");
       if (p?.xp !== undefined && p?.xp !== null) return p.xp;
       if (p?.points !== undefined && p?.points !== null) return p.points;
-    } catch {}
+    } catch {
+      // fallback
+    }
     return 0;
   };
 
@@ -57,7 +83,9 @@ function Home() {
               "ziyo_user",
               JSON.stringify({ ...currentU, ...(data?.user || {}), xp: realXp })
             );
-          } catch {}
+          } catch {
+            // ignore
+          }
         }
       } catch (err) {
         console.error("Foydalanuvchi ballini yuklashda xatolik:", err);
@@ -85,50 +113,9 @@ function Home() {
     };
   }, []);
 
-  const handleQuickJoin = (e) => {
-    e.preventDefault();
-    if (quickPin.trim()) {
-      navigate(`/live/${quickPin.trim()}`);
-    } else {
-      navigate("/live");
-    }
-  };
-
-  const categories = [
-    {
-      name: "Barchasi",
-      icon: <IoGridOutline />,
-      iconBG: "#16A34A",
-      bg: "#F0FDF4",
-    },
-    {
-      name: "Fizika",
-      icon: <LuAtom />,
-      iconBG: "#0284C7",
-      bg: "#F0F9FF",
-    },
-    {
-      name: "Matematika",
-      icon: <IoCalculatorOutline />,
-      iconBG: "#4F46E5",
-      bg: "#EEF2FF",
-    },
-    {
-      name: "Mantiqiy savollar",
-      icon: <IoExtensionPuzzleOutline />,
-      iconBG: "#D97706",
-      bg: "#FFFBEB",
-    },
-    {
-      name: "Qiziqarli faktlar",
-      icon: <IoBulbOutline />,
-      iconBG: "#9333EA",
-      bg: "#FAF5FF",
-    },
-  ];
   return (
     <div className="home-container">
-      <div className="home-header">
+      <header className="home-header">
         <div className="searchbar">
           <input
             type="text"
@@ -153,10 +140,10 @@ function Home() {
             <span>{Number(xp || 0).toLocaleString()}</span>
           </div>
         </div>
-      </div>
+      </header>
 
       <div className="post-sorts">
-        {categories.map((item) => (
+        {CATEGORIES.map((item) => (
           <div className="post-sort" key={item.name}>
             <button
               type="button"

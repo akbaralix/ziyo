@@ -1,4 +1,6 @@
-/* BarabanPlay Page - Strict Light Mode & border-radius 33px & box-shadow: none !important */
+/* ==========================================================================
+   Baraban Play - Spinning Wheel Game Page Styles
+   ========================================================================== */
 
 .baraban-play-page {
   max-width: 1200px;
@@ -6,60 +8,71 @@
   margin: 0 auto;
   padding: 24px 20px 80px;
   box-sizing: border-box;
-  color: #1e293b;
-}
-
-.baraban-play-page *,
-.baraban-play-page *::before,
-.baraban-play-page *::after {
-  box-shadow: none !important;
-  transition: none !important;
+  color: var(--text-primary);
 }
 
 /* Base button & modal styles */
 .baraban-circle-btn {
   width: 46px;
   height: 46px;
-  border-radius: 33px;
-  background: #f1f5f9;
-  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-pill);
+  background: var(--bg-muted);
+  border: 1.5px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: #334155;
+  color: var(--text-secondary);
   cursor: pointer;
   flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.baraban-circle-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
 }
 
 .baraban-primary-btn {
-  background: #461fe2;
-  color: #ffffff;
-  border: 1.5px solid #461fe2;
-  border-radius: 33px;
+  background: var(--primary);
+  color: var(--text-white);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-pill);
   padding: 10px 22px;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.baraban-primary-btn:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
 .baraban-secondary-btn {
-  background: #f1f5f9;
-  color: #334155;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
   padding: 10px 20px;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.baraban-secondary-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
 }
 
 .baraban-modal-backdrop {
@@ -77,15 +90,21 @@
 .modal-close-btn {
   width: 36px;
   height: 36px;
-  border-radius: 33px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-pill);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modal-close-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
 }
 
 /* Play Header */
@@ -105,9 +124,9 @@
 }
 
 .play-title {
-  font-size: 22px;
+  font-size: var(--font-2xl);
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 4px;
 }
 
@@ -118,25 +137,25 @@
 }
 
 .play-badge {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   padding: 4px 12px;
-  border-radius: 33px;
-  background: #e0e7ff;
-  color: #4338ca;
-  border: 1px solid #c7d2fe;
+  border-radius: var(--radius-pill);
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--primary-border);
 }
 
 .play-badge.secondary {
-  background: #f1f5f9;
-  color: #475569;
-  border-color: #e2e8f0;
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
 }
 
 .play-badge.info {
-  background: #fef3c7;
-  color: #b45309;
-  border-color: #fde68a;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-dark);
+  border-color: var(--color-warning-border);
 }
 
 .play-header-actions {
@@ -159,14 +178,15 @@
 }
 
 .play-wheel-box {
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
   padding: 30px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  box-shadow: var(--shadow-sm);
 }
 
 .wheel-stage {
@@ -185,17 +205,23 @@
 }
 
 .big-spin-btn {
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 600;
   padding: 16px 48px;
-  background: #461fe2;
-  color: #ffffff;
-  border: 1.5px solid #461fe2;
-  border-radius: 33px;
+  background: var(--primary);
+  color: var(--text-white);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-pill);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  transition: all var(--transition-fast);
+}
+
+.big-spin-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
 .big-spin-btn:disabled {
@@ -213,9 +239,9 @@
 }
 
 .all-finished-notice p {
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -229,20 +255,21 @@
 .sidebar-card {
   padding: 20px;
   margin-bottom: 0;
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-xs);
 }
 
 .sidebar-section-title {
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 12px;
 }
 
 .sidebar-section-title.text-muted {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .play-names-list {
@@ -254,19 +281,19 @@
 }
 
 .play-name-pill {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 500;
   padding: 6px 14px;
-  border-radius: 33px;
-  background: #f1f5f9;
-  border: 1.5px solid #e2e8f0;
-  color: #1e293b;
+  border-radius: var(--radius-pill);
+  background: var(--bg-muted);
+  border: 1.5px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 .play-name-pill.strike {
-  background: #f8fafc;
-  color: #94a3b8;
-  border-color: #cbd5e1;
+  background: var(--bg-subtle);
+  color: var(--text-light);
+  border-color: var(--border-hover);
   text-decoration: line-through;
 }
 
@@ -275,9 +302,10 @@
   max-width: 500px;
   text-align: center;
   padding: 24px;
-  border-radius: 33px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-xl);
 }
 
 .winner-modal-top {
@@ -290,10 +318,10 @@
 .winner-trophy-icon {
   width: 48px;
   height: 48px;
-  border-radius: 33px;
-  background: #fef3c7;
-  border: 1.5px solid #fde68a;
-  color: #d97706;
+  border-radius: var(--radius-pill);
+  background: var(--color-warning-bg);
+  border: 1.5px solid var(--color-warning-border);
+  color: var(--color-warning-dark);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -305,26 +333,26 @@
 }
 
 .winner-announce-sub {
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
-  color: #461fe2;
+  color: var(--primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .winner-name-highlight {
-  font-size: 32px;
+  font-size: var(--font-4xl);
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 6px 0 16px;
 }
 
 /* Question card inside Winner Modal */
 .winner-question-card {
   text-align: left;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
   padding: 18px 20px;
   margin-top: 10px;
 }
@@ -333,16 +361,16 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
-  color: #461fe2;
+  color: var(--primary);
   margin-bottom: 8px;
 }
 
 .question-main-text {
-  font-size: 15px;
+  font-size: var(--font-md);
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 14px;
 }
 
@@ -357,28 +385,29 @@
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 33px;
-  font-size: 14px;
-  color: #1e293b;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-hover);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-base);
+  color: var(--text-primary);
   cursor: pointer;
   width: 100%;
   text-align: left;
   font-family: inherit;
+  transition: all var(--transition-fast);
 }
 
 .opt-char {
   width: 24px;
   height: 24px;
-  border-radius: 33px;
-  background: #f1f5f9;
+  border-radius: var(--radius-pill);
+  background: var(--bg-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 12px;
-  color: #475569;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
 }
 
 .opt-text {
@@ -386,26 +415,26 @@
 }
 
 .play-opt-btn.is-correct-answer {
-  background: #ecfdf5;
-  border-color: #10b981;
-  color: #065f46;
+  background: var(--color-success-bg);
+  border-color: var(--color-success);
+  color: var(--color-success-dark);
   font-weight: 600;
 }
 
 .play-opt-btn.is-correct-answer .opt-char {
-  background: #10b981;
-  color: #ffffff;
+  background: var(--color-success);
+  color: var(--text-white);
 }
 
 .play-opt-btn.is-wrong-answer {
-  background: #fef2f2;
-  border-color: #ef4444;
-  color: #991b1b;
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
+  color: var(--color-danger-dark);
 }
 
 .play-opt-btn.is-wrong-answer .opt-char {
-  background: #ef4444;
-  color: #ffffff;
+  background: var(--color-danger);
+  color: var(--text-white);
 }
 
 .opt-status-icon {
@@ -413,11 +442,11 @@
 }
 
 .opt-status-icon.success {
-  color: #10b981;
+  color: var(--color-success);
 }
 
 .opt-status-icon.error {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 .winner-footer {
@@ -429,7 +458,7 @@
   width: 100%;
   justify-content: center;
   padding: 14px;
-  font-size: 15px;
+  font-size: var(--font-md);
 }
 
 /* ========================================================
@@ -460,7 +489,7 @@
   }
 
   .play-title {
-    font-size: 18px;
+    font-size: var(--font-lg);
     line-height: 1.3;
     margin-bottom: 6px;
   }
@@ -485,12 +514,12 @@
     width: 100%;
     justify-content: center;
     padding: 10px 12px;
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   .play-wheel-box {
     padding: 20px 14px;
-    border-radius: 28px;
+    border-radius: var(--radius-2xl);
   }
 
   .wheel-stage {
@@ -501,13 +530,13 @@
     width: 100%;
     max-width: 360px;
     padding: 14px 20px;
-    font-size: 15px;
+    font-size: var(--font-md);
     justify-content: center;
   }
 
   .sidebar-card {
     padding: 16px 14px;
-    border-radius: 28px;
+    border-radius: var(--radius-2xl);
   }
 
   .play-names-list {
@@ -516,13 +545,13 @@
   }
 
   .play-name-pill {
-    font-size: 12px;
+    font-size: var(--font-xs);
     padding: 5px 12px;
   }
 
   .winner-modal-card {
     padding: 20px 16px;
-    border-radius: 28px;
+    border-radius: var(--radius-2xl);
     max-height: 90vh;
     overflow-y: auto;
   }
@@ -534,26 +563,26 @@
   }
 
   .winner-name-highlight {
-    font-size: 26px;
+    font-size: var(--font-3xl);
     word-break: break-word;
     margin: 4px 0 12px;
   }
 
   .winner-question-card {
     padding: 14px 12px;
-    border-radius: 24px;
+    border-radius: var(--radius-2xl);
   }
 
   .question-main-text {
-    font-size: 14px;
+    font-size: var(--font-base);
     margin-bottom: 12px;
   }
 
   .play-opt-btn {
     padding: 8px 12px;
-    font-size: 13px;
+    font-size: var(--font-sm);
     gap: 10px;
-    border-radius: 24px;
+    border-radius: var(--radius-2xl);
   }
 
   .opt-char {
@@ -565,7 +594,7 @@
 
   .winner-next-btn {
     padding: 12px 16px;
-    font-size: 14px;
+    font-size: var(--font-base);
   }
 }
 
@@ -579,30 +608,30 @@
   }
 
   .play-title {
-    font-size: 17px;
+    font-size: var(--font-md);
   }
 
   .play-wheel-box {
     padding: 16px 8px;
-    border-radius: 24px;
+    border-radius: var(--radius-2xl);
   }
 
   .big-spin-btn {
     padding: 13px 16px;
-    font-size: 14px;
+    font-size: var(--font-base);
   }
 
   .sidebar-card {
     padding: 14px 12px;
-    border-radius: 24px;
+    border-radius: var(--radius-2xl);
   }
 
   .winner-modal-card {
     padding: 16px 12px;
-    border-radius: 24px;
+    border-radius: var(--radius-2xl);
   }
 
   .winner-name-highlight {
-    font-size: 22px;
+    font-size: var(--font-2xl);
   }
 }

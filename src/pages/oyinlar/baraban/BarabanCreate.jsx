@@ -22,14 +22,26 @@ export default function BarabanCreate() {
   const editId = searchParams.get("id");
   const wheelRef = useRef(null);
 
+  const getExistingGame = () => {
+    if (!editId) return null;
+    try {
+      const saved = localStorage.getItem(`ziyo_baraban_${editId}`);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const existingGame = getExistingGame();
+
   // Form State
-  const [title, setTitle] = useState("Aylanuvchi Baraban");
-  const [names, setNames] = useState([]);
+  const [title, setTitle] = useState(() => existingGame?.title || "Aylanuvchi Baraban");
+  const [names, setNames] = useState(() => (Array.isArray(existingGame?.names) ? existingGame.names : []));
   const [nameInput, setNameInput] = useState("");
-  const [removeWinner, setRemoveWinner] = useState(true);
+  const [removeWinner, setRemoveWinner] = useState(() => (existingGame?.removeWinner !== undefined ? existingGame.removeWinner : true));
 
   // Questions State
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState(() => (Array.isArray(existingGame?.questions) ? existingGame.questions : []));
   const [showManualQuestionModal, setShowManualQuestionModal] = useState(false);
   const [newQuestion, setNewQuestion] = useState({
     question: "",
@@ -42,25 +54,6 @@ export default function BarabanCreate() {
   const [aiTopic, setAiTopic] = useState("");
   const [aiCount, setAiCount] = useState(5);
   const [aiJsonInput, setAiJsonInput] = useState("");
-
-  // Load existing game if editId
-  useEffect(() => {
-    if (editId) {
-      try {
-        const saved = localStorage.getItem(`ziyo_baraban_${editId}`);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setTitle(parsed.title || "Aylanuvchi Baraban");
-          if (parsed.names) setNames(parsed.names);
-          if (parsed.removeWinner !== undefined)
-            setRemoveWinner(parsed.removeWinner);
-          if (parsed.questions) setQuestions(parsed.questions);
-        }
-      } catch (err) {
-        console.error("O'yinni yuklashda xatolik:", err);
-      }
-    }
-  }, [editId]);
 
   // Names management
   const handleAddName = (e) => {

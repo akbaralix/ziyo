@@ -13,9 +13,25 @@ import {
   FaCaretUp,
   FaCircle,
   FaSquare,
+  FaDice,
+  FaCheck,
 } from "react-icons/fa";
 
 import { FaDiamond } from "react-icons/fa6";
+
+import quizAvatar1 from "../../assets/quiz-avatar/quiz-avatar1.jpg";
+import quizAvatar2 from "../../assets/quiz-avatar/quiz-avatar2.jpg";
+import quizAvatar3 from "../../assets/quiz-avatar/quiz-avatar3.jpg";
+import quizAvatar4 from "../../assets/quiz-avatar/quiz-avatar4.jpg";
+import quizAvatar5 from "../../assets/quiz-avatar/quiz-avatar5.jpg";
+
+export const QUIZ_AVATARS = [
+  { id: 1, src: quizAvatar1, name: "Qahramon 1" },
+  { id: 2, src: quizAvatar2, name: "Qahramon 2" },
+  { id: 3, src: quizAvatar3, name: "Qahramon 3" },
+  { id: 4, src: quizAvatar4, name: "Qahramon 4" },
+  { id: 5, src: quizAvatar5, name: "Qahramon 5" },
+];
 
 import { joinByPin } from "../../api/quizApi.js";
 import { sfx } from "../../utils/soundEffects.js";
@@ -44,6 +60,18 @@ export default function LivePlayer() {
       if (p && p.name) return p.name;
     } catch {}
     return "";
+  });
+
+  const [profilePic, setProfilePic] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("ziyo_live_player"));
+      if (saved && saved.profilePic) return saved.profilePic;
+      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      if (u && u.profilePic) return u.profilePic;
+      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+      if (p && p.profilePic) return p.profilePic;
+    } catch {}
+    return quizAvatar1;
   });
 
   const [socket, setSocket] = useState(null);
@@ -94,7 +122,13 @@ export default function LivePlayer() {
     }, 1000);
   };
 
-  const connectToGame = ({ pinToUse, sessionIdToUse, playerIdToUse, nameToUse }) => {
+  const connectToGame = ({
+    pinToUse,
+    sessionIdToUse,
+    playerIdToUse,
+    nameToUse,
+    profilePicToUse,
+  }) => {
     if (socketRef.current) {
       socketRef.current.disconnect();
     }
@@ -109,17 +143,21 @@ export default function LivePlayer() {
     socketRef.current = newSocket;
     setSocket(newSocket);
 
+    const activePic = profilePicToUse || profilePic || quizAvatar1;
+
     newSocket.on("connect", () => {
       newSocket.emit("player:join", {
         sessionId: sessionIdToUse,
         playerId: playerIdToUse,
         name: nameToUse,
+        profilePic: activePic,
       });
     });
 
     newSocket.on("player:joined", (data) => {
       setPlayerId(data.playerId);
       if (data.name) setName(data.name);
+      if (data.profilePic) setProfilePic(data.profilePic);
       if (data.score !== undefined) setTotalScore(data.score);
       if (data.myAnswerHistory) setMyAnswerHistory(data.myAnswerHistory);
 
@@ -131,7 +169,8 @@ export default function LivePlayer() {
           sessionId: sessionIdToUse,
           playerId: data.playerId,
           name: data.name || nameToUse,
-        })
+          profilePic: data.profilePic || activePic,
+        }),
       );
 
       setIsJoining(false);
@@ -160,6 +199,12 @@ export default function LivePlayer() {
         setPlayerState("ended");
       } else {
         setPlayerState("lobby");
+      }
+    });
+
+    newSocket.on("player:avatar:updated", (data) => {
+      if (data.playerId === playerIdToUse) {
+        setProfilePic(data.profilePic);
       }
     });
 
@@ -212,7 +257,8 @@ export default function LivePlayer() {
 
       const currentPlayerName = nameToUse || name;
       const found = data.leaderboard?.findIndex(
-        (p) => p.name?.toLowerCase() === currentPlayerName?.trim().toLowerCase(),
+        (p) =>
+          p.name?.toLowerCase() === currentPlayerName?.trim().toLowerCase(),
       );
       if (found !== -1 && found !== undefined) {
         setMyRank(found + 1);
@@ -235,6 +281,7 @@ export default function LivePlayer() {
       if (!urlPin || urlPin === saved.pin) {
         setPin(saved.pin);
         if (saved.name) setName(saved.name);
+        if (saved.profilePic) setProfilePic(saved.profilePic);
         setSessionId(saved.sessionId);
         setPlayerId(saved.playerId);
         setIsJoining(true);
@@ -244,6 +291,7 @@ export default function LivePlayer() {
           sessionIdToUse: saved.sessionId,
           playerIdToUse: saved.playerId,
           nameToUse: saved.name,
+          profilePicToUse: saved.profilePic,
         });
         return;
       }
@@ -300,6 +348,7 @@ export default function LivePlayer() {
         sessionIdToUse: res.sessionId,
         playerIdToUse: existingPlayerId,
         nameToUse: name.trim(),
+        profilePicToUse: profilePic,
       });
     } catch (err) {
       const msg = err.message || "Ulanishda xatolik yuz berdi";
@@ -307,6 +356,39 @@ export default function LivePlayer() {
       toast.error(msg);
       setIsJoining(false);
     }
+  };
+
+  // Avatar tanlash funksiyasi (Kahoot uslubida)
+  const handleSelectAvatar = (avatarSrc) => {
+    setProfilePic(avatarSrc);
+
+    // LocalStorage-ga saqlash
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("ziyo_live_player") || "{}",
+      );
+      saved.profilePic = avatarSrc;
+      localStorage.setItem("ziyo_live_player", JSON.stringify(saved));
+    } catch {}
+
+    // Serverga yuborish (real-vaqtda host va barchaga yangilanadi)
+    const activeSocket = socketRef.current || socket;
+    if (activeSocket && sessionId && playerId) {
+      activeSocket.emit("player:update-avatar", {
+        sessionId,
+        playerId,
+        profilePic: avatarSrc,
+      });
+    }
+  };
+
+  // Tasodifiy avatar tanlash
+  const handleRandomAvatar = () => {
+    const available = QUIZ_AVATARS.filter((a) => a.src !== profilePic);
+    const pick =
+      available[Math.floor(Math.random() * available.length)] ||
+      QUIZ_AVATARS[0];
+    handleSelectAvatar(pick.src);
   };
 
   // Submit Answer
@@ -342,9 +424,21 @@ export default function LivePlayer() {
       {/* Top mini header */}
       <header className="player-top-header">
         {name && playerState !== "join" && (
-          <span className="player-name-badge">
-            👤 {name} • ⭐ {totalScore} ball
-          </span>
+          <div className="player-name-badge">
+            <span className="player-badge-avatar-wrap">
+              {profilePic ? (
+                <img
+                  src={profilePic}
+                  alt={name}
+                  className="player-badge-avatar"
+                />
+              ) : (
+                <span className="player-badge-avatar-fallback">👤</span>
+              )}
+            </span>
+            <span className="player-badge-name">{name}</span>
+            <span className="player-badge-score">⭐ {totalScore} ball</span>
+          </div>
         )}
       </header>
 
@@ -354,7 +448,6 @@ export default function LivePlayer() {
           <div className="player-join-card">
             <div className="join-logo-box">🎮</div>
             <h2>Ziyo QUIZ</h2>
-            <p>O'yin PIN kodini va ismingizni kiriting</p>
 
             {errorMsg && <div className="join-error-text">{errorMsg}</div>}
 
@@ -404,11 +497,60 @@ export default function LivePlayer() {
             animate={{ scale: 1, opacity: 1 }}
           >
             <div className="pulse-avatar-circle">
-              {name.charAt(0).toUpperCase()}
+              {profilePic ? (
+                <img src={profilePic} alt={name} className="pulse-avatar-img" />
+              ) : (
+                name.charAt(0).toUpperCase()
+              )}
             </div>
+
             <h2>Siz o'yindasiz, {name}! 🎉</h2>
-            <p>Boshlovchi o'yinni boshlashini kuting...</p>
-            <div className="lobby-spinner" />
+            <p className="lobby-wait-text">
+              Boshlovchi o'yinni boshlashini kuting...
+            </p>
+
+            {/* Kahoot-uslubidagi avatar tanlagich */}
+            <div className="kahoot-avatar-picker-box">
+              <div className="picker-header">
+                <span className="picker-title">🎭 Avataringizni tanlang</span>
+                <button
+                  type="button"
+                  className="random-avatar-btn"
+                  onClick={handleRandomAvatar}
+                  title="Tasodifiy avatar"
+                >
+                  <FaDice /> Tasodifiy
+                </button>
+              </div>
+
+              <div className="kahoot-avatar-grid">
+                {QUIZ_AVATARS.map((av) => {
+                  const isSelected = profilePic === av.src;
+                  return (
+                    <motion.button
+                      key={av.id}
+                      type="button"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`kahoot-avatar-item ${isSelected ? "selected" : ""}`}
+                      onClick={() => handleSelectAvatar(av.src)}
+                      title={av.name}
+                    >
+                      <img
+                        src={av.src}
+                        alt={av.name}
+                        className="kahoot-avatar-img"
+                      />
+                      {isSelected && (
+                        <div className="avatar-check-badge">
+                          <FaCheck />
+                        </div>
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
           </motion.div>
         </div>
       )}
@@ -525,6 +667,14 @@ export default function LivePlayer() {
             <div className="ended-trophy-icon">🏆</div>
             <h2>O'yin yakunlandi!</h2>
             <div className="my-rank-banner">
+              <div className="my-rank-avatar-wrapper">
+                <img
+                  src={profilePic || quizAvatar1}
+                  alt={name}
+                  className="my-rank-avatar-img"
+                />
+                {myRank === 1 && <span className="my-rank-crown">👑</span>}
+              </div>
               {myRank ? (
                 <>
                   <span className="rank-title">Sizning o'rningiz:</span>
@@ -568,24 +718,49 @@ export default function LivePlayer() {
             {endViewTab === "leaderboard" && (
               <div className="player-top3-list">
                 <h4>Top ishtirokchilar reytingi:</h4>
-                {finalLeaderboard.slice(0, 5).map((p, idx) => (
-                  <div
-                    key={idx}
-                    className={`top3-item ${idx === 0 ? "first" : ""}`}
-                  >
-                    <span>
-                      {idx === 0
-                        ? "🥇"
-                        : idx === 1
-                          ? "🥈"
-                          : idx === 2
-                            ? "🥉"
-                            : `${idx + 1}.`}{" "}
-                      {p.name}
-                    </span>
-                    <strong>{p.score} ball</strong>
-                  </div>
-                ))}
+                {finalLeaderboard.slice(0, 5).map((p, idx) => {
+                  const isCurrent =
+                    p.id === playerId ||
+                    p.name?.trim().toLowerCase() === name?.trim().toLowerCase();
+                  const pAvatar = isCurrent
+                    ? profilePic || p.profilePic
+                    : p.profilePic;
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`top3-item ${idx === 0 ? "first" : ""} ${isCurrent ? "me-highlight" : ""}`}
+                    >
+                      <div className="top3-item-left">
+                        <span className="top3-rank-icon">
+                          {idx === 0
+                            ? "🥇"
+                            : idx === 1
+                              ? "🥈"
+                              : idx === 2
+                                ? "🥉"
+                                : `${idx + 1}.`}
+                        </span>
+                        {pAvatar ? (
+                          <img
+                            src={pAvatar}
+                            alt={p.name}
+                            className="top3-player-avatar"
+                          />
+                        ) : (
+                          <span className="top3-player-avatar-fallback">
+                            {p.name?.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        <span className="top3-player-name">
+                          {p.name}{" "}
+                          {isCurrent && <span className="me-label">(Siz)</span>}
+                        </span>
+                      </div>
+                      <strong>{p.score} ball</strong>
+                    </div>
+                  );
+                })}
               </div>
             )}
 

@@ -18,7 +18,6 @@ import {
   FaSquare,
 } from "react-icons/fa";
 import { FaDiamond } from "react-icons/fa6";
-import { IoSparkles } from "react-icons/io5";
 import { toast } from "react-toastify";
 import { sfx } from "../../utils/soundEffects.js";
 import "./LiveHost.css";
@@ -38,6 +37,7 @@ export default function LiveHost() {
   const [gameState, setGameState] = useState("lobby"); // 'lobby' | 'question' | 'answer' | 'ended'
   const [pin, setPin] = useState("");
   const [quizTitle, setQuizTitle] = useState("");
+  const [creatorId, setCreatorId] = useState(null);
   const [players, setPlayers] = useState([]);
   const [qrDataUrl, setQrDataUrl] = useState("");
   const [isMuted, setIsMuted] = useState(false);
@@ -82,6 +82,49 @@ export default function LiveHost() {
     }, 1000);
   };
 
+  const triggerConfetti = () => {
+    const end = Date.now() + 3.5 * 1000;
+    const colors = ["#bb0000", "#ffffff", "#2563eb", "#eab308", "#10b981"];
+
+    (function frame() {
+      confetti({
+        particleCount: 4,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors,
+      });
+      confetti({
+        particleCount: 4,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors,
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    })();
+  };
+
+  const getCurrentUserId = () => {
+    try {
+      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      if (u && (u._id || u.id)) return String(u._id || u.id);
+      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+      if (p && (p._id || p.id)) return String(p._id || p.id);
+      const token = localStorage.getItem("token");
+      if (token) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        if (payload && (payload.userId || payload.id)) {
+          return String(payload.userId || payload.id);
+        }
+      }
+    } catch {}
+    return null;
+  };
+
   // Connect socket
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -97,9 +140,18 @@ export default function LiveHost() {
       newSocket.emit("host:join", { sessionId });
     });
 
+    newSocket.on("error", (data) => {
+      if (data?.msg) {
+        toast.error(data.msg);
+      }
+    });
+
     newSocket.on("host:joined", (data) => {
       setPin(data.pin);
       setQuizTitle(data.quizTitle);
+      if (data.creatorId || data.hostId) {
+        setCreatorId(String(data.creatorId || data.hostId));
+      }
       if (data.players) setPlayers(data.players);
 
       // Generate QR Code
@@ -135,7 +187,7 @@ export default function LiveHost() {
         const exists = prev.some((p) => p.id === player.id);
         if (exists) {
           return prev.map((p) =>
-            p.id === player.id ? { ...p, ...player } : p
+            p.id === player.id ? { ...p, ...player } : p,
           );
         }
         return [...prev, player];
@@ -145,6 +197,15 @@ export default function LiveHost() {
     // Player Left
     newSocket.on("player:left", ({ playerId }) => {
       setPlayers((prev) => prev.filter((p) => p.id !== playerId));
+    });
+
+    // Player Avatar Updated
+    newSocket.on("player:avatar:updated", ({ playerId, profilePic }) => {
+      setPlayers((prev) =>
+        prev.map((p) =>
+          p.id === playerId || p._id === playerId ? { ...p, profilePic } : p,
+        ),
+      );
     });
 
     // Game Started
@@ -192,35 +253,11 @@ export default function LiveHost() {
     };
   }, [sessionId]);
 
-  const triggerConfetti = () => {
-    const end = Date.now() + 3.5 * 1000;
-    const colors = ["#bb0000", "#ffffff", "#2563eb", "#eab308", "#10b981"];
-
-    (function frame() {
-      confetti({
-        particleCount: 4,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors,
-      });
-      confetti({
-        particleCount: 4,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors,
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    })();
-  };
-
   const handleStartGame = () => {
     if (players.length === 0) {
-      toast.warning("O'yinni boshlash uchun kamida 1 ta o'yinchi qo'shilishi kerak!");
+      toast.warning(
+        "O'yinni boshlash uchun kamida 1 ta o'yinchi qo'shilishi kerak!",
+      );
       return;
     }
     socket.emit("host:start", { sessionId });
@@ -231,10 +268,28 @@ export default function LiveHost() {
   };
 
   const handleEndGameEarly = () => {
+    const currentUserId = getCurrentUserId();
+
+    // Faqat o'yin yaratuvchisi o'yinni tugata oladi
+    if (
+      creatorId &&
+      currentUserId &&
+      String(creatorId) !== String(currentUserId)
+    ) {
+      toast.error(
+        "Faqat o'yinni yaratgan foydalanuvchi uni yakunlashi mumkin!",
+      );
+      return;
+    }
+
     if (window.confirm("Rostdan ham o'yinni tugatmoqchimisiz?")) {
-      socket.emit("host:end", { sessionId });
+      socket.emit("host:end", { sessionId, userId: currentUserId });
     }
   };
+
+  const currentUserId = getCurrentUserId();
+  const isCreator =
+    !creatorId || !currentUserId || String(creatorId) === String(currentUserId);
 
   return (
     <div className="live-host-screen">
@@ -257,7 +312,7 @@ export default function LiveHost() {
             <FaUsers /> {players.length} ishtirokchi
           </div>
 
-          {gameState !== "ended" && (
+          {gameState !== "ended" && isCreator && (
             <button
               type="button"
               className="host-end-btn"
@@ -319,7 +374,15 @@ export default function LiveHost() {
                     className="lobby-player-chip"
                   >
                     <span className="player-avatar-circle">
-                      {p.name.charAt(0).toUpperCase()}
+                      {p.profilePic ? (
+                        <img
+                          src={p.profilePic}
+                          alt={p.name}
+                          className="player-avatar-img"
+                        />
+                      ) : (
+                        p.name.charAt(0).toUpperCase()
+                      )}
                     </span>
                     <span className="player-chip-name">{p.name}</span>
                   </motion.div>
@@ -354,7 +417,7 @@ export default function LiveHost() {
             </div>
 
             <span className="answers-counter">
-              {answeredCount} / {players.length} javob berdi
+              {answeredCount} / {players.length} Javob
             </span>
           </div>
 
@@ -440,7 +503,20 @@ export default function LiveHost() {
                           ? "🥉 3"
                           : `${idx + 1}`}
                   </div>
-                  <div className="lb-name">{item.name}</div>
+                  <div className="lb-player-cell">
+                    {item.profilePic ? (
+                      <img
+                        src={item.profilePic}
+                        alt={item.name}
+                        className="lb-avatar"
+                      />
+                    ) : (
+                      <span className="lb-avatar-fallback">
+                        {item.name?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="lb-name">{item.name}</span>
+                  </div>
                   <div className="lb-score">
                     {item.score.toLocaleString()} ball
                   </div>
@@ -470,7 +546,17 @@ export default function LiveHost() {
                 transition={{ delay: 0.6, duration: 0.7, type: "spring" }}
               >
                 <div className="pillar-player-info">
-                  <div className="pillar-avatar silver">🥈</div>
+                  <div className="pillar-avatar silver">
+                    {finalLeaderboard[1].profilePic ? (
+                      <img
+                        src={finalLeaderboard[1].profilePic}
+                        alt={finalLeaderboard[1].name}
+                        className="pillar-avatar-img"
+                      />
+                    ) : (
+                      "🥈"
+                    )}
+                  </div>
                   <span className="pillar-player-name">
                     {finalLeaderboard[1].name}
                   </span>
@@ -494,7 +580,17 @@ export default function LiveHost() {
               >
                 <div className="pillar-player-info">
                   <FaCrown className="crown-icon" />
-                  <div className="pillar-avatar gold">👑</div>
+                  <div className="pillar-avatar gold">
+                    {finalLeaderboard[0].profilePic ? (
+                      <img
+                        src={finalLeaderboard[0].profilePic}
+                        alt={finalLeaderboard[0].name}
+                        className="pillar-avatar-img"
+                      />
+                    ) : (
+                      "👑"
+                    )}
+                  </div>
                   <span className="pillar-player-name">
                     {finalLeaderboard[0].name}
                   </span>
@@ -517,7 +613,17 @@ export default function LiveHost() {
                 transition={{ delay: 0.2, duration: 0.6, type: "spring" }}
               >
                 <div className="pillar-player-info">
-                  <div className="pillar-avatar bronze">🥉</div>
+                  <div className="pillar-avatar bronze">
+                    {finalLeaderboard[2].profilePic ? (
+                      <img
+                        src={finalLeaderboard[2].profilePic}
+                        alt={finalLeaderboard[2].name}
+                        className="pillar-avatar-img"
+                      />
+                    ) : (
+                      "🥉"
+                    )}
+                  </div>
                   <span className="pillar-player-name">
                     {finalLeaderboard[2].name}
                   </span>
@@ -539,7 +645,20 @@ export default function LiveHost() {
               {finalLeaderboard.map((player, idx) => (
                 <div key={idx} className="ranking-table-row">
                   <span className="rank-col">#{idx + 1}</span>
-                  <span className="name-col">{player.name}</span>
+                  <div className="ranking-player-cell">
+                    {player.profilePic ? (
+                      <img
+                        src={player.profilePic}
+                        alt={player.name}
+                        className="ranking-table-avatar"
+                      />
+                    ) : (
+                      <span className="ranking-table-avatar-fallback">
+                        {player.name?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="name-col">{player.name}</span>
+                  </div>
                   <span className="score-col">{player.score} ball</span>
                 </div>
               ))}

@@ -1,4 +1,5 @@
 import utganKunlarPdf from "../../assets/books/utgan_kunlar_.pdf";
+import atomOdatlari from "../../assets/books/atom_odatlari.pdf";
 
 export const BOOKS_DATA = [
   {
@@ -8,7 +9,7 @@ export const BOOKS_DATA = [
     category: "Badiiy adabiyot",
     img: "/booksimg/O'tgan-kunlar.jpg",
     year: "1926",
-    pages: 288,
+    pages: 220,
     rating: 4.9,
     readersCount: 1420,
     coverColor: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
@@ -76,14 +77,14 @@ export const BOOKS_DATA = [
     img: "/booksimg/atom-odatlari.jpg",
     category: "Rivojlanish",
     year: "2018",
-    pages: 320,
+    pages: 290,
     rating: 4.8,
     readersCount: 2300,
     coverColor: "linear-gradient(135deg, #b45309 0%, #f59e0b 100%)",
     badge: "Bestseller",
     description:
       "Mayda o'zgarishlar orqali ulkan natijalarga erishish va yaxshi odatlarni shakllantirish bo'yicha dunyo bo'yicha eng mashhur qo'llanma.",
-    pdfUrl: utganKunlarPdf, // fallback
+    pdfUrl: atomOdatlari, // fallback
     featured: true,
   },
 ];

@@ -4,13 +4,11 @@ import { io } from "socket.io-client";
 import confetti from "canvas-confetti";
 import {
   IoArrowBack,
-  IoFlash,
   IoCheckmarkCircle,
   IoCloseCircle,
   IoTrophyOutline,
   IoRefreshOutline,
   IoFlame,
-  IoShieldCheckmarkOutline,
 } from "react-icons/io5";
 import { LuSword } from "react-icons/lu";
 import { sfx } from "../../utils/soundEffects.js";

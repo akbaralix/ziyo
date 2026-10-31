@@ -22,7 +22,6 @@ const images = Object.values(
   }),
 );
 
-// Telegram'dan kelgan stilsizlantirilgan Unicode harflarni (masalan: 𝕬𝖐𝖇𝖆𝖗𝖆𝖑𝖎) oddiy matnga aylantirish
 const normalizeTelegramText = (text) => {
   if (!text) return "";
   return text
@@ -217,6 +216,11 @@ function Login() {
       toast.warning("Iltimos, ta'lim maskanini tanlang.");
       return;
     }
+    if (userData.studyPlace === "ustoz") {
+      handleCompleteRegistration("ustoz");
+      return;
+    }
+
     setLoginStep(3);
   };
 
@@ -373,7 +377,7 @@ function Login() {
           {isWaitingTg && (
             <div className="waiting-status-box">
               <FaSpinner className="spinner-icon" />
-              <span>Botda /start bosilishi kutilmoqda...</span>
+              <span>Botga /start bosishingiz kutilmoqda...</span>
             </div>
           )}
 
@@ -495,8 +499,27 @@ function Login() {
           >
             <span className="study-emoji">🏫</span>
             <div className="study-info">
-              <h4>Maktab</h4>
+              <h4>O'quvchi</h4>
               <p>Umumta'lim maktabi o'quvchilari uchun</p>
+            </div>
+          </div>
+
+          <div
+            onClick={() =>
+              setUserData({
+                ...userData,
+                studyPlace: "ustoz",
+                course: "",
+              })
+            }
+            className={`study-option ${
+              userData.studyPlace === "ustoz" ? "active-study" : ""
+            }`}
+          >
+            <span className="study-emoji">👩‍💼</span>
+            <div className="study-info">
+              <h4>Ustoz</h4>
+              <p>O'qituchi va murabbiylar uchun</p>
             </div>
           </div>
 

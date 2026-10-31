@@ -32,11 +32,12 @@ export const initTelegramSession = async (req, res) => {
 
     await session.save();
 
-    const botUsername = process.env.BOT_USERNAME || "avtosavdo1bot";
+    const botUsername = process.env.BOT_USERNAME || "eduziyobot";
     const botUrl = `https://t.me/${botUsername}?start=${rawToken}`;
 
     return res.status(201).json({
       success: true,
+
       token: rawToken,
       botUrl,
       expiresAt,
@@ -274,13 +275,59 @@ export const getMe = async (req, res) => {
 // 5. Profilni tahrirlash
 export const updateProfile = async (req, res) => {
   try {
-    const { firstName, lastName, profilePic, bio, studyPlace, course } =
-      req.body;
+    const {
+      firstName,
+      lastName,
+      username,
+      profilePic,
+      bio,
+      studyPlace,
+      course,
+    } = req.body;
     const user = req.user;
 
     if (firstName) user.firstName = firstName.trim();
     if (lastName) user.lastName = lastName.trim();
     if (profilePic) user.profilePic = profilePic;
+
+    if (username !== undefined) {
+      const cleanUsername = username.replace(/^@/, "").trim().toLowerCase();
+      if (cleanUsername) {
+        if (cleanUsername.length < 3) {
+          return res.status(400).json({
+            success: false,
+            message: "Username kamida 3 ta belgidan iborat bo'lishi kerak.",
+          });
+        }
+        const validRegex = /^[a-z0-9_]{3,30}$/;
+        if (!validRegex.test(cleanUsername)) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Username faqat lotin harflari, raqamlar va pastki chiziq (_) dan iborat bo'lishi kerak.",
+          });
+        }
+
+        // Boshqa foydalanuvchida bor-yo'qligini tekshirish
+        const existingUser = await User.findOne({
+          _id: { $ne: user._id },
+          $or: [
+            { username: cleanUsername },
+            { telegramUsername: new RegExp(`^${cleanUsername}$`, "i") },
+          ],
+        });
+
+        if (existingUser) {
+          return res.status(400).json({
+            success: false,
+            message: "Bu username band!",
+          });
+        }
+
+        user.username = cleanUsername;
+        user.telegramUsername = cleanUsername;
+      }
+    }
 
     if (bio !== undefined) user.bio = bio.trim();
     if (studyPlace) user.studyPlace = studyPlace;
@@ -306,6 +353,82 @@ export const updateProfile = async (req, res) => {
   }
 };
 
+// 5.1 Username mavjudligini real vaqtda tekshirish
+export const checkUsernameAvailability = async (req, res) => {
+  try {
+    const rawUsername = req.params.username || req.query.username || "";
+    const cleanUsername = rawUsername.replace(/^@/, "").trim().toLowerCase();
+
+    if (!cleanUsername || cleanUsername.length < 3) {
+      return res.status(400).json({
+        success: false,
+        available: false,
+        message: "Username kamida 3 ta belgidan iborat bo'lishi kerak.",
+      });
+    }
+
+    const validRegex = /^[a-z0-9_]{3,30}$/;
+    if (!validRegex.test(cleanUsername)) {
+      return res.status(400).json({
+        success: false,
+        available: false,
+        message:
+          "Username faqat lotin harflari, raqamlar va pastki chiziq (_) dan iborat bo'lishi kerak.",
+      });
+    }
+
+    // Foydalanuvchining o'z joriy username-i bo'lsa
+    if (
+      req.user &&
+      ((req.user.username &&
+        req.user.username.toLowerCase() === cleanUsername) ||
+        (req.user.telegramUsername &&
+          req.user.telegramUsername.toLowerCase() === cleanUsername))
+    ) {
+      return res.json({
+        success: true,
+        available: true,
+        isSelf: true,
+        message: "Bu sizning joriy username-ingiz.",
+      });
+    }
+
+    const query = {
+      $or: [
+        { username: cleanUsername },
+        { telegramUsername: new RegExp(`^${cleanUsername}$`, "i") },
+      ],
+    };
+
+    if (req.user?._id) {
+      query._id = { $ne: req.user._id };
+    }
+
+    const existingUser = await User.findOne(query);
+
+    if (existingUser) {
+      return res.json({
+        success: true,
+        available: false,
+        message: "Bu band",
+      });
+    }
+
+    return res.json({
+      success: true,
+      available: true,
+      message: "Username bo'sh",
+    });
+  } catch (error) {
+    console.error("checkUsernameAvailability xatosi:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server xatosi.",
+      error: error.message,
+    });
+  }
+};
+
 // 6. Boshqa foydalanuvchi profilini olish (ID yoki username orqali)
 export const getUserProfileById = async (req, res) => {
   try {
@@ -320,7 +443,10 @@ export const getUserProfileById = async (req, res) => {
     let user = null;
     const cleanUsername = idOrUsername.replace(/^@/, "").trim();
 
-    if (mongoose.Types.ObjectId.isValid(cleanUsername) && cleanUsername.length === 24) {
+    if (
+      mongoose.Types.ObjectId.isValid(cleanUsername) &&
+      cleanUsername.length === 24
+    ) {
       user = await User.findById(cleanUsername);
     }
 
@@ -328,6 +454,7 @@ export const getUserProfileById = async (req, res) => {
       const usernameRegex = new RegExp(`^${cleanUsername}$`, "i");
       user = await User.findOne({
         $or: [
+          { username: cleanUsername.toLowerCase() },
           { telegramUsername: usernameRegex },
           { telegramId: cleanUsername },
         ],
@@ -406,7 +533,9 @@ export const updateReadingProgress = async (req, res) => {
       if (!Array.isArray(user.finishedBooks)) {
         user.finishedBooks = [];
       }
-      const alreadyFinished = user.finishedBooks.some((b) => b.bookId === bookId);
+      const alreadyFinished = user.finishedBooks.some(
+        (b) => b.bookId === bookId,
+      );
       if (!alreadyFinished) {
         user.finishedBooks.push({
           bookId,

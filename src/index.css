@@ -37,16 +37,17 @@
   --text-white: #ffffff;
 
   /* --- Typography Scale --- */
-  --font-family-base: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-xs: 0.75rem;    /* 12px */
-  --font-sm: 0.8125rem;  /* 13px */
+  --font-family-base:
+    "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-xs: 0.75rem; /* 12px */
+  --font-sm: 0.8125rem; /* 13px */
   --font-base: 0.875rem; /* 14px */
-  --font-md: 0.9375rem;  /* 15px */
-  --font-lg: 1rem;       /* 16px */
-  --font-xl: 1.125rem;   /* 18px */
-  --font-2xl: 1.25rem;   /* 20px */
-  --font-3xl: 1.5rem;    /* 24px */
-  --font-4xl: 1.875rem;  /* 30px */
+  --font-md: 0.9375rem; /* 15px */
+  --font-lg: 1rem; /* 16px */
+  --font-xl: 1.125rem; /* 18px */
+  --font-2xl: 1.25rem; /* 20px */
+  --font-3xl: 1.5rem; /* 24px */
+  --font-4xl: 1.875rem; /* 30px */
 
   /* --- Borders & Dividers --- */
   --border-color: #e2e8f0;
@@ -72,9 +73,9 @@
   --color-success-border: #a7f3d0;
 
   /* Danger / Error (Red) */
-  --color-danger: #ef4444;
+  --color-danger: #e90606;
   --color-danger-dark: #dc2626;
-  --color-danger-bg: #fef2f2;
+  --color-danger-bg: #eeeeee;
   --color-danger-border: #fecaca;
 
   /* Warning (Amber / Gold) */
@@ -84,17 +85,20 @@
   --color-warning-border: #fde68a;
 
   /* Info (Blue) */
-  --color-info: #2563eb;
-  --color-info-dark: #1d4ed8;
-  --color-info-bg: #eff6ff;
-  --color-info-border: #bfdbfe;
+  --color-info: #4925eb;
+  --color-info-dark: #4c1dd8;
+  --color-info-bg: #efefff;
+  --color-info-border: #c5bffe;
 
   /* --- Box Shadows --- */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
 
   /* --- Transitions --- */

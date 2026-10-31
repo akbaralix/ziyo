@@ -47,7 +47,7 @@ const loginSessionSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Auto-delete expired sessions from MongoDB

@@ -5,6 +5,7 @@ import {
   registerTelegramUser,
   getMe,
   updateProfile,
+  checkUsernameAvailability,
   getUserProfileById,
   updateReadingProgress,
 } from "../controllers/authController.js";
@@ -16,6 +17,7 @@ const router = Router();
 router.post("/telegram/init", initTelegramSession);
 router.get("/telegram/check/:token", checkTelegramSession);
 router.post("/telegram/register", registerTelegramUser);
+router.get("/check-username/:username", optionalAuthMiddleware, checkUsernameAvailability);
 router.get("/user/:idOrUsername", optionalAuthMiddleware, getUserProfileById);
 
 // Himoyalangan yo'llar (JWT orqali)

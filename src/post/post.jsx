@@ -6,7 +6,7 @@ import {
   FaRegBookmark,
   FaBookmark,
 } from "react-icons/fa";
-import { LuShare2, LuSend, LuPencil, LuTrash2 } from "react-icons/lu";
+import { LuShare2, LuArrowUp, LuPencil, LuTrash2 } from "react-icons/lu";
 import { IoMdClose } from "react-icons/io";
 import { IoEyeOffOutline, IoAlertCircleOutline } from "react-icons/io5";
 import { useState } from "react";
@@ -26,6 +26,24 @@ import {
 } from "../api/postApi.js";
 import ModalOverlay from "../components/ModalOverlay";
 import "./post.css";
+
+function getTimeAgo(date) {
+  if (!date) return "";
+  const timestamp = new Date(date).getTime();
+  if (Number.isNaN(timestamp)) return "";
+
+  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+  if (seconds < 60) return "Hozirgina";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} daqiqa oldin`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} soat oldin`;
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)} kun oldin`;
+
+  return new Date(date).toLocaleDateString("uz-UZ", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 function Post({
   selectedCategory = "Barchasi",
@@ -48,10 +66,7 @@ function Post({
 
     // 2. Aks holda uning aniq MongoDB ID si!
     const uid =
-      targetUser?._id ||
-      targetUser?.id ||
-      authorId ||
-      targetUser?.userId;
+      targetUser?._id || targetUser?.id || authorId || targetUser?.userId;
 
     if (uid) {
       navigate(`/@${String(uid)}`);
@@ -104,26 +119,6 @@ function Post({
     tags: "",
   });
 
-  const getTimeAgo = (date) => {
-    if (!date) return "";
-
-    const timestamp = new Date(date).getTime();
-
-    if (Number.isNaN(timestamp)) return "";
-
-    const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
-
-    if (seconds < 60) return "Hozirgina";
-    if (seconds < 3600) return `${Math.floor(seconds / 60)} daqiqa oldin`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)} soat oldin`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)} kun oldin`;
-
-    return new Date(date).toLocaleDateString("uz-UZ", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
   // TanStack Query orqali postlarni keshdan tezkor olish
   const { data, isLoading: loading } = useQuery({
     queryKey: ["posts", selectedCategory, searchQuery, onlyMyPosts, userId],
@@ -888,10 +883,6 @@ function Post({
             </div>
             <div>
               <h3>Shikoyat yuborish</h3>
-              <p className="report-target-snippet">
-                Post: <b>"{selectedPost?.title}"</b> (
-                {selectedPost?.user?.name || "Muallif"})
-              </p>
             </div>
             <button
               type="button"
@@ -1120,7 +1111,9 @@ function Post({
                       alt="User"
                       className="comment-avatar"
                       style={{ cursor: "pointer" }}
-                      onClick={() => handleUserClick(c.user, c.user?.id || c.author)}
+                      onClick={() =>
+                        handleUserClick(c.user, c.user?.id || c.author)
+                      }
                       title="Profilni ko'rish"
                     />
                     <div className="comment-content-box">
@@ -1128,7 +1121,9 @@ function Post({
                         <span
                           className="comment-author-name"
                           style={{ cursor: "pointer" }}
-                          onClick={() => handleUserClick(c.user, c.user?.id || c.author)}
+                          onClick={() =>
+                            handleUserClick(c.user, c.user?.id || c.author)
+                          }
                           title="Profilni ko'rish"
                         >
                           {c.user?.name || "Foydalanuvchi"}
@@ -1165,7 +1160,7 @@ function Post({
               disabled={!newCommentText.trim() || commentMutation.isPending}
               className="comment-submit-btn"
             >
-              <LuSend />
+              <LuArrowUp />
             </button>
           </form>
         </div>

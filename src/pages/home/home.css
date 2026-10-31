@@ -1,11 +1,16 @@
+/* ==========================================================================
+   Home Page Styles
+   ========================================================================== */
+
 .home-container {
   width: 100%;
   max-width: 100%;
   min-width: 0;
 }
 
+/* --- Sticky Top Header --- */
 .home-header {
-  background-color: #fff;
+  background-color: var(--bg-card);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: 100;
@@ -19,55 +24,63 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid var(--border-color);
 }
 
+/* --- Search Bar --- */
 .searchbar {
   display: flex;
   align-items: center;
-  background-color: #ffffff;
-  border: 1.5px solid #e5e7eb;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-color);
   gap: 8px;
-  padding: 6px 12px;
-  border-radius: 33px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
   flex: 1;
   max-width: 420px;
-  min-width: 0; /* Prevents flex item from overflowing parent on small screens */
-  transition: all 0.2s ease;
+  min-width: 0;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .searchbar:focus-within {
-  border-color: #6a6b6d;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .searchbar input {
   width: 100%;
   min-width: 0;
   padding: 4px 0;
-  font-size: 14px;
+  font-size: var(--font-base);
   border: none;
   outline: none;
   background: transparent;
-  color: #111827;
+  color: var(--text-primary);
   font-family: inherit;
 }
 
 .searchbar input::placeholder {
-  font-size: 14px;
-  color: #9ca3af;
+  font-size: var(--font-base);
+  color: var(--text-light);
 }
 
 .searchbar button {
   font-size: 19px;
   background: none;
-  color: #6b7280;
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: color var(--transition-fast);
 }
 
+.searchbar button:hover {
+  color: var(--primary);
+}
+
+/* --- Header Actions --- */
 .header-action {
   display: flex;
   align-items: center;
@@ -78,25 +91,25 @@
 .header-divider {
   width: 1px;
   height: 18px;
-  background-color: #d1d5db;
+  background-color: var(--border-color);
   display: block;
 }
 
 .notification button {
   background: none;
   font-size: 22px;
-  color: #4b5563;
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .notification button:hover {
-  background-color: #f3f4f6;
-  color: #111827;
+  background-color: var(--bg-muted);
+  color: var(--text-primary);
 }
 
 .user-pointes {
@@ -104,15 +117,15 @@
   align-items: center;
   gap: 6px;
   font-weight: 600;
-  font-size: 14px;
-  color: #111827;
-  background: #f3f4f6;
-  padding: 5px 10px;
-  border-radius: 20px;
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  background: var(--bg-muted);
+  padding: 5px 12px;
+  border-radius: var(--radius-xl);
 }
 
 .user-pointes svg {
-  color: #eab308;
+  color: var(--color-warning);
   font-size: 16px;
 }
 
@@ -139,35 +152,41 @@
 
 .post-sort-btn {
   padding: 7px 14px;
-  border-radius: 22px;
-  background: #ffffff;
-  border: 1.5px solid #e5e7eb;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
   width: fit-content;
   gap: 8px;
   display: flex;
   align-items: center;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
-  color: #4b5563;
+  color: var(--text-secondary);
   white-space: nowrap;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
+}
+
+.post-sort-btn:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-hover);
 }
 
 .post-sort-btn.active {
-  border-color: #461fe2;
-  background: #f2eefa;
-  color: #531fe2;
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-weight: 600;
 }
 
 .post-sort-btn span {
-  color: white;
+  color: var(--text-white);
   display: flex;
   align-items: center;
   padding: 4px;
   justify-content: center;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: var(--radius-xs);
+  font-size: var(--font-base);
   flex-shrink: 0;
 }
 
@@ -175,7 +194,7 @@
   font-size: 16px;
 }
 
-/* --- Responsive for Mobile --- */
+/* --- Responsive Media Queries --- */
 @media (max-width: 768px) {
   .home-header {
     padding: 8px 12px;
@@ -186,12 +205,9 @@
     padding: 5px 10px;
   }
 
-  .searchbar input {
-    font-size: 13px;
-  }
-
+  .searchbar input,
   .searchbar input::placeholder {
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   .header-action {
@@ -200,7 +216,7 @@
 
   .user-pointes {
     padding: 4px 8px;
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   .post-sorts {
@@ -210,13 +226,13 @@
 
   .post-sort-btn {
     padding: 6px 11px;
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 }
 
 @media (max-width: 400px) {
   .user-pointes span {
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .searchbar {

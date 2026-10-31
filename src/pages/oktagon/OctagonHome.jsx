@@ -5,8 +5,6 @@ import {
   IoFlash,
   IoShieldCheckmark,
   IoTrophy,
-  IoFlame,
-  IoTrendingUp,
   IoSettingsOutline,
   IoClose,
 } from "react-icons/io5";
@@ -241,38 +239,6 @@ export default function OctagonHome() {
         >
           <IoFlash /> Jangga kirish (1v1)
         </button>
-      </div>
-
-      {/* Rules Card */}
-      <div className="octagon-rules-card">
-        <h4 className="rules-title">
-          <IoShieldCheckmark /> Oktagon qoidalari:
-        </h4>
-        <div className="rules-grid">
-          <div className="rule-item">
-            <span className="rule-num">1</span>
-            <div>
-              <strong>10 ta teng savol:</strong> Ikkala tomon bir vaqtning
-              o‘zida xuddi shu savollarni oladi.
-            </div>
-          </div>
-          <div className="rule-item">
-            <span className="rule-num">2</span>
-            <div>
-              <strong>12 soniya & Tezlik:</strong> Qancha tez javob bersangiz,
-              shuncha ko‘p ball yoziladi.
-            </div>
-          </div>
-          <div className="rule-item">
-            <span className="rule-num">3</span>
-            <div>
-              <strong>XP Stavkalari:</strong> Matematikada Oson{" "}
-              <strong>(+30 / -15 XP)</strong>, Qiyin{" "}
-              <strong>(+40 / -25 XP)</strong>, Murakkab{" "}
-              <strong>(+60 / -40 XP)</strong>.
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Settings Modal (Matematika darajasini sozlash) */}

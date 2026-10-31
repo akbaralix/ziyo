@@ -1,6 +1,55 @@
-import { useEffect } from "react";
-import ReactDOM from "react-dom"; // 👈 Mana shu qator yetishmayotgan edi
+import { useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import "./ModalOverlay.css";
+
+// Ochiq modallar sonini kuzatish (Nested modallarda scroll buzilmasligi uchun)
+let activeModalsCount = 0;
+let preservedScrollY = 0;
+
+const lockBodyScroll = () => {
+  if (activeModalsCount === 0) {
+    preservedScrollY = window.scrollY || window.pageYOffset || 0;
+
+    // Scrollbar enini hisoblab olish (sahifa sakrab ketmasligi uchun)
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+  }
+  activeModalsCount++;
+};
+
+const unlockBodyScroll = () => {
+  activeModalsCount = Math.max(0, activeModalsCount - 1);
+
+  if (activeModalsCount === 0) {
+    // Barcha inline stillarni to'liq tozalash
+    document.documentElement.style.removeProperty("overflow");
+    document.body.style.removeProperty("overflow");
+    document.body.style.removeProperty("position");
+    document.body.style.removeProperty("top");
+    document.body.style.removeProperty("width");
+    document.body.style.removeProperty("padding-right");
+
+    // Kafolatli fallback tozalash (ba'zi brauzerlarda removeProperty inline stillarni darhol tozalab ulgurmasligi mumkin)
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+    document.body.style.paddingRight = "";
+
+    // Oldingi scroll pozitsiyasini tiklash
+    if (preservedScrollY !== undefined && preservedScrollY !== null) {
+      window.scrollTo(0, preservedScrollY);
+    }
+  }
+};
 
 function ModalOverlay({
   isOpen = true,
@@ -11,32 +60,21 @@ function ModalOverlay({
   closeOnClickOutside = true,
   ...props
 }) {
+  const onCloseRef = useRef(onClose);
+
+  // onClose o'zgarganda refni yangilab boramiz (useEffectni keraksiz ishga tushirmaslik uchun)
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!isOpen) return;
 
-    // Oldingi scroll stillarini saqlash
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalBodyPosition = document.body.style.position;
-    const originalBodyTop = document.body.style.top;
-    const originalBodyWidth = document.body.style.width;
+    lockBodyScroll();
 
-    // Sahifaning hozirgi scroll holatini saqlash
-    const scrollY = window.scrollY;
-
-    // Orqa sahifa scrollini bloklash
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
-
-    // Mobil brauzerlarda orqa sahifa siljishini oldini olish
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
-
-    // ESC tugmasi bilan modalni yopish
     const handleKeyDown = (e) => {
-      if (e.key === "Escape" && onClose) {
-        onClose();
+      if (e.key === "Escape" && onCloseRef.current) {
+        onCloseRef.current();
       }
     };
 
@@ -44,24 +82,15 @@ function ModalOverlay({
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-
-      // Oldingi stillarni tiklash
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      document.body.style.overflow = originalBodyOverflow;
-      document.body.style.position = originalBodyPosition;
-      document.body.style.top = originalBodyTop;
-      document.body.style.width = originalBodyWidth;
-
-      // Modal ochilishidan oldingi scroll joyiga qaytish
-      window.scrollTo(0, scrollY);
+      unlockBodyScroll();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget && closeOnClickOutside && onClose) {
-      onClose();
+    if (e.target === e.currentTarget && closeOnClickOutside && onCloseRef.current) {
+      onCloseRef.current();
     }
   };
 

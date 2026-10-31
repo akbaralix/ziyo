@@ -88,10 +88,11 @@ function Reytinglar() {
     staleTime: 1000 * 60 * 2,
   });
 
-  const rawUsers = ratingResponse?.ratings || [];
+  const ratings = ratingResponse?.ratings;
 
   // Foydalanuvchilarni XP bo'yicha kamayish tartibida saralash
   const sortedUsers = useMemo(() => {
+    const rawUsers = ratings || [];
     // Vaqt filtri bo'yicha XP ni moslash (dinamik multiplikator bilan)
     const multiplier =
       timeframe === "weekly" ? 0.25 : timeframe === "monthly" ? 0.65 : 1;
@@ -137,15 +138,15 @@ function Reytinglar() {
       const q = searchQuery.toLowerCase();
       users = users.filter(
         (u) =>
-          u.name.toLowerCase().includes(q) ||
-          u.username.toLowerCase().includes(q) ||
+          (u.name || "").toLowerCase().includes(q) ||
+          (u.username || "").toLowerCase().includes(q) ||
           (u.level && u.level.toLowerCase().includes(q)),
       );
     }
 
     return users;
   }, [
-    rawUsers,
+    ratings,
     timeframe,
     selectedCategory,
     searchQuery,
@@ -340,7 +341,7 @@ function Reytinglar() {
               return (
                 <div
                   key={user.id}
-                  className={`leaderboard-row ${isMe ? "current-user-row" : ""}`}
+                  className={`reyting-row ${isMe ? "current-user-row" : ""}`}
                 >
                   <div className="col-rank">
                     <span className="rank-circle">#{user.rank}</span>

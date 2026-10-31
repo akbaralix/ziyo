@@ -12,7 +12,7 @@ export function initSocketIO(io) {
     if (token) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        socket.userId = decoded.id;
+        socket.userId = decoded.userId || decoded.id || decoded._id;
       } catch {}
     }
     next();
@@ -29,12 +29,17 @@ export function initSocketIO(io) {
         socket.role = "host";
         socket.join(`session:${sessionId}`);
 
+        const creatorId =
+          session.host?.toString() || session.quiz?.host?.toString() || null;
+
         const baseData = {
           sessionId,
           pin: session.pin,
           quizTitle: session.quiz.title,
           questionsCount: session.quiz.questions.length,
           status: session.status,
+          creatorId,
+          hostId: creatorId,
           players: session.players.map((p) => ({
             id: p._id,
             name: p.name,
@@ -74,7 +79,12 @@ export function initSocketIO(io) {
           const leaderboard = [...session.players]
             .sort((a, b) => b.score - a.score)
             .slice(0, 5)
-            .map((p, i) => ({ rank: i + 1, name: p.name, score: p.score }));
+            .map((p, i) => ({
+              rank: i + 1,
+              name: p.name,
+              score: p.score,
+              profilePic: p.profilePic,
+            }));
 
           baseData.currentQuestion = {
             questionIndex: session.currentQuestion,
@@ -137,6 +147,9 @@ export function initSocketIO(io) {
           if (player) {
             // O'yinchi qayta ulandi
             player.socketId = socket.id;
+            if (profilePic) {
+              player.profilePic = profilePic;
+            }
             await session.save();
 
             socket.playerId = player._id.toString();
@@ -155,6 +168,7 @@ export function initSocketIO(io) {
               playerId: player._id,
               name: player.name,
               score: player.score,
+              profilePic: player.profilePic,
               status: session.status,
               quizTitle: session.quiz?.title,
               myAnswerHistory: player.answers || [],
@@ -238,6 +252,7 @@ export function initSocketIO(io) {
             playerId: savedPlayer._id,
             name: savedPlayer.name,
             score: 0,
+            profilePic: savedPlayer.profilePic,
             status: "lobby",
             quizTitle: session.quiz?.title,
             myAnswerHistory: [],
@@ -253,6 +268,32 @@ export function initSocketIO(io) {
         } catch (err) {
           console.error("player:join error:", err);
           socket.emit("player:join:error", { msg: "Server xatosi" });
+        }
+      },
+    );
+
+    // ===================== AVATARNI YANGILASH =====================
+    socket.on(
+      "player:update-avatar",
+      async ({ sessionId, playerId, profilePic }) => {
+        try {
+          const session = await GameSession.findById(sessionId);
+          if (!session) return;
+
+          const player = session.players.find(
+            (p) => p._id.toString() === playerId,
+          );
+          if (player) {
+            player.profilePic = profilePic;
+            await session.save();
+
+            io.to(`session:${sessionId}`).emit("player:avatar:updated", {
+              playerId,
+              profilePic,
+            });
+          }
+        } catch (err) {
+          console.error("player:update-avatar error:", err);
         }
       },
     );
@@ -370,8 +411,29 @@ export function initSocketIO(io) {
     });
 
     // ===================== O'YINNI TUGATISH (HOST) =====================
-    socket.on("host:end", async ({ sessionId }) => {
-      await endGame(io, sessionId);
+    socket.on("host:end", async ({ sessionId, userId }) => {
+      try {
+        const session = await GameSession.findById(sessionId).populate("quiz");
+        if (!session || session.status === "ended") return;
+
+        const currentUserId = userId || socket.userId;
+        const creatorId =
+          session.host?.toString() || session.quiz?.host?.toString();
+
+        if (
+          currentUserId &&
+          creatorId &&
+          currentUserId.toString() === creatorId.toString()
+        ) {
+          await endGame(io, sessionId);
+        } else {
+          socket.emit("error", {
+            msg: "Faqat o'yinni yaratgan foydalanuvchi uni yakunlashi mumkin!",
+          });
+        }
+      } catch (err) {
+        console.error("host:end error:", err);
+      }
     });
 
     // ===================== ULANISH UZILDI =====================
@@ -447,7 +509,12 @@ async function showAnswer(io, sessionId, session, questionIndex) {
   const leaderboard = [...freshSession.players]
     .sort((a, b) => b.score - a.score)
     .slice(0, 5)
-    .map((p, i) => ({ rank: i + 1, name: p.name, score: p.score }));
+    .map((p, i) => ({
+      rank: i + 1,
+      name: p.name,
+      score: p.score,
+      profilePic: p.profilePic,
+    }));
 
   io.to(`session:${sessionId}`).emit("question:ended", {
     correctIndex: question.correctIndex,

@@ -8,6 +8,13 @@ const userSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
+    username: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+    },
     telegramUsername: {
       type: String,
       default: "",
@@ -30,12 +37,11 @@ const userSchema = new mongoose.Schema(
     },
     studyPlace: {
       type: String,
-      enum: ["institut", "maktab"],
+      enum: ["institut", "maktab", "ustoz"],
       required: true,
     },
     course: {
       type: String,
-      required: true,
     },
     bio: {
       type: String,

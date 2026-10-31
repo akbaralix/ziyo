@@ -1,3 +1,7 @@
+/* ==========================================================================
+   Post Component & Feed Styles
+   ========================================================================== */
+
 .post-container {
   width: 100%;
   max-width: 720px;
@@ -7,15 +11,23 @@
 
 .post-card {
   width: 100%;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 26px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-2xl);
   margin-bottom: 20px;
   overflow: hidden;
   box-sizing: border-box;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition-normal);
 }
 
-/* Loader konteyneri */
+.post-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ==========================================================================
+   Skeleton Loading State
+   ========================================================================== */
 .posts-loader-container {
   display: flex;
   flex-direction: column;
@@ -23,29 +35,26 @@
   width: 100%;
 }
 
-/* Skelet karta dizayni */
 .post-skeleton-card {
-  background: #ffffff;
-  border: 1px solid #eaeaea;
-  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-xs);
 }
 
-/* Skelet qismlari uchun umumiy animatsiya */
 .post-skeleton-avatar,
 .post-skeleton-line,
 .post-skeleton-action-btn {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s infinite ease-in-out;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
-/* Yuqori qism (Avatar vaism) */
 .post-skeleton-header {
   display: flex;
   align-items: center;
@@ -55,7 +64,7 @@
 .post-skeleton-avatar {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
@@ -66,10 +75,9 @@
   flex: 1;
 }
 
-/* Matn chiziqlari o'lchamlari */
 .post-skeleton-line {
   height: 14px;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
 }
 
 .post-skeleton-line.shortest {
@@ -89,7 +97,6 @@
   width: 100%;
 }
 
-/* Asosiy kontent qismi */
 .post-skeleton-content {
   display: flex;
   flex-direction: column;
@@ -97,13 +104,12 @@
   padding: 4px 0;
 }
 
-/* Pastki qism (Like, izoh va sana) */
 .post-skeleton-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-top: 8px;
-  border-top: 1px solid #f2f2f2;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .post-skeleton-actions-group {
@@ -114,10 +120,9 @@
 .post-skeleton-action-btn {
   width: 40px;
   height: 28px;
-  border-radius: 50px;
+  border-radius: var(--radius-pill);
 }
 
-/* Yorqinlik (shimmer) animatsiyasi */
 @keyframes skeleton-shimmer {
   0% {
     background-position: 200% 0;
@@ -126,28 +131,29 @@
     background-position: -200% 0;
   }
 }
-/* =========================
-   POST HEADER
-========================= */
 
+/* ==========================================================================
+   Post Header
+   ========================================================================== */
 .post-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border-bottom: 1px solid #dfdfdf;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .post-user-info {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
 }
 
 .post-user-avatar {
   width: 44px;
   height: 44px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   object-fit: cover;
   display: block;
 }
@@ -159,20 +165,17 @@
 
 .post-user-name {
   margin: 0;
-  font-size: 15px;
+  font-size: var(--font-base);
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .post-user-username {
-  font-size: 13px;
-  color: #6b7280;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
 }
 
-/* =========================
-   MORE BUTTON
-========================= */
-
+/* More Actions Button */
 .post-action-btn {
   display: flex;
   align-items: center;
@@ -184,22 +187,26 @@
   height: 36px;
   border: none;
   background: transparent;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--text-muted);
   font-size: 21px;
   transition:
-    background 0.2s ease,
-    color 0.2s ease;
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .post-action-btn button:hover {
-  background: #f3f4f6;
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
+/* ==========================================================================
+   Post Content & Body
+   ========================================================================== */
 .post-content {
   padding: 0 16px 16px;
   margin-top: 15px;
@@ -207,24 +214,25 @@
 
 .post-title {
   margin: 4px 0 8px;
-  margin-bottom: 15px;
-  font-size: 19px;
+  margin-bottom: 12px;
+  font-size: var(--font-xl);
+  font-weight: 700;
   line-height: 1.35;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .post-text {
   margin: 0 0 14px;
-  font-size: 15px;
+  font-size: var(--font-base);
   line-height: 1.6;
-  color: #374151;
+  color: var(--text-secondary);
 }
 
 .post-image {
   width: 100%;
   margin-top: 12px;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
 }
 
 .post-image img {
@@ -235,6 +243,9 @@
   object-fit: cover;
 }
 
+/* ==========================================================================
+   Post Quiz & Options
+   ========================================================================== */
 .post-quiz {
   margin-top: 18px;
 }
@@ -249,23 +260,23 @@
   width: 100%;
   min-height: 52px;
   padding: 8px 12px;
-  border: 1px solid #dbe1ea;
-  border-radius: 25px;
-  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
   display: flex;
   align-items: center;
   gap: 12px;
   text-align: left;
   cursor: pointer;
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.15s ease;
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .quiz-option:hover:not(:disabled) {
-  background: #f8faff;
-  border-color: #a2a4a7;
+  background: var(--primary-light);
+  border-color: var(--primary-border);
 }
 
 .quiz-option:active:not(:disabled) {
@@ -282,27 +293,27 @@
   width: 32px;
   height: 32px;
   flex-shrink: 0;
-  border: 1px solid #dbe1ea;
-  border-radius: 50%;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  color: #374151;
+  font-size: var(--font-xs);
+  color: var(--text-secondary);
 }
 
 .quiz-option-text {
-  font-size: 14px;
-  color: #1f2937;
-  font-family: "poppins";
+  font-size: var(--font-base);
+  color: var(--text-primary);
+  font-family: inherit;
 }
-/* Kichik yuklanish animatsiyasi (Spinner) */
+
 .quiz-mini-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--text-white);
   border-top-color: transparent;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   animation: quiz-spin 0.8s linear infinite;
   display: inline-block;
 }
@@ -315,14 +326,14 @@
     transform: rotate(360deg);
   }
 }
-/* =========================
-   POST FOOTER
-========================= */
 
+/* ==========================================================================
+   Post Footer & Actions
+   ========================================================================== */
 .post-footer {
   min-height: 52px;
   padding: 10px 16px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -344,40 +355,48 @@
   gap: 7px;
   padding: 5px 0;
   cursor: pointer;
-  color: #6d6b80;
-  font-size: 15px;
+  color: var(--text-muted);
+  font-size: var(--font-base);
+  transition: color var(--transition-fast);
 }
 
 .post-like-btn svg,
 .post-comment-btn svg {
   font-size: 19px;
 }
+
+.post-like-btn:hover {
+  color: var(--color-danger);
+}
+
+.post-comment-btn:hover {
+  color: var(--primary);
+}
+
 .post-date {
-  font-size: 13px;
-  color: #59595a;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
 }
 
 .post-category {
-  padding: 5px 10px;
-  border-radius: 20px;
-  background: #eff6ff;
-  color: #2563eb;
-  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: var(--font-xs);
+  font-weight: 500;
 }
 
-/* =========================
-   POST ACTION MODAL (CHROYLI & ZAMONAVIY)
-========================= */
-
+/* ==========================================================================
+   Post Action Dropdown / Modal
+   ========================================================================== */
 .post-action-modal {
-  background: #ffffff;
+  background: var(--bg-card);
   width: 100%;
   max-width: 440px;
-  border-radius: 24px;
+  border-radius: var(--radius-2xl);
   overflow: hidden;
-  box-shadow:
-    0 25px 60px -15px rgba(15, 23, 42, 0.25),
-    0 0 0 1px rgba(226, 232, 240, 0.8);
+  box-shadow: var(--shadow-xl);
   animation: modalScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
@@ -399,20 +418,20 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .post-action-modal-title h4 {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--font-lg);
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .post-action-post-snippet {
   margin: 3px 0 0;
-  font-size: 12px;
-  color: #64748b;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
   max-width: 320px;
   white-space: nowrap;
   overflow: hidden;
@@ -422,21 +441,21 @@
 .post-action-close-btn {
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   border: none;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-muted);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .post-action-close-btn:hover {
-  background: #e2e8f0;
-  color: #0f172a;
+  background: var(--border-color);
+  color: var(--text-primary);
 }
 
 .post-action-list {
@@ -449,57 +468,61 @@
 .post-action-row {
   width: 100%;
   padding: 11px 14px;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   border: 1px solid transparent;
-  background: #ffffff;
+  background: var(--bg-card);
   display: flex;
   align-items: center;
   gap: 14px;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all var(--transition-fast);
+}
+
+.post-action-row:hover {
+  background: var(--bg-hover);
 }
 
 .post-action-icon {
   width: 42px;
   height: 42px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   flex-shrink: 0;
-  transition: transform 0.2s ease;
-  color: white;
+  color: var(--text-white);
 }
 
+/* Aligned action colors to design system tokens */
 .post-action-icon.share {
-  background: #4627dd;
+  background: var(--primary);
 }
 
 .post-action-icon.bookmark {
-  background: #2dee0b;
+  background: var(--color-warning);
 }
 
 .post-action-icon.bookmark.active {
-  background: #cd7c0c;
+  background: var(--color-warning-dark);
 }
 
 .post-action-icon.hide {
-  background: #ebe406;
+  background: var(--text-muted);
 }
 
 .post-action-icon.edit {
-  background: #0af185;
+  background: var(--color-info);
 }
 
 .post-action-icon.delete {
-  background: #d51919;
+  background: var(--color-danger);
 }
 
 .post-action-icon.report {
-  background: #ea580c;
+  background: var(--color-danger-dark);
 }
 
 .post-action-text {
@@ -510,35 +533,34 @@
 }
 
 .post-action-text strong {
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .post-action-text span {
-  font-size: 12px;
-  color: #64748b;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
 }
 
 .post-action-row.danger-action .post-action-text strong {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 .post-action-row.report-action .post-action-text strong {
-  color: #ea580c;
+  color: var(--color-danger-dark);
 }
 
-/* =========================
-   REPORT MODAL (SHIKOYAT)
-========================= */
-
+/* ==========================================================================
+   Report Modal (Shikoyat)
+   ========================================================================== */
 .report-post-modal {
-  background: #ffffff;
+  background: var(--bg-card);
   width: 100%;
   max-width: 480px;
-  border-radius: 24px;
+  border-radius: var(--radius-2xl);
   overflow: hidden;
-
+  box-shadow: var(--shadow-xl);
   animation: modalScaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
@@ -549,16 +571,16 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-subtle);
   position: relative;
 }
 
 .report-modal-badge {
   width: 42px;
   height: 42px;
-  border-radius: 12px;
-  background: #fee2e2;
-  color: #dc2626;
+  border-radius: var(--radius-md);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -568,19 +590,9 @@
 
 .report-modal-header h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--font-lg);
   font-weight: 700;
-  color: #0f172a;
-}
-
-.report-target-snippet {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: #64748b;
-  max-width: 320px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--text-primary);
 }
 
 .report-modal-close {
@@ -589,16 +601,16 @@
   top: 18px;
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   border: none;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--bg-muted);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .report-modal-body {
@@ -609,9 +621,9 @@
 }
 
 .report-label {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
-  color: #334155;
+  color: var(--text-secondary);
 }
 
 .report-reasons-grid {
@@ -625,48 +637,47 @@
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
-  border-radius: 20px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
   cursor: pointer;
-  font-size: 13.5px;
+  font-size: var(--font-sm);
   font-weight: 500;
-  color: #334155;
-  transition: all 0.18s ease;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
 }
 
 .report-reason-chip input[type="radio"] {
-  accent-color: #dc2626;
+  accent-color: var(--color-danger);
   width: 16px;
   height: 16px;
   cursor: pointer;
 }
 
 .report-reason-chip.active {
-  background: #fef2f2;
-  border-color: #f87171;
-  color: #b91c1c;
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger-border);
+  color: var(--color-danger-dark);
   font-weight: 600;
 }
 
 .report-textarea {
   width: 100%;
   padding: 11px 14px;
-  border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  font-size: 13.5px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  font-size: var(--font-sm);
   font-family: inherit;
   outline: none;
   resize: vertical;
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-fast);
   box-sizing: border-box;
 }
 
 .report-textarea:focus {
-  border-color: #dc2626;
+  border-color: var(--color-danger);
 }
 
-/* Tugmalar qismi: Qizil yuborish va Bekor qilish */
 .report-modal-actions {
   display: flex;
   align-items: center;
@@ -677,41 +688,38 @@
 
 .report-btn-cancel {
   padding: 11px 20px;
-  border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
-  color: #475569;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .report-btn-cancel:hover:not(:disabled) {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: var(--bg-muted);
+  color: var(--text-primary);
 }
 
 .report-btn-danger {
   padding: 11px 22px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: none;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 600;
+  background: var(--color-danger);
+  color: var(--text-white);
+  font-size: var(--font-base);
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .report-btn-danger:hover:not(:disabled) {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.45);
-  transform: translateY(-1px);
+  background: var(--color-danger-dark);
 }
 
 .report-btn-danger:disabled,
@@ -720,96 +728,20 @@
   cursor: not-allowed;
   transform: none;
 }
-@media (max-width: 768px) {
-  .post-container {
-    max-width: 100%;
-    padding: 10px;
-  }
 
-  .post-card {
-    border-radius: 14px;
-    margin-bottom: 14px;
-  }
-
-  .post-header {
-    padding: 12px;
-  }
-
-  .post-content {
-    padding: 0 12px 14px;
-  }
-
-  .post-footer {
-    padding: 9px 12px;
-  }
-
-  .post-title {
-    font-size: 17px;
-  }
-
-  .post-text {
-    font-size: 14px;
-  }
-
-  .post-user-avatar {
-    width: 40px;
-    height: 40px;
-  }
-
-  .post-user-name {
-    font-size: 14px;
-  }
-
-  .post-user-username {
-    font-size: 12px;
-  }
-
-  .quiz-option {
-    min-height: 48px;
-  }
-
-  .quiz-option-text {
-    font-size: 14px;
-  }
-}
-
-/* =========================
-   SMALL MOBILE
-========================= */
-
-@media (max-width: 480px) {
-  .post-container {
-    padding: 8px;
-  }
-
-  .post-card {
-    border-radius: 12px;
-  }
-
-  .post-category {
-    font-size: 11px;
-    padding: 4px 8px;
-  }
-
-  .post-actions {
-    gap: 14px;
-  }
-}
-
-/* =========================
-   COMMENTS MODAL
-========================= */
-
+/* ==========================================================================
+   Comments Modal
+   ========================================================================== */
 .comments-modal-box {
-  background: #ffffff;
+  background: var(--bg-card);
   width: 100%;
   max-width: 520px;
   max-height: 85vh;
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-xl);
   animation: modalFadeIn 0.2s ease-out;
   z-index: 1000;
 }
@@ -830,34 +762,34 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .comments-modal-header h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--font-lg);
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .comments-modal-close {
   background: transparent;
   border: none;
   font-size: 22px;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   width: 32px;
   height: 32px;
-  transition: background 0.2s ease;
+  transition: background var(--transition-fast);
 }
 
 .comments-modal-close:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: var(--bg-muted);
+  color: var(--text-primary);
 }
 
 .comments-modal-body {
@@ -871,8 +803,8 @@
 .comments-loading-state,
 .comments-empty-state {
   text-align: center;
-  color: #64748b;
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: var(--font-base);
   padding: 30px 10px;
 }
 
@@ -891,17 +823,17 @@
 .comment-avatar {
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   object-fit: cover;
   flex-shrink: 0;
 }
 
 .comment-content-box {
-  background: #f8fafc;
-  border-radius: 14px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
   padding: 10px 14px;
   flex: 1;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--border-subtle);
 }
 
 .comment-user-header {
@@ -912,20 +844,20 @@
 }
 
 .comment-author-name {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .comment-date {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .comment-text-body {
   margin: 0;
-  font-size: 14px;
-  color: #334155;
+  font-size: var(--font-base);
+  color: var(--text-secondary);
   line-height: 1.45;
   word-break: break-word;
 }
@@ -933,46 +865,46 @@
 .comment-form-container {
   padding: 12px 16px;
   position: relative;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #ffffff;
+  background: var(--bg-card);
 }
 
 .comment-input-field {
   flex: 1;
   padding: 11px 16px;
-  border-radius: 20px;
-  border: 1.5px solid #e2e8f0;
-  font-size: 14px;
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--border-color);
+  font-size: var(--font-base);
   outline: none;
   font-family: inherit;
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-fast);
 }
 
 .comment-input-field:focus {
-  border-color: #2563eb;
+  border-color: var(--primary);
 }
 
 .comment-submit-btn {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   border: none;
-  background: #2563eb;
-  color: #ffffff;
-  font-size: 17px;
+  background: var(--primary);
+  color: var(--text-white);
+  font-size: 1.3rem;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--transition-fast);
   flex-shrink: 0;
 }
 
 .comment-submit-btn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--primary-hover);
 }
 
 .comment-submit-btn:disabled {
@@ -980,36 +912,19 @@
   cursor: not-allowed;
 }
 
-/* =========================
-   POST ACTION & EDIT MODAL
-========================= */
-
-.post-action-menyu-item.danger-action button {
-  color: #ef4444;
-}
-
-.post-action-menyu-item.danger-action button:hover {
-  background: #fee2e2;
-}
-
-.post-action-menyu-item.edit-action button {
-  color: #2563eb;
-}
-
-.post-action-menyu-item.edit-action button:hover {
-  background: #eff6ff;
-}
-
+/* ==========================================================================
+   Edit Post Modal
+   ========================================================================== */
 .edit-post-modal {
-  background: #ffffff;
+  background: var(--bg-card);
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
-  border-radius: 20px;
+  border-radius: var(--radius-2xl);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-xl);
   animation: modalFadeIn 0.2s ease-out;
 }
 
@@ -1018,14 +933,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .edit-post-modal-header h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--font-lg);
   font-weight: 700;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .edit-post-form {
@@ -1043,27 +958,27 @@
 }
 
 .edit-post-field label {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .edit-post-input,
 .edit-post-textarea,
 .edit-post-select {
   padding: 12px 14px;
-  border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  font-size: var(--font-base);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color var(--transition-fast);
 }
 
 .edit-post-input:focus,
 .edit-post-textarea:focus,
 .edit-post-select:focus {
-  border-color: #2563eb;
+  border-color: var(--primary);
 }
 
 .edit-post-actions {
@@ -1075,34 +990,34 @@
 
 .edit-post-cancel-btn {
   padding: 10px 18px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #64748b;
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  font-size: var(--font-base);
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--transition-fast);
 }
 
 .edit-post-cancel-btn:hover {
-  background: #f1f5f9;
+  background: var(--bg-muted);
 }
 
 .edit-post-save-btn {
   padding: 10px 20px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: none;
-  background: #2563eb;
-  color: #ffffff;
-  font-size: 14px;
+  background: var(--primary);
+  color: var(--text-white);
+  font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background var(--transition-fast);
 }
 
 .edit-post-save-btn:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: var(--primary-hover);
 }
 
 .edit-post-save-btn:disabled {
@@ -1110,6 +1025,9 @@
   cursor: not-allowed;
 }
 
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
 @media (max-width: 780px) {
   .comments-modal-box {
     position: absolute;
@@ -1121,5 +1039,77 @@
   }
   .quiz-options {
     grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .post-container {
+    max-width: 100%;
+    padding: 10px;
+  }
+
+  .post-card {
+    border-radius: var(--radius-lg);
+    margin-bottom: 14px;
+  }
+
+  .post-header {
+    padding: 12px;
+  }
+
+  .post-content {
+    padding: 0 12px 14px;
+  }
+
+  .post-footer {
+    padding: 9px 12px;
+  }
+
+  .post-title {
+    font-size: var(--font-lg);
+  }
+
+  .post-text {
+    font-size: var(--font-base);
+  }
+
+  .post-user-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .post-user-name {
+    font-size: var(--font-base);
+  }
+
+  .post-user-username {
+    font-size: var(--font-xs);
+  }
+
+  .quiz-option {
+    min-height: 48px;
+  }
+
+  .quiz-option-text {
+    font-size: var(--font-base);
+  }
+}
+
+@media (max-width: 480px) {
+  .post-container {
+    padding: 8px;
+  }
+
+  .post-card {
+    border-radius: var(--radius-md);
+  }
+
+  .post-category {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .post-actions {
+    gap: 14px;
   }
 }

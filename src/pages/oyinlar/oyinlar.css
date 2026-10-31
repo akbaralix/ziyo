@@ -1,4 +1,6 @@
-/* Ziyo Games Hub - Strict Light Mode & border-radius 33px & box-shadow: none !important */
+/* ==========================================================================
+   Games Hub (O'yinlar) Page Styles
+   ========================================================================== */
 
 .ziyo-hub-container {
   max-width: 1050px;
@@ -6,7 +8,7 @@
   padding: 24px 20px 80px;
   margin: 0 auto;
   box-sizing: border-box;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .ziyo-hub-header {
@@ -26,15 +28,19 @@
   align-items: center;
   justify-content: center;
   font-size: 20px;
+  background: none;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
 }
 
 .ziyo-hub-title {
-  font-size: 18px;
+  font-size: var(--font-xl);
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 4px;
 }
 
+/* --- Games Grid --- */
 .ziyo-games-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -43,21 +49,32 @@
 
 .ziyo-game-card {
   position: relative;
-  background-color: #ffffff;
-  border: 1.5px solid #e2e8f0;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-color);
   padding: 24px;
-  border-radius: 33px;
+  border-radius: var(--radius-pill);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   box-sizing: border-box;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
+
+.ziyo-game-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
 .ziyo-game-card:has(.ziyo-game-btn.disabled) {
   filter: grayscale(40%);
   opacity: 0.85;
 }
+
 .game-imge {
-  border-radius: 25px;
+  border-radius: var(--radius-2xl);
   left: 10px;
   right: 10px;
   top: 10px;
@@ -65,11 +82,13 @@
   position: absolute;
   overflow: hidden;
 }
+
 .game-imge img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
+
 .ziyo-game-top {
   z-index: 10;
   display: flex;
@@ -79,13 +98,14 @@
 }
 
 .ziyo-game-category {
-  font-size: 12px;
+  font-size: var(--font-xs);
   font-weight: 600;
   padding: 4px 12px;
-  border-radius: 33px;
+  border-radius: var(--radius-pill);
   backdrop-filter: blur(13px);
-  background: #ffffff67;
-  color: #fff;
+  -webkit-backdrop-filter: blur(13px);
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--text-white);
 }
 
 .ziyo-game-icon {
@@ -99,40 +119,47 @@
 }
 
 .ziyo-game-title {
-  font-size: 18px;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: #fff;
+  color: var(--text-white);
   margin: 0 0 8px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .ziyo-game-desc {
-  font-size: 13px;
-  color: #64748b;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
   line-height: 1.5;
   margin: 0;
 }
 
 .ziyo-game-btn {
   margin-top: 60px;
-  background-color: var(--button-bg);
-  border: 1.5px solid #461fe2;
+  background-color: var(--primary);
+  border: 1.5px solid var(--primary);
   padding: 12px 20px;
-  border-radius: 33px;
-  font-size: 14px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-base);
   font-weight: 500;
   width: 100%;
-  color: #ffffff;
+  color: var(--text-white);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: inherit;
   box-sizing: border-box;
+  transition: all var(--transition-fast);
+}
+
+.ziyo-game-btn:hover:not(.disabled) {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
 .ziyo-game-btn.disabled {
-  background-color: #f1f5f9;
-  border-color: #e2e8f0;
-  color: #94a3b8;
+  background-color: var(--bg-muted);
+  border-color: var(--border-color);
+  color: var(--text-light);
   cursor: not-allowed;
 }

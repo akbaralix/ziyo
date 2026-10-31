@@ -17,7 +17,6 @@ import {
   IoArrowBack,
   IoCheckmark,
   IoShareSocialOutline,
-  IoArrowBackOutline,
 } from "react-icons/io5";
 import { MdAddAPhoto, MdOutlineAutoStories, MdSchool } from "react-icons/md";
 import { GoTrophy } from "react-icons/go";
@@ -31,6 +30,7 @@ import {
   getUserProfile,
   getUserProfileById,
   updateProfile,
+  checkUsernameAvailability,
 } from "../../api/userApi.js";
 import { logout } from "../../api/authApi.js";
 import { fetchPosts } from "../../api/postApi.js";
@@ -102,10 +102,16 @@ function Profil() {
     return false;
   }, [cleanUsername, currentLoggedUser]);
 
-  const [activeTab, setActiveTab] = useState("posts"); // 'posts' | 'quizzes' | 'saved'
+  const [activeTab, setActiveTab] = useState("posts"); // 'posts' | 'books' | 'quizzes' | 'saved'
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState("");
   const [editLastName, setEditLastName] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState({
+    loading: false,
+    available: null,
+    message: "",
+  });
   const [editBio, setEditBio] = useState("");
   const [editProfilePic, setEditProfilePic] = useState("");
 
@@ -246,7 +252,7 @@ function Profil() {
         });
       }
     }
-  }, [isPhotoModalOpen]);
+  }, [isPhotoModalOpen, editProfilePic]);
 
   // Foydalanuvchi to'liq ismi (Faqat shu ochilgan foydalanuvchiniki!)
   const fullName = useMemo(() => {
@@ -302,14 +308,25 @@ function Profil() {
   }, [ratingsResponse, u, isMe, currentLoggedUser, cleanUsername]);
 
   // Ta'lim muassasasi: Maktab yoki Institut
+  // Foydalanuvchining ta'lim turi
   const studyPlaceType = (u?.studyPlace || "institut").toLowerCase();
+
   const isSchool = studyPlaceType === "maktab";
-  const studyLabel = isSchool ? "Maktab o'quvchisi" : "Institut talabasi";
-  const studyCourseText = u?.course ? `(${u.course})` : "";
+  const isTeacher = studyPlaceType === "ustoz";
+  const isInstitute = studyPlaceType === "institut";
+
+  const studyLabel = isTeacher
+    ? "Ustoz"
+    : isSchool
+      ? "Maktab o'quvchisi"
+      : "Institut talabasi";
+
+  const studyCourseText = !isTeacher && u?.course ? `(${u.course})` : "";
 
   const profileData = {
     name: fullName,
     username:
+      u?.username ||
       u?.telegramUsername ||
       (cleanUsername.length === 24 ? "us" : cleanUsername) ||
       "user",
@@ -321,7 +338,7 @@ function Profil() {
         : "Ziyo platformasi foydalanuvchisi."),
     studyPlace: studyPlaceType,
     studyLabel: `${studyLabel} ${studyCourseText}`.trim(),
-    course: u?.course || (isSchool ? "Maktab" : "1-kurs"),
+    course: isTeacher ? "" : u?.course || (isSchool ? "Maktab" : "1-kurs"),
     level: (u?.xp || 0) > 1000 ? "Usta 🌟" : "Bilimdon ⚡",
     rank: computedRank,
     xp: u?.xp || 0,
@@ -329,23 +346,72 @@ function Profil() {
     solvedQuizzes: u?.solvedQuizzes || 0,
   };
 
-  // O'qiyotgan kitobi ma'lumotlari
-  const readingBook = useMemo(() => {
+  // O'qiyotgan kitoblari ro'yxati (1 ta yoki undan ortiq)
+  const readingBooks = useMemo(() => {
+    let list = [];
     if (isMe) {
       try {
-        const localReading = localStorage.getItem("ziyo_current_reading_book");
-        if (localReading) {
-          const parsed = JSON.parse(localReading);
-          if (parsed && parsed.title) return parsed;
+        const localList = localStorage.getItem("ziyo_current_reading_books");
+        if (localList) {
+          const parsed = JSON.parse(localList);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            list = parsed.filter((b) => b && b.title);
+          }
         }
+      } catch {}
+
+      // Agar multiple list bo'sh bo'lsa, eski yagona kalitni tekshiramiz
+      if (list.length === 0) {
+        try {
+          const single = localStorage.getItem("ziyo_current_reading_book");
+          if (single) {
+            const parsed = JSON.parse(single);
+            if (parsed && parsed.title) {
+              list = [parsed];
+            }
+          }
+        } catch {}
+      }
+
+      // Agar hali ham bo'sh yoki kam bo'lsa, ziyo_last_page_ kalitlaridan qidiramiz
+      try {
+        const knownKeys = Object.keys(localStorage).filter((k) =>
+          k.startsWith("ziyo_last_page_"),
+        );
+        knownKeys.forEach((key) => {
+          const bookId = key.replace("ziyo_last_page_", "");
+          if (!list.some((b) => b.bookId === bookId)) {
+            const page = parseInt(localStorage.getItem(key), 10);
+            if (page > 1) {
+              list.push({
+                bookId,
+                title: bookId.replace(/-/g, " "),
+                author: "Muallif",
+                img: "/booksimg/O'tgan-kunlar.jpg",
+                pages: 100,
+                currentPage: page,
+                updatedAt: new Date().toISOString(),
+              });
+            }
+          }
+        });
       } catch {}
     }
 
-    if (u?.readingBook && u.readingBook.bookId) {
-      return u.readingBook;
+    // Backenddan kelgan readingBook yoki readingBooks bo'lsa
+    if (Array.isArray(u?.readingBooks) && u.readingBooks.length > 0) {
+      u.readingBooks.forEach((rb) => {
+        if (!list.some((b) => b.bookId === rb.bookId)) {
+          list.push(rb);
+        }
+      });
+    } else if (u?.readingBook && u.readingBook.bookId) {
+      if (!list.some((b) => b.bookId === u.readingBook.bookId)) {
+        list.push(u.readingBook);
+      }
     }
 
-    return null;
+    return list;
   }, [u, isMe]);
 
   // O'qib bo'lingan kitoblar ("agar o'qib bo'lgan bo'lsa")
@@ -368,12 +434,6 @@ function Profil() {
 
     return list;
   }, [u, isMe]);
-
-  const readingPercent = useMemo(() => {
-    if (!readingBook || !readingBook.pages) return 0;
-    const p = Math.round((readingBook.currentPage / readingBook.pages) * 100);
-    return Math.min(Math.max(p, 1), 100);
-  }, [readingBook]);
 
   // Profilni tahrirlash mutatsiyasi
   const updateProfileMutation = useMutation({
@@ -398,11 +458,91 @@ function Profil() {
     },
   });
 
+  // Real vaqtda username mavjudligini tekshirish
+  useEffect(() => {
+    if (!isEditModalOpen) return;
+
+    const trimmed = editUsername.replace(/^@/, "").trim().toLowerCase();
+    const currentClean = (profileData.username || "")
+      .replace(/^@/, "")
+      .trim()
+      .toLowerCase();
+
+    if (!trimmed) {
+      setUsernameStatus({ loading: false, available: null, message: "" });
+      return;
+    }
+
+    if (trimmed.length < 3) {
+      setUsernameStatus({
+        loading: false,
+        available: false,
+        message: "Username kamida 3 ta belgidan iborat bo'lishi kerak",
+      });
+      return;
+    }
+
+    const validRegex = /^[a-z0-9_]{3,30}$/;
+    if (!validRegex.test(trimmed)) {
+      setUsernameStatus({
+        loading: false,
+        available: false,
+        message: "Faqat lotin harflari, raqamlar va pastki chiziq (_) mumkin",
+      });
+      return;
+    }
+
+    if (currentClean && trimmed === currentClean) {
+      setUsernameStatus({
+        loading: false,
+        available: true,
+        message: "Bu sizning joriy usernameyingiz",
+      });
+      return;
+    }
+
+    setUsernameStatus({
+      loading: true,
+      available: null,
+      message: "Tekshirilmoqda...",
+    });
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await checkUsernameAvailability(trimmed);
+        if (res.available) {
+          setUsernameStatus({
+            loading: false,
+            available: true,
+            message: "Username bo'sh va mavjud",
+          });
+        } else {
+          setUsernameStatus({
+            loading: false,
+            available: false,
+            message: res.message || "Bu band",
+          });
+        }
+      } catch (err) {
+        setUsernameStatus({
+          loading: false,
+          available: false,
+          message: err?.message || "Bu band",
+        });
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [editUsername, isEditModalOpen, profileData.username]);
+
   const handleOpenEdit = () => {
     if (!isMe) return;
     const parts = (profileData.name || "").split(" ");
     setEditName(parts[0] || "");
     setEditLastName(parts.slice(1).join(" ") || "");
+    const cleanCurrent = (profileData.username || "").replace(/^@/, "");
+    setEditUsername(cleanCurrent === "user" ? "" : cleanCurrent);
+    setUsernameStatus({ loading: false, available: null, message: "" });
     setEditBio(profileData.bio || "");
     setEditProfilePic(profileData.profilePic || images[0] || userPic);
     setIsEditModalOpen(true);
@@ -414,9 +554,23 @@ function Profil() {
       toast.warning("Iltimos, ismingizni kiriting!");
       return;
     }
+
+    const trimmedUsername = editUsername.replace(/^@/, "").trim().toLowerCase();
+    if (trimmedUsername) {
+      if (trimmedUsername.length < 3) {
+        toast.warning("Username kamida 3 ta belgidan iborat bo'lishi kerak!");
+        return;
+      }
+      if (usernameStatus.available === false) {
+        toast.error("Bu username band! Iltimos, boshqa username tanlang.");
+        return;
+      }
+    }
+
     updateProfileMutation.mutate({
       firstName: editName.trim(),
       lastName: editLastName.trim(),
+      username: trimmedUsername,
       bio: editBio.trim(),
       profilePic: editProfilePic,
     });
@@ -444,7 +598,7 @@ function Profil() {
       count: `${profileData.solvedQuizzes} ta`,
       icon: <IoExtensionPuzzleOutline />,
       color: "#ffffff",
-      bgColor: "#23a8f5",
+      bgColor: "#59fc08",
     },
     {
       id: 3,
@@ -460,7 +614,7 @@ function Profil() {
       count: `#${profileData.rank} o'rin`,
       icon: <GoTrophy />,
       color: "#ffffff",
-      bgColor: "#1ed044",
+      bgColor: "#1e95d0",
     },
   ];
 
@@ -504,7 +658,11 @@ function Profil() {
 
                   <span
                     className={`profile-education-badge ${
-                      isSchool ? "school-badge" : "institute-badge"
+                      isTeacher
+                        ? "teacher-badge"
+                        : isSchool
+                          ? "school-badge"
+                          : "institute-badge"
                     }`}
                   >
                     <MdSchool className="edu-icon" />
@@ -585,115 +743,9 @@ function Profil() {
         ))}
       </div>
 
-      {/* HOZIR O'QIYOTGAN KITOBI */}
-      {readingBook && (
-        <div className="profile-reading-card-wrapper">
-          <div className="profile-reading-card">
-            <div className="profile-reading-header">
-              <div className="profile-reading-badge">
-                <span className="reading-pulse-dot" />
-                <span>Hozir mutolaa qilinmoqda</span>
-              </div>
-              <span className="profile-reading-percent">{readingPercent}%</span>
-            </div>
-
-            <div className="profile-reading-content">
-              <div className="profile-book-cover-wrap">
-                <img
-                  src={readingBook.img || "/booksimg/O'tgan-kunlar.jpg"}
-                  alt={readingBook.title}
-                  className="profile-book-cover"
-                  onError={(e) => {
-                    e.target.src = "/booksimg/O'tgan-kunlar.jpg";
-                  }}
-                />
-              </div>
-
-              <div className="profile-book-details">
-                <h4 className="profile-book-title">{readingBook.title}</h4>
-                <p className="profile-book-author">{readingBook.author}</p>
-
-                <div className="profile-page-progress-info">
-                  <MdOutlineAutoStories className="profile-book-icon" />
-                  <span>
-                    <strong>{readingBook.currentPage}</strong> /{" "}
-                    {readingBook.pages}-sahifaga kelgan
-                  </span>
-                </div>
-
-                <div className="profile-progress-bar-track">
-                  <div
-                    className="profile-progress-bar-fill"
-                    style={{ width: `${readingPercent}%` }}
-                  />
-                </div>
-
-                <div className="profile-reading-actions">
-                  <span className="profile-progress-subtext">
-                    {readingBook.pages - readingBook.currentPage > 0
-                      ? `Yana ${readingBook.pages - readingBook.currentPage} bet qoldi`
-                      : "Kitob tugatilish arafasida! 🎉"}
-                  </span>
-                  {isMe && (
-                    <button
-                      type="button"
-                      className="profile-continue-read-btn"
-                      onClick={() => navigate("/kutubxona")}
-                    >
-                      Davom ettirish 📖
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* HOZIR O'QIYOTGAN KITOBLARI */}
 
       {/* O'QIB BO'LINGAN KITOBLAR ("agar o'qib bo'lgan bo'lsa") */}
-      {finishedBooks && finishedBooks.length > 0 && (
-        <div className="profile-finished-section">
-          <div className="profile-section-title-row">
-            <div className="profile-title-with-icon">
-              <FaBook className="profile-sec-icon" />
-              <h3>O'qib bo'lingan kitoblar</h3>
-            </div>
-            <span className="profile-count-chip">
-              {finishedBooks.length} ta kitob
-            </span>
-          </div>
-
-          <div className="profile-finished-slider">
-            {finishedBooks.map((book, idx) => (
-              <div
-                key={book.bookId || idx}
-                className="profile-finished-book-card"
-              >
-                <div className="profile-finished-cover-box">
-                  <img
-                    src={book.img || "/booksimg/O'tgan-kunlar.jpg"}
-                    alt={book.title}
-                    className="profile-finished-img"
-                    onError={(e) => {
-                      e.target.src = "/booksimg/O'tgan-kunlar.jpg";
-                    }}
-                  />
-                  <span className="profile-completed-badge">
-                    <FaCheckCircle /> O'qib bo'lingan
-                  </span>
-                </div>
-                <h5 className="profile-finished-title">{book.title}</h5>
-                <p className="profile-finished-author">{book.author}</p>
-                <span className="profile-finished-pages">
-                  {book.pages
-                    ? `${book.pages} sahifa to'liq`
-                    : "Muvaffaqiyatli mutolaa"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Profile Navigation Tabs */}
       <div className="profile-tabs-wrapper">
@@ -706,6 +758,18 @@ function Profil() {
             <IoGridOutline />
             <span>{isMe ? "Mening postlarim" : "Postlar"}</span>
             <span className="tab-count-badge">{postCount}</span>
+          </button>
+
+          <button
+            type="button"
+            className={`profile-tab-btn ${activeTab === "books" ? "active" : ""}`}
+            onClick={() => setActiveTab("books")}
+          >
+            <FaBook />
+            <span>Kitoblar</span>
+            <span className="tab-count-badge">
+              {readingBooks.length + finishedBooks.length}
+            </span>
           </button>
 
           {isMe && (
@@ -737,9 +801,7 @@ function Profil() {
       {activeTab === "posts" && (
         <div className="profile-posts-section">
           <div className="profile-posts-header">
-            <h3 className="profile-section-title">
-              {isMe ? "Postlar" : `${profileData.name}ning postlari`}
-            </h3>
+            <h3 className="profile-section-title">{isMe ? "Postlar" : null}</h3>
             {isMe && (
               <button
                 type="button"
@@ -771,6 +833,143 @@ function Profil() {
               onlyMyPosts={isMe}
               userId={isMe ? null : String(u?._id || cleanUsername)}
             />
+          )}
+        </div>
+      )}
+      {activeTab === "books" && (
+        <div>
+          {readingBooks && readingBooks.length > 0 && (
+            <div className="profile-reading-card-wrapper">
+              <div className="profile-reading-list-header">
+                <div className="profile-reading-badge">
+                  <span className="reading-pulse-dot" />
+                  <span>Hozir mutolaa qilinmoqda ({readingBooks.length})</span>
+                </div>
+              </div>
+
+              <div className="profile-reading-grid">
+                {readingBooks.map((book, idx) => {
+                  const pagesTotal = book.pages || 100;
+                  const curPage = book.currentPage || 1;
+                  const p = Math.round((curPage / pagesTotal) * 100);
+                  const percent = Math.min(Math.max(p, 1), 100);
+                  const remaining = pagesTotal - curPage;
+
+                  return (
+                    <div
+                      className="profile-reading-card"
+                      key={book.bookId || idx}
+                    >
+                      <div className="profile-reading-header">
+                        <span className="profile-reading-card-index">
+                          #{idx + 1} Kitob
+                        </span>
+                        <span className="profile-reading-percent">
+                          {percent}%
+                        </span>
+                      </div>
+
+                      <div className="profile-reading-content">
+                        <div className="profile-book-cover-wrap">
+                          <img
+                            src={book.img || "/booksimg/O'tgan-kunlar.jpg"}
+                            alt={book.title}
+                            className="profile-book-cover"
+                            onError={(e) => {
+                              e.target.src = "/booksimg/O'tgan-kunlar.jpg";
+                            }}
+                          />
+                        </div>
+
+                        <div className="profile-book-details">
+                          <h4 className="profile-book-title">{book.title}</h4>
+                          <p className="profile-book-author">{book.author}</p>
+
+                          <div className="profile-page-progress-info">
+                            <MdOutlineAutoStories className="profile-book-icon" />
+                            <span>
+                              <strong>{pagesTotal}</strong> / {curPage}-sahifaga
+                              kelgan
+                            </span>
+                          </div>
+
+                          <div className="profile-progress-bar-track">
+                            <div
+                              className="profile-progress-bar-fill"
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+
+                          <div className="profile-reading-actions">
+                            <span className="profile-progress-subtext">
+                              {remaining > 0
+                                ? `Yana ${remaining} bet qoldi`
+                                : "Kitob tugatilish arafasida! 🎉"}
+                            </span>
+                            {isMe && (
+                              <button
+                                type="button"
+                                className="profile-continue-read-btn"
+                                onClick={() =>
+                                  navigate("/kutubxona", {
+                                    state: { bookId: book.bookId },
+                                  })
+                                }
+                              >
+                                Davom ettirish 📖
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          {finishedBooks && finishedBooks.length > 0 && (
+            <div className="profile-finished-section">
+              <div className="profile-section-title-row">
+                <div className="profile-title-with-icon">
+                  <FaBook className="profile-sec-icon" />
+                  <h3>O'qib bo'lingan kitoblar</h3>
+                </div>
+                <span className="profile-count-chip">
+                  {finishedBooks.length} ta kitob
+                </span>
+              </div>
+
+              <div className="profile-finished-slider">
+                {finishedBooks.map((book, idx) => (
+                  <div
+                    key={book.bookId || idx}
+                    className="profile-finished-book-card"
+                  >
+                    <div className="profile-finished-cover-box">
+                      <img
+                        src={book.img || "/booksimg/O'tgan-kunlar.jpg"}
+                        alt={book.title}
+                        className="profile-finished-img"
+                        onError={(e) => {
+                          e.target.src = "/booksimg/O'tgan-kunlar.jpg";
+                        }}
+                      />
+                      <span className="profile-completed-badge">
+                        <FaCheckCircle /> O'qib bo'lingan
+                      </span>
+                    </div>
+                    <h5 className="profile-finished-title">{book.title}</h5>
+                    <p className="profile-finished-author">{book.author}</p>
+                    <span className="profile-finished-pages">
+                      {book.pages
+                        ? `${book.pages} sahifa to'liq`
+                        : "Muvaffaqiyatli mutolaa"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -943,6 +1142,50 @@ function Profil() {
               </div>
 
               <div className="form-field">
+                <label>Foydalanuvchi nomi (Username)</label>
+                <div className="username-input-wrapper">
+                  <span className="username-prefix">@</span>
+                  <input
+                    type="text"
+                    value={editUsername}
+                    onChange={(e) =>
+                      setEditUsername(
+                        e.target.value.replace(/^@/, "").replace(/\s+/g, ""),
+                      )
+                    }
+                    placeholder="foydalanuvchi_nomi"
+                    maxLength={30}
+                    className={`username-input ${
+                      usernameStatus.available === true
+                        ? "is-valid"
+                        : usernameStatus.available === false
+                          ? "is-invalid"
+                          : ""
+                    }`}
+                  />
+                  {usernameStatus.loading && (
+                    <span className="username-spinner" />
+                  )}
+                </div>
+
+                {usernameStatus.message && (
+                  <div
+                    className={`username-status-hint ${
+                      usernameStatus.available === true
+                        ? "hint-success"
+                        : usernameStatus.available === false
+                          ? "hint-error"
+                          : "hint-loading"
+                    }`}
+                  >
+                    {usernameStatus.available === true && <IoCheckmark />}
+                    {usernameStatus.available === false && <IoClose />}
+                    <span>{usernameStatus.message}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="form-field">
                 <label>Foydalanuvchi ma'lumoti (Bio)</label>
                 <textarea
                   value={editBio}
@@ -963,7 +1206,11 @@ function Profil() {
                 <button
                   type="submit"
                   className="save-btn"
-                  disabled={updateProfileMutation.isPending}
+                  disabled={
+                    updateProfileMutation.isPending ||
+                    usernameStatus.available === false ||
+                    usernameStatus.loading
+                  }
                 >
                   <IoCheckmark />{" "}
                   {updateProfileMutation.isPending

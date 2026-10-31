@@ -1,4 +1,6 @@
-/* BarabanCreate Page - Strict Light Mode & border-radius 33px & box-shadow: none !important */
+/* ==========================================================================
+   Baraban Create - Spinning Wheel Configuration Page Styles
+   ========================================================================== */
 
 .baraban-create-page {
   max-width: 1200px;
@@ -6,14 +8,7 @@
   margin: 0 auto;
   padding: 24px 20px 80px;
   box-sizing: border-box;
-  color: #1e293b;
-}
-
-/* Global shadow reset for strict requirement */
-.baraban-create-page *,
-.baraban-modal-backdrop * {
-  box-shadow: none !important;
-  transition: none !important;
+  color: var(--text-primary);
 }
 
 /* Header */
@@ -35,27 +30,33 @@
 .baraban-circle-btn {
   width: 46px;
   height: 46px;
-  border-radius: 33px;
-  background: #f1f5f9;
-  border: 1.5px solid #e2e8f0;
+  border-radius: var(--radius-pill);
+  background: var(--bg-muted);
+  border: 1.5px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: #334155;
+  color: var(--text-secondary);
   cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.baraban-circle-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
 }
 
 .baraban-page-title {
-  font-size: 22px;
+  font-size: var(--font-2xl);
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .baraban-page-desc {
-  font-size: 13px;
-  color: #64748b;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
   margin: 2px 0 0;
 }
 
@@ -78,12 +79,13 @@
 
 /* Card base */
 .baraban-card {
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
   padding: 24px;
   margin-bottom: 20px;
   box-sizing: border-box;
+  box-shadow: var(--shadow-sm);
 }
 
 /* Left Wheel Panel */
@@ -97,7 +99,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: #f8fafc;
+  background: var(--bg-subtle);
 }
 
 .wheel-card-header {
@@ -109,19 +111,19 @@
 }
 
 .wheel-badge {
-  background: #e0e7ff;
-  color: #4338ca;
-  font-size: 12px;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: var(--font-xs);
   font-weight: 600;
   padding: 6px 14px;
-  border-radius: 33px;
-  border: 1px solid #c7d2fe;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--primary-border);
 }
 
 .wheel-participant-count {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .wheel-canvas-wrapper {
@@ -147,22 +149,22 @@
 }
 
 .wheel-tip {
-  font-size: 12px;
-  color: #64748b;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
   margin: 0;
 }
 
 /* Section typography */
 .section-title {
-  font-size: 16px;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0 0 6px;
 }
 
 .section-subtitle {
-  font-size: 13px;
-  color: #64748b;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
   margin: 0 0 16px;
 }
 
@@ -181,98 +183,120 @@
 
 /* Buttons */
 .baraban-primary-btn {
-  background: #461fe2;
-  color: #ffffff;
-  border: 1.5px solid #461fe2;
-  border-radius: 33px;
+  background: var(--primary);
+  color: var(--text-white);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-pill);
   padding: 10px 22px;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.baraban-primary-btn:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
 .baraban-secondary-btn {
-  background: #f1f5f9;
-  color: #334155;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
+  background: var(--bg-muted);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
   padding: 10px 20px;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.baraban-secondary-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
 }
 
 .baraban-ai-btn {
   background: #fdf2f8;
   color: #be185d;
   border: 1.5px solid #fbcfe8;
-  border-radius: 33px;
+  border-radius: var(--radius-pill);
   padding: 10px 18px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  transition: all var(--transition-fast);
+}
+
+.baraban-ai-btn:hover {
+  background: #fce7f3;
 }
 
 .baraban-text-btn {
   background: transparent;
-  color: #461fe2;
-  font-size: 13px;
+  color: var(--primary);
+  font-size: var(--font-sm);
   font-weight: 500;
   padding: 6px 12px;
-  border-radius: 33px;
+  border-radius: var(--radius-pill);
   border: 1.5px solid transparent;
   cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .baraban-text-btn.danger {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 /* Inputs */
 .baraban-input {
   width: 100%;
   padding: 12px 18px;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
-  font-size: 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-base);
   font-family: inherit;
-  color: #1e293b;
-  background: #ffffff;
+  color: var(--text-primary);
+  background: var(--bg-card);
   outline: none;
   box-sizing: border-box;
+  transition: all var(--transition-fast);
 }
 
 .baraban-input:focus {
-  border-color: #461fe2;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .baraban-textarea {
   width: 100%;
   padding: 14px 18px;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 20px;
-  font-size: 13px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-sm);
   font-family: monospace;
-  color: #1e293b;
-  background: #ffffff;
+  color: var(--text-primary);
+  background: var(--bg-card);
   outline: none;
   box-sizing: border-box;
   resize: vertical;
+  transition: all var(--transition-fast);
 }
 
 .baraban-textarea:focus {
-  border-color: #461fe2;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
 }
 
 .flex-1 {
@@ -291,21 +315,22 @@
   align-items: flex-start;
   gap: 14px;
   padding: 14px 18px;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
-  background: #ffffff;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
   cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .rule-radio-card.active {
-  border-color: #461fe2;
-  background: #f5f3ff;
+  border-color: var(--primary);
+  background: var(--primary-light);
 }
 
 .rule-radio-card input {
   margin-top: 4px;
   cursor: pointer;
-  accent-color: #461fe2;
+  accent-color: var(--primary);
 }
 
 .rule-text {
@@ -315,14 +340,14 @@
 }
 
 .rule-title {
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .rule-desc {
-  font-size: 12px;
-  color: #64748b;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
   line-height: 1.4;
 }
 
@@ -344,9 +369,9 @@
   gap: 8px;
   min-height: 48px;
   padding: 12px;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
   box-sizing: border-box;
 }
 
@@ -354,34 +379,35 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 33px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-hover);
+  border-radius: var(--radius-pill);
   padding: 6px 14px;
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 500;
-  color: #1e293b;
+  color: var(--text-primary);
 }
 
 .chip-remove-btn {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--text-light);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
   font-size: 15px;
+  transition: color var(--transition-fast);
 }
 
 .chip-remove-btn:hover {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 .empty-notice {
-  font-size: 13px;
-  color: #94a3b8;
+  font-size: var(--font-sm);
+  color: var(--text-light);
   width: 100%;
   text-align: center;
   padding: 8px 0;
@@ -404,7 +430,7 @@
 
 .empty-icon {
   font-size: 32px;
-  color: #cbd5e1;
+  color: var(--border-hover);
 }
 
 .questions-items-list {
@@ -414,10 +440,10 @@
 }
 
 .question-item-card {
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
   padding: 16px 20px;
-  background: #ffffff;
+  background: var(--bg-card);
 }
 
 .question-item-top {
@@ -428,35 +454,36 @@
 }
 
 .q-badge {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  color: #475569;
-  font-size: 12px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border-hover);
+  color: var(--text-secondary);
+  font-size: var(--font-xs);
   font-weight: 600;
   padding: 4px 10px;
-  border-radius: 33px;
+  border-radius: var(--radius-pill);
 }
 
 .q-title-text {
   flex: 1;
-  font-size: 14px;
+  font-size: var(--font-base);
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .q-delete-btn {
-  background: #fee2e2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
+  background: var(--color-danger-bg);
+  border: 1px solid var(--color-danger-border);
+  color: var(--color-danger-dark);
   width: 32px;
   height: 32px;
-  border-radius: 33px;
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   font-size: 15px;
+  transition: all var(--transition-fast);
 }
 
 .q-options-grid {
@@ -479,27 +506,27 @@
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
-  font-size: 13px;
-  color: #334155;
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
 }
 
 .q-option-pill.correct {
-  background: #ecfdf5;
-  border-color: #a7f3d0;
-  color: #065f46;
+  background: var(--color-success-bg);
+  border-color: var(--color-success-border);
+  color: var(--color-success-dark);
   font-weight: 600;
 }
 
 .q-option-letter {
   font-weight: 600;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .q-option-pill.correct .q-option-letter {
-  color: #059669;
+  color: var(--color-success-dark);
 }
 
 .q-option-val {
@@ -508,10 +535,10 @@
 
 .correct-tag {
   font-size: 11px;
-  background: #059669;
-  color: #ffffff;
+  background: var(--color-success-dark);
+  color: var(--text-white);
   padding: 2px 8px;
-  border-radius: 33px;
+  border-radius: var(--radius-pill);
 }
 
 /* Modals */
@@ -528,9 +555,9 @@
 }
 
 .baraban-modal-card {
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
   width: 100%;
   max-width: 540px;
   max-height: 90vh;
@@ -538,6 +565,7 @@
   flex-direction: column;
   overflow: hidden;
   box-sizing: border-box;
+  box-shadow: var(--shadow-xl);
 }
 
 .ai-modal-card {
@@ -546,7 +574,7 @@
 
 .modal-header {
   padding: 20px 24px;
-  border-bottom: 1.5px solid #e2e8f0;
+  border-bottom: 1.5px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -554,23 +582,24 @@
 
 .modal-header h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: var(--font-lg);
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary);
 }
 
 .modal-close-btn {
   width: 36px;
   height: 36px;
-  border-radius: 33px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-pill);
+  background: var(--bg-muted);
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: #64748b;
+  color: var(--text-muted);
   cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .modal-body {
@@ -582,9 +611,9 @@
 }
 
 .modal-label {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
-  color: #334155;
+  color: var(--text-secondary);
   display: block;
   margin-bottom: 6px;
 }
@@ -604,27 +633,28 @@
 .opt-radio-btn {
   width: 36px;
   height: 36px;
-  border-radius: 33px;
-  border: 1.5px solid #cbd5e1;
-  background: #f8fafc;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-hover);
+  background: var(--bg-subtle);
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: inherit;
+  transition: all var(--transition-fast);
 }
 
 .opt-radio-btn.selected {
-  background: #10b981;
-  border-color: #10b981;
-  color: #ffffff;
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: var(--text-white);
 }
 
 .modal-footer {
   padding: 16px 24px;
-  border-top: 1.5px solid #e2e8f0;
+  border-top: 1.5px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -641,7 +671,7 @@
 .ai-icon-bubble {
   width: 40px;
   height: 40px;
-  border-radius: 33px;
+  border-radius: var(--radius-pill);
   background: #fdf2f8;
   border: 1px solid #fbcfe8;
   color: #db2777;
@@ -652,28 +682,28 @@
 }
 
 .ai-modal-desc {
-  font-size: 12px;
-  color: #64748b;
+  font-size: var(--font-xs);
+  color: var(--text-muted);
   margin: 2px 0 0;
 }
 
 .ai-step-box {
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 33px;
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
   padding: 18px 20px;
 }
 
 .step-badge {
-  font-size: 13px;
+  font-size: var(--font-sm);
   font-weight: 600;
-  color: #461fe2;
+  color: var(--primary);
   margin-bottom: 12px;
 }
 
 .step-instruction {
-  font-size: 13px;
-  color: #475569;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
   margin: 0 0 10px;
 }
 
@@ -691,13 +721,13 @@
 }
 
 .prompt-code-block {
-  background: #ffffff;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-xl);
   padding: 12px 16px;
-  font-size: 12px;
+  font-size: var(--font-xs);
   line-height: 1.45;
-  color: #334155;
+  color: var(--text-secondary);
   white-space: pre-wrap;
   word-break: break-word;
   max-height: 140px;
@@ -739,30 +769,30 @@
   }
 
   .baraban-page-title {
-    font-size: 18px;
+    font-size: var(--font-lg);
     line-height: 1.3;
   }
 
   .baraban-page-desc {
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .save-game-btn {
     width: 100%;
     justify-content: center;
     padding: 12px 18px;
-    font-size: 14px;
+    font-size: var(--font-base);
   }
 
   .baraban-card {
     padding: 18px 14px;
-    border-radius: 28px;
+    border-radius: var(--radius-2xl);
     margin-bottom: 16px;
   }
 
   .wheel-preview-card {
     padding: 18px 12px;
-    border-radius: 28px;
+    border-radius: var(--radius-2xl);
   }
 
   .wheel-card-header {
@@ -772,17 +802,17 @@
 
   .wheel-test-spin-btn {
     padding: 11px 16px;
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   .rule-radio-card {
     padding: 12px 14px;
-    border-radius: 24px;
+    border-radius: var(--radius-2xl);
     gap: 12px;
   }
 
   .rule-title {
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   .rule-desc {
@@ -802,25 +832,25 @@
 
   .name-input-row .baraban-input {
     padding: 10px 14px;
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   .name-input-row .add-btn {
     padding: 10px 16px;
-    font-size: 13px;
+    font-size: var(--font-sm);
     white-space: nowrap;
     flex-shrink: 0;
   }
 
   .names-chips-list {
     padding: 10px 12px;
-    border-radius: 24px;
+    border-radius: var(--radius-2xl);
     gap: 6px;
   }
 
   .name-chip {
     padding: 5px 12px;
-    font-size: 12px;
+    font-size: var(--font-xs);
     max-width: 100%;
   }
 
@@ -843,12 +873,12 @@
     width: 100%;
     justify-content: center;
     padding: 9px 10px;
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .question-item-card {
     padding: 14px 12px;
-    border-radius: 24px;
+    border-radius: var(--radius-2xl);
   }
 
   .question-item-top {
@@ -856,7 +886,7 @@
   }
 
   .q-title-text {
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   .q-delete-btn {
@@ -872,7 +902,7 @@
   }
 
   .baraban-modal-card {
-    border-radius: 28px;
+    border-radius: var(--radius-2xl);
     max-height: 92vh;
   }
 
@@ -881,7 +911,7 @@
   }
 
   .modal-header h3 {
-    font-size: 16px;
+    font-size: var(--font-lg);
   }
 
   .modal-body {
@@ -899,7 +929,7 @@
     width: 100%;
     justify-content: center;
     padding: 11px 16px;
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   .manual-opt-row {
@@ -910,12 +940,12 @@
     width: 32px;
     height: 32px;
     min-width: 32px;
-    font-size: 12px;
+    font-size: var(--font-xs);
   }
 
   .manual-opt-row .baraban-input {
     padding: 10px 14px;
-    font-size: 13px;
+    font-size: var(--font-sm);
   }
 
   /* AI Modal */
@@ -937,14 +967,14 @@
 
   .ai-step-box {
     padding: 14px 12px;
-    border-radius: 24px;
+    border-radius: var(--radius-2xl);
   }
 
   .prompt-code-block {
     padding: 10px 12px;
     font-size: 11px;
     max-height: 110px;
-    border-radius: 16px;
+    border-radius: var(--radius-lg);
   }
 
   .copy-prompt-btn {
@@ -960,12 +990,12 @@
 
   .baraban-card {
     padding: 14px 10px;
-    border-radius: 22px;
+    border-radius: var(--radius-xl);
   }
 
   .wheel-preview-card {
     padding: 14px 10px;
-    border-radius: 22px;
+    border-radius: var(--radius-xl);
   }
 
   .question-tools-row {
@@ -974,7 +1004,7 @@
 
   .question-item-card {
     padding: 12px 10px;
-    border-radius: 20px;
+    border-radius: var(--radius-xl);
   }
 
   .name-input-row {
@@ -987,7 +1017,7 @@
   }
 
   .baraban-modal-card {
-    border-radius: 22px;
+    border-radius: var(--radius-xl);
   }
 
   .modal-header {
@@ -1002,4 +1032,3 @@
     padding: 12px 14px;
   }
 }
-

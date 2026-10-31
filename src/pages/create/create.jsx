@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   IoArrowBack,
@@ -52,50 +52,55 @@ const QUICK_EMOJIS = ["💡", "🧠", "💻", "📚", "✨", "🎯", "🔥", "�
 function Create() {
   const navigate = useNavigate();
 
+  const getSavedDraft = () => {
+    try {
+      const saved = localStorage.getItem("ziyo_post_draft");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const draft = getSavedDraft();
+
   // Post form state
-  const [postType, setPostType] = useState("post"); // 'post' | 'quiz' | 'fact'
-  const [category, setCategory] = useState("Barchasi");
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [postType, setPostType] = useState(() => draft?.postType || "post"); // 'post' | 'quiz' | 'fact'
+  const [category, setCategory] = useState(() => draft?.category || "Barchasi");
+  const [title, setTitle] = useState(() => draft?.title || "");
+  const [content, setContent] = useState(() => draft?.content || "");
 
   // Quiz state
-  const [quizOptions, setQuizOptions] = useState([
-    { id: "a", text: "" },
-    { id: "b", text: "" },
-    { id: "c", text: "" },
-    { id: "d", text: "" },
-  ]);
-  const [correctOption, setCorrectOption] = useState("a");
-  const [quizExplanation, setQuizExplanation] = useState("");
+  const [quizOptions, setQuizOptions] = useState(() => {
+    if (
+      draft?.quizOptions &&
+      Array.isArray(draft.quizOptions) &&
+      draft.quizOptions.length > 0
+    ) {
+      return draft.quizOptions;
+    }
+    return [
+      { id: "a", text: "" },
+      { id: "b", text: "" },
+      { id: "c", text: "" },
+      { id: "d", text: "" },
+    ];
+  });
+  const [correctOption, setCorrectOption] = useState(
+    () => draft?.correctOption || "a",
+  );
+  const [quizExplanation, setQuizExplanation] = useState(
+    () => draft?.quizExplanation || "",
+  );
 
   // Tags state
-  const [tags, setTags] = useState([]);
+  const [tags, setTags] = useState(() =>
+    Array.isArray(draft?.tags) ? draft.tags : [],
+  );
   const [tagInput, setTagInput] = useState("");
 
   // UI state
   const [viewMode, setViewMode] = useState("edit"); // 'edit' | 'preview'
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  // Load draft if available
-  useEffect(() => {
-    const savedDraft = localStorage.getItem("ziyo_post_draft");
-    if (savedDraft) {
-      try {
-        const draft = JSON.parse(savedDraft);
-        if (draft.title || draft.content) {
-          setTitle(draft.title || "");
-          setContent(draft.content || "");
-          setCategory(draft.category || "Dasturlash");
-          setPostType(draft.postType || "post");
-          if (draft.quizOptions) setQuizOptions(draft.quizOptions);
-          if (draft.correctOption) setCorrectOption(draft.correctOption);
-          if (draft.tags) setTags(draft.tags);
-        }
-      } catch {
-        // ignore parse error
-      }
-    }
-  }, []);
 
   const handleOptionTextChange = (id, newText) => {
     setQuizOptions((prev) =>
@@ -316,13 +321,6 @@ function Create() {
           <button
             type="button"
             className="type-btn"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(80, 72, 236, 0.1), rgba(93, 43, 210, 0.1))",
-              borderColor: "#3e0cb4",
-              color: "#5f5cf6",
-              fontWeight: "700",
-            }}
             onClick={() => navigate("/oyinlar")}
           >
             <img src="/ziyo-game.webp" alt="" /> <span>Ziyo O'yinlari</span>

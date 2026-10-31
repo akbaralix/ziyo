@@ -1,4 +1,4 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import { sfx } from "../../../utils/soundEffects.js";
 
 const WHEEL_COLORS = [
@@ -32,12 +32,26 @@ const SpinWheel = forwardRef(function SpinWheel(
   const animFrameRef = useRef(null);
   const lastTickSliceRef = useRef(-1);
 
-  // Redraw whenever items or size changes
-  useEffect(() => {
-    drawWheel();
-  }, [items, size]);
+  const drawPointer = (ctx, cx, cy, radius) => {
+    const pointerY = cy - radius - 2;
+    const pointerSize = 18;
 
-  const drawWheel = () => {
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, pointerY + pointerSize + 8); // Tip pointing down into the wheel
+    ctx.lineTo(cx - pointerSize / 2, pointerY);
+    ctx.lineTo(cx + pointerSize / 2, pointerY);
+    ctx.closePath();
+
+    ctx.fillStyle = "#ef4444";
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#ffffff";
+    ctx.stroke();
+    ctx.restore();
+  };
+
+  const drawWheel = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -151,26 +165,12 @@ const SpinWheel = forwardRef(function SpinWheel(
 
     // Top Pointer Arrow
     drawPointer(ctx, cx, cy, radius);
-  };
+  }, [items, size]);
 
-  const drawPointer = (ctx, cx, cy, radius) => {
-    const pointerY = cy - radius - 2;
-    const pointerSize = 18;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(cx, pointerY + pointerSize + 8); // Tip pointing down into the wheel
-    ctx.lineTo(cx - pointerSize / 2, pointerY);
-    ctx.lineTo(cx + pointerSize / 2, pointerY);
-    ctx.closePath();
-
-    ctx.fillStyle = "#ef4444";
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#ffffff";
-    ctx.stroke();
-    ctx.restore();
-  };
+  // Redraw whenever items or size changes
+  useEffect(() => {
+    drawWheel();
+  }, [drawWheel]);
 
   const getWinnerIndex = (rotation) => {
     const count = items.length;

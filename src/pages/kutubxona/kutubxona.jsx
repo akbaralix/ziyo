@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import {
@@ -14,14 +15,11 @@ import {
   IoArrowForwardOutline,
   IoAddOutline,
   IoRemoveOutline,
-  IoSparklesOutline,
   IoTimeOutline,
-  IoBookOutline,
   IoStar,
-  IoDownloadOutline,
   IoAlertCircleOutline,
 } from "react-icons/io5";
-import { FaBookOpen, FaGlasses } from "react-icons/fa";
+import { FaBookOpen } from "react-icons/fa";
 import { BOOKS_DATA } from "./booksData";
 import { saveReadingProgress } from "../../api/userApi";
 import "./kutubxona.css";
@@ -39,6 +37,8 @@ const CATEGORIES = [
 ];
 
 function Kutubxona() {
+  const location = useLocation();
+
   // Kutubxona holatlari
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
   const [searchQuery, setSearchQuery] = useState("");
@@ -98,9 +98,28 @@ function Kutubxona() {
 
       const context = canvas.getContext("2d", { willReadFrequently: true });
 
-      // Ekran kengligiga moslash
+      // Konteyner kengligiga moslash
+      const containerEl = readerContainerRef.current?.querySelector(
+        ".reader-canvas-container",
+      );
+      const containerWidth = containerEl
+        ? containerEl.clientWidth - 12
+        : window.innerWidth - 12;
+
+      // Sahifaning tabiiy o'lchamini olish
+      const defaultViewport = page.getViewport({ scale: 1.0 });
+
+      // Ekranga sig'adigan masshtabni hisoblash
+      const fitScale = containerWidth / defaultViewport.width;
       const isMobile = window.innerWidth <= 768;
-      const adjustedScale = isMobile ? Math.min(scale, 0.85) : scale;
+
+      let adjustedScale;
+      if (isMobile) {
+        // Mobileda konteyner kengligiga moslab, lekin foydalanuvchi zoom dan kam emas
+        adjustedScale = Math.min(fitScale, scale);
+      } else {
+        adjustedScale = scale;
+      }
 
       const viewport = page.getViewport({ scale: adjustedScale });
 
@@ -134,7 +153,7 @@ function Kutubxona() {
   }, []);
 
   // Kitobni ochish
-  const handleOpenBook = async (book) => {
+  const handleOpenBook = useCallback(async (book) => {
     setActiveBook(book);
     setIsLoadingPdf(true);
     setRenderError(null);
@@ -169,7 +188,18 @@ function Kutubxona() {
       setRenderError("PDF faylni yuklab bo'lmadi");
       setIsLoadingPdf(false);
     }
-  };
+  }, [renderPage, zoomScale]);
+
+  // Agar router state orqali bookId uzatilgan bo'lsa avtomatik ochish
+  useEffect(() => {
+    const bookId = location?.state?.bookId;
+    if (bookId && !activeBook) {
+      const targetBook = BOOKS_DATA.find((b) => b.id === bookId);
+      if (targetBook) {
+        handleOpenBook(targetBook);
+      }
+    }
+  }, [location?.state?.bookId, activeBook, handleOpenBook]);
 
   // Kitobni yopish
   const handleCloseBook = () => {
@@ -218,6 +248,23 @@ function Kutubxona() {
           "ziyo_current_reading_book",
           JSON.stringify(currentReadingObj),
         );
+
+        // Bir nechta o'qilayotgan kitoblar ro'yxatiga ham saqlash / yangilash
+        try {
+          const listStr = localStorage.getItem("ziyo_current_reading_books") || "[]";
+          let readingList = JSON.parse(listStr);
+          if (!Array.isArray(readingList)) readingList = [];
+          const existingIdx = readingList.findIndex((b) => b.bookId === activeBook.id);
+          if (existingIdx !== -1) {
+            readingList[existingIdx] = currentReadingObj;
+          } else {
+            readingList.unshift(currentReadingObj);
+          }
+          localStorage.setItem(
+            "ziyo_current_reading_books",
+            JSON.stringify(readingList),
+          );
+        } catch {}
 
         // Agar kitob oxirgi betigacha o'qilgan bo'lsa
         if (currentPage >= (activeBook.pages || totalPages)) {
@@ -346,6 +393,25 @@ function Kutubxona() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeBook, currentPage, totalPages, isFullscreen]);
 
+  // Ekran o'lchami o'zgarganda canvasni qayta chizish (orientatsiya o'zgarishi)
+  useEffect(() => {
+    if (!pdfDoc || !activeBook) return;
+
+    let resizeTimer;
+    const handleResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        renderPage(currentPage, pdfDoc, zoomScale);
+      }, 250);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      clearTimeout(resizeTimer);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [pdfDoc, activeBook, currentPage, zoomScale, renderPage]);
+
   // Kitoblarni filtrlash
   const filteredBooks = BOOKS_DATA.filter((book) => {
     const matchCategory =
@@ -411,9 +477,9 @@ function Kutubxona() {
                       className="book-cover"
                       onClick={() => handleOpenBook(book)}
                     >
-                      <img src={book.img} alt="" />
+                      <img src={book.img} alt={book.title} />
+                      <span className="book-badge">{book.badge}</span>
                       <div className="book-cover-content">
-                        <span className="book-badge">{book.badge}</span>
                         <h3 className="book-cover-title">{book.title}</h3>
                         <p className="book-cover-author">{book.author}</p>
                         <div className="book-cover-meta">
@@ -502,7 +568,7 @@ function Kutubxona() {
                 onClick={handleCloseBook}
                 title="Chiqish"
               >
-                <IoCloseOutline />
+                <IoArrowBackOutline />
               </button>
 
               <div className="reader-book-info">
@@ -553,7 +619,7 @@ function Kutubxona() {
             {/* O'ng tomon: Zoom, Theme, Bookmark, Fullscreen */}
             <div className="toolbar-right">
               {/* Zoom Controls */}
-              <div className="zoom-controls ">
+              <div className="zoom-controls">
                 <button
                   type="button"
                   className="toolbar-icon-btn"
@@ -579,8 +645,10 @@ function Kutubxona() {
                 </button>
               </div>
 
+              <span className="toolbar-divider hide-mobile" />
+
               {/* Theme Toggle (Light / Dark / Sepia) */}
-              <div className="theme-toggle-group">
+              <div className="theme-toggle-group hide-mobile">
                 <button
                   type="button"
                   className={`theme-btn light ${
@@ -612,6 +680,8 @@ function Kutubxona() {
                   <IoMoonOutline />
                 </button>
               </div>
+
+              <span className="toolbar-divider hide-mobile" />
 
               {/* Bookmark Button */}
               <button

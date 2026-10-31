@@ -10,7 +10,6 @@ import {
   IoCheckmarkCircle,
   IoCloseCircle,
   IoHelpCircleOutline,
-  IoSparkles,
   IoClose,
 } from "react-icons/io5";
 import { toast } from "react-toastify";
@@ -23,8 +22,36 @@ export default function BarabanPlay() {
   const navigate = useNavigate();
   const wheelRef = useRef(null);
 
-  const [game, setGame] = useState(null);
-  const [activeNames, setActiveNames] = useState([]);
+  const getInitialGame = () => {
+    let saved = null;
+    if (id) {
+      saved = localStorage.getItem(`ziyo_baraban_${id}`);
+    }
+    if (!saved) {
+      saved = localStorage.getItem("ziyo_active_baraban");
+    }
+
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    return {
+      id: "demo",
+      title: "Aylanuvchi Baraban",
+      names: [],
+      removeWinner: true,
+      questions: [],
+    };
+  };
+
+  const initialGame = getInitialGame();
+
+  const [game, setGame] = useState(() => initialGame);
+  const [activeNames, setActiveNames] = useState(() => (Array.isArray(initialGame?.names) ? initialGame.names : []));
   const [removedNames, setRemovedNames] = useState([]);
   const [isSpinning, setIsSpinning] = useState(false);
 
@@ -36,44 +63,12 @@ export default function BarabanPlay() {
   const [answeredQuestion, setAnsweredQuestion] = useState(false);
   const [askedQuestionIndexes, setAskedQuestionIndexes] = useState([]);
 
-  // Load game from localStorage
-  useEffect(() => {
-    let saved = null;
-    if (id) {
-      saved = localStorage.getItem(`ziyo_baraban_${id}`);
-    }
-    if (!saved) {
-      saved = localStorage.getItem("ziyo_active_baraban");
-    }
-
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setGame(parsed);
-        setActiveNames(Array.isArray(parsed.names) ? parsed.names : []);
-      } catch (e) {
-        console.error(e);
-      }
-    } else {
-      // Default fallback
-      const defaultGame = {
-        id: "demo",
-        title: "Aylanuvchi Baraban",
-        names: [],
-        removeWinner: true,
-        questions: [],
-      };
-      setGame(defaultGame);
-      setActiveNames([]);
-    }
-  }, [id]);
-
   const handleSpinStart = () => {
     setIsSpinning(true);
     setWinner(null);
   };
 
-  const handleSpinEnd = (winningName, winnerIndex) => {
+  const handleSpinEnd = (winningName) => {
     setIsSpinning(false);
     setWinner(winningName);
     setShowWinnerModal(true);

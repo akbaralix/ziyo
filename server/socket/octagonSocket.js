@@ -24,88 +24,113 @@ function getXpChanges(difficulty = "oson") {
 }
 
 const BOT_NAMES = [
-  { name: "Jasur_Pro", pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Jasur" },
-  { name: "Madina_Smart", pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Madina" },
-  { name: "Bobur_Math", pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Bobur" },
-  { name: "Nilufar_Star", pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Nilufar" },
-  { name: "Temur_Master", pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Temur" },
+  {
+    name: "Jasur_Pro",
+    pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Jasur",
+  },
+  {
+    name: "Madina_Smart",
+    pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Madina",
+  },
+  {
+    name: "Bobur_Math",
+    pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Bobur",
+  },
+  {
+    name: "Nilufar_Star",
+    pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Nilufar",
+  },
+  {
+    name: "Temur_Master",
+    pic: "https://api.dicebear.com/7.x/bottts/svg?seed=Temur",
+  },
 ];
 
 export function initOctagonSocket(io) {
   io.on("connection", (socket) => {
     // 1. Matchmaking Queuega qo'shilish
-    socket.on("octagon:join_queue", async ({ category = "matematika", difficulty = "oson", user = {} }) => {
-      const catKey = normalizeCategory(category);
-      const diffKey = ["oson", "qiyin", "murakkab"].includes(difficulty) ? difficulty : "oson";
-      const qKey = catKey === "matematika" ? `matematika:${diffKey}` : catKey;
+    socket.on(
+      "octagon:join_queue",
+      async ({ category = "matematika", difficulty = "oson", user = {} }) => {
+        const catKey = normalizeCategory(category);
+        const diffKey = ["oson", "qiyin", "murakkab"].includes(difficulty)
+          ? difficulty
+          : "oson";
+        const qKey = catKey === "matematika" ? `matematika:${diffKey}` : catKey;
 
-      if (!queues[qKey]) queues[qKey] = [];
+        if (!queues[qKey]) queues[qKey] = [];
 
-      // Foydalanuvchini mavjud bo'lsa tozalash
-      removeFromQueue(socket.id);
+        // Foydalanuvchini mavjud bo'lsa tozalash
+        removeFromQueue(socket.id);
 
-      // FIX 1: "me" kabi fallback userId larni socket.id bilan almashtiramiz
-      // Shunda anonim userlar ham bir-biri bilan match bo'ladi
-      const rawUserId = user.id || user._id || "";
-      const userId = (rawUserId && rawUserId !== "me" && rawUserId.length > 5)
-        ? rawUserId
-        : socket.id;
+        // FIX 1: "me" kabi fallback userId larni socket.id bilan almashtiramiz
+        // Shunda anonim userlar ham bir-biri bilan match bo'ladi
+        const rawUserId = user.id || user._id || "";
+        const userId =
+          rawUserId && rawUserId !== "me" && rawUserId.length > 5
+            ? rawUserId
+            : socket.id;
 
-      const queueEntry = {
-        socketId: socket.id,
-        socket,
-        userId,
-        user: {
-          id: userId,
-          name: `${user.firstName || user.name || "O'yinchi"} ${user.lastName || ""}`.trim(),
-          profilePic: user.profilePic || "",
-          xp: Number(user.xp) || 0,
-        },
-        category: catKey,
-        difficulty: diffKey,
-        joinedAt: Date.now(),
-      };
+        const queueEntry = {
+          socketId: socket.id,
+          socket,
+          userId,
+          user: {
+            id: userId,
+            name: `${user.firstName || user.name || "O'yinchi"} ${user.lastName || ""}`.trim(),
+            profilePic: user.profilePic || "",
+            xp: Number(user.xp) || 0,
+          },
+          category: catKey,
+          difficulty: diffKey,
+          joinedAt: Date.now(),
+        };
 
-      // Navbatda boshqa o'yinchi bormi?
-      let opponentEntry = null;
-      while (queues[qKey].length > 0) {
-        const candidate = queues[qKey].shift();
-        clearTimeout(candidate.botTimeout);
+        // Navbatda boshqa o'yinchi bormi?
+        let opponentEntry = null;
+        while (queues[qKey].length > 0) {
+          const candidate = queues[qKey].shift();
+          clearTimeout(candidate.botTimeout);
 
-        // Uzilgan socket ni o'tkazib yuborish
-        const isDisconnected = !candidate.socket?.connected;
-        // O'z-o'zi bilan match: faqat haqiqiy (real) userId larda tekshiriladi
-        // socket.id farqli bo'lsa — ular turli odamlar
-        const isSameSocket = candidate.socketId === socket.id;
+          // Uzilgan socket ni o'tkazib yuborish
+          const isDisconnected = !candidate.socket?.connected;
+          // O'z-o'zi bilan match: faqat haqiqiy (real) userId larda tekshiriladi
+          // socket.id farqli bo'lsa — ular turli odamlar
+          const isSameSocket = candidate.socketId === socket.id;
 
-        if (isDisconnected || isSameSocket) {
-          continue;
+          if (isDisconnected || isSameSocket) {
+            continue;
+          }
+
+          opponentEntry = candidate;
+          break;
         }
 
-        opponentEntry = candidate;
-        break;
-      }
+        if (opponentEntry) {
+          // Real opponent topildi — jang boshlash
+          startBattle(io, catKey, queueEntry, opponentEntry, false, diffKey);
+        } else {
+          // Navbatga qo'shish
+          queues[qKey].push(queueEntry);
+          socket.emit("octagon:queue_waiting", {
+            category: catKey,
+            difficulty: diffKey,
+            queueTime: 0,
+          });
 
-      if (opponentEntry) {
-        // Real opponent topildi — jang boshlash
-        startBattle(io, catKey, queueEntry, opponentEntry, false, diffKey);
-      } else {
-        // Navbatga qo'shish
-        queues[qKey].push(queueEntry);
-        socket.emit("octagon:queue_waiting", { category: catKey, difficulty: diffKey, queueTime: 0 });
-
-        // FIX 2: Bot timeout 25 soniyaga oshirildi
-        // (real player ulanishi uchun yetarli vaqt)
-        queueEntry.botTimeout = setTimeout(() => {
-          const idx = queues[qKey].indexOf(queueEntry);
-          if (idx !== -1) {
-            queues[qKey].splice(idx, 1);
-            const botData = createBotOpponent();
-            startBattle(io, catKey, queueEntry, botData, true, diffKey);
-          }
-        }, 25000);
-      }
-    });
+          // FIX 2: Bot timeout 25 soniyaga oshirildi
+          // (real player ulanishi uchun yetarli vaqt)
+          queueEntry.botTimeout = setTimeout(() => {
+            const idx = queues[qKey].indexOf(queueEntry);
+            if (idx !== -1) {
+              queues[qKey].splice(idx, 1);
+              const botData = createBotOpponent();
+              startBattle(io, catKey, queueEntry, botData, true, diffKey);
+            }
+          }, 25000);
+        }
+      },
+    );
 
     // 2. Navbatdan chiqish
     socket.on("octagon:leave_queue", () => {
@@ -114,40 +139,49 @@ export function initOctagonSocket(io) {
     });
 
     // 3. Savolga javob yuborish
-    socket.on("octagon:submit_answer", ({ roomId, questionIndex, answerIndex, timeRemaining = 0 }) => {
-      const battle = activeBattles.get(roomId);
-      if (!battle || battle.status !== "active") return;
-      if (battle.currentQuestionIndex !== questionIndex) return;
+    socket.on(
+      "octagon:submit_answer",
+      ({ roomId, questionIndex, answerIndex, timeRemaining = 0 }) => {
+        const battle = activeBattles.get(roomId);
+        if (!battle || battle.status !== "active") return;
+        if (battle.currentQuestionIndex !== questionIndex) return;
 
-      const playerKey = battle.player1.socketId === socket.id ? "player1" : "player2";
-      const currentQ = battle.questions[questionIndex];
-      const isCorrect = currentQ.correctIndex === answerIndex;
+        const playerKey =
+          battle.player1.socketId === socket.id ? "player1" : "player2";
+        const currentQ = battle.questions[questionIndex];
+        const isCorrect = currentQ.correctIndex === answerIndex;
 
-      // Ball hisoblash: to'g'ri bo'lsa 100 ball + tezlik bonusi (soniya * 10)
-      const points = isCorrect ? 100 + Math.round(Number(timeRemaining) * 10) : 0;
+        // Ball hisoblash: to'g'ri bo'lsa 100 ball + tezlik bonusi (soniya * 10)
+        const points = isCorrect
+          ? 100 + Math.round(Number(timeRemaining) * 10)
+          : 0;
 
-      battle[playerKey].answers[questionIndex] = {
-        questionIndex,
-        answerIndex,
-        isCorrect,
-        points,
-        timeRemaining,
-      };
-      battle[playerKey].score += points;
-      battle[playerKey].currentAnswer = answerIndex;
-
-      // Raqibga javob berilganini bildirish (real vaqt indikatori)
-      const opponentKey = playerKey === "player1" ? "player2" : "player1";
-      if (!battle[opponentKey].isBot) {
-        io.to(battle[opponentKey].socketId).emit("octagon:opponent_answered", {
+        battle[playerKey].answers[questionIndex] = {
           questionIndex,
-          hasAnswered: true,
-        });
-      }
+          answerIndex,
+          isCorrect,
+          points,
+          timeRemaining,
+        };
+        battle[playerKey].score += points;
+        battle[playerKey].currentAnswer = answerIndex;
 
-      // Agar ikkala tomon ham javob bergan bo'lsa, raundni yakunlash
-      checkRoundEnd(io, battle);
-    });
+        // Raqibga javob berilganini bildirish (real vaqt indikatori)
+        const opponentKey = playerKey === "player1" ? "player2" : "player1";
+        if (!battle[opponentKey].isBot) {
+          io.to(battle[opponentKey].socketId).emit(
+            "octagon:opponent_answered",
+            {
+              questionIndex,
+              hasAnswered: true,
+            },
+          );
+        }
+
+        // Agar ikkala tomon ham javob bergan bo'lsa, raundni yakunlash
+        checkRoundEnd(io, battle);
+      },
+    );
 
     // 4. Uzilish holati (Disconnect)
     socket.on("disconnect", () => {
@@ -156,7 +190,10 @@ export function initOctagonSocket(io) {
       // Agar faol jangda bo'lsa, raqibga g'alaba berish
       for (const [roomId, battle] of activeBattles.entries()) {
         if (battle.status === "active") {
-          if (battle.player1.socketId === socket.id || battle.player2.socketId === socket.id) {
+          if (
+            battle.player1.socketId === socket.id ||
+            battle.player2.socketId === socket.id
+          ) {
             handlePlayerForfeit(io, battle, socket.id);
             break;
           }
@@ -169,7 +206,8 @@ export function initOctagonSocket(io) {
 function normalizeCategory(cat) {
   if (!cat) return "matematika";
   const lower = cat.toLowerCase();
-  if (lower.includes("ingliz") || lower.includes("english")) return "ingliz-tili";
+  if (lower.includes("ingliz") || lower.includes("english"))
+    return "ingliz-tili";
   if (lower.includes("tarix") || lower.includes("history")) return "tarix";
   return "matematika";
 }
@@ -199,7 +237,14 @@ function createBotOpponent() {
 }
 
 // Jangni boshlash
-function startBattle(io, category, player1, player2, isBotBattle = false, difficulty = "oson") {
+function startBattle(
+  io,
+  category,
+  player1,
+  player2,
+  isBotBattle = false,
+  difficulty = "oson",
+) {
   const roomId = `battle_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
   const questions = getBattleQuestions(category, 10, difficulty); // 10 ta savol
 
@@ -299,9 +344,12 @@ function sendQuestion(io, battle) {
 
   // Vaqt tugaganda avtomatik raund tugashi
   clearTimeout(battle.roundTimer);
-  battle.roundTimer = setTimeout(() => {
-    checkRoundEnd(io, battle, true);
-  }, (q.timeLimit || 12) * 1000 + 400);
+  battle.roundTimer = setTimeout(
+    () => {
+      checkRoundEnd(io, battle, true);
+    },
+    (q.timeLimit || 12) * 1000 + 400,
+  );
 }
 
 // Bot javob berishi
@@ -312,7 +360,11 @@ function simulateBotAnswer(io, battle, questionIndex) {
   // 3s - 7s orasida kechikish
   const delay = Math.floor(Math.random() * 4000) + 3000;
   setTimeout(() => {
-    if (battle.status !== "active" || battle.currentQuestionIndex !== questionIndex) return;
+    if (
+      battle.status !== "active" ||
+      battle.currentQuestionIndex !== questionIndex
+    )
+      return;
     // FIX: Raund allaqachon tugagan bo'lsa bot javob bermaydi
     if (battle.roundEnded) return;
 
@@ -320,8 +372,11 @@ function simulateBotAnswer(io, battle, questionIndex) {
     const isBotCorrect = Math.random() < 0.72;
     let chosenIndex = currentQ.correctIndex;
     if (!isBotCorrect) {
-      const wrongIndices = [0, 1, 2, 3].filter((i) => i !== currentQ.correctIndex);
-      chosenIndex = wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
+      const wrongIndices = [0, 1, 2, 3].filter(
+        (i) => i !== currentQ.correctIndex,
+      );
+      chosenIndex =
+        wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
     }
 
     const timeRemaining = Math.max(0, 12 - Math.round(delay / 1000));
@@ -451,7 +506,10 @@ async function finishBattle(io, battle) {
     difficulty: battle.difficulty,
   };
 
-  io.to(battle.player1.socketId).emit("octagon:battle_finished", p1FinalPayload);
+  io.to(battle.player1.socketId).emit(
+    "octagon:battle_finished",
+    p1FinalPayload,
+  );
 
   if (!battle.player2.isBot) {
     const p2FinalPayload = {
@@ -464,7 +522,10 @@ async function finishBattle(io, battle) {
       questions: battle.questions,
       difficulty: battle.difficulty,
     };
-    io.to(battle.player2.socketId).emit("octagon:battle_finished", p2FinalPayload);
+    io.to(battle.player2.socketId).emit(
+      "octagon:battle_finished",
+      p2FinalPayload,
+    );
   }
 
   activeBattles.delete(battle.roomId);
@@ -483,13 +544,17 @@ async function handlePlayerForfeit(io, battle, forfeitSocketId) {
   // G'olibga avtomatik win XP
   if (!winner.isBot && winner.userId) {
     try {
-      await User.findByIdAndUpdate(winner.userId, { $inc: { xp: xpConfig.win } });
+      await User.findByIdAndUpdate(winner.userId, {
+        $inc: { xp: xpConfig.win },
+      });
     } catch {}
   }
 
   if (!loser.isBot && loser.userId) {
     try {
-      await User.findByIdAndUpdate(loser.userId, { $inc: { xp: xpConfig.lose } });
+      await User.findByIdAndUpdate(loser.userId, {
+        $inc: { xp: xpConfig.lose },
+      });
     } catch {}
   }
 

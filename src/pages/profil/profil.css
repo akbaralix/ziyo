@@ -148,7 +148,10 @@
   background: #5b1ae8;
   color: white;
 }
-
+.teacher-badge {
+  background: #15ef61;
+  color: #fff;
+}
 .profile-education-badge .edu-icon {
   font-size: 14px;
 }
@@ -167,7 +170,7 @@
   gap: 6px;
   padding: 10px 16px;
   border-radius: 22px;
-  font-size: 13px;
+  font-size: 11px;
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
@@ -267,6 +270,9 @@
 
 /* ---------------- TABS NAVIGATION ---------------- */
 .profile-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
 }
 
@@ -274,7 +280,7 @@
   display: flex;
   gap: 8px;
   padding: 5px;
-  border-radius: 22px;
+  border-radius: 33px;
   border: 1px solid #e2e8f0;
   width: fit-content;
   background: #ffffff;
@@ -295,7 +301,6 @@
 }
 
 .profile-tab-btn.active {
-  background: #f1f5f9;
   color: #0f172a;
   font-weight: 500;
 }
@@ -460,6 +465,71 @@
 .form-field textarea:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Username input with @ prefix and real-time validation indicator */
+.username-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.username-prefix {
+  position: absolute;
+  left: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #94a3b8;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.username-input {
+  width: 100%;
+  padding-left: 32px !important;
+}
+
+.username-input.is-valid {
+  border-color: #10b981 !important;
+  background-color: #f0fdf4 !important;
+}
+
+.username-input.is-invalid {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.username-spinner {
+  position: absolute;
+  right: 14px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.username-status-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.username-status-hint.hint-success {
+  color: #10b981;
+}
+
+.username-status-hint.hint-error {
+  color: #ef4444;
+}
+
+.username-status-hint.hint-loading {
+  color: #64748b;
 }
 
 .modal-actions {
@@ -1009,6 +1079,31 @@
    ========================================================= */
 .profile-reading-card-wrapper {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-reading-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-reading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.profile-reading-card-index {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 3px 10px;
+  border-radius: 12px;
 }
 
 .profile-reading-card {
@@ -1024,16 +1119,6 @@
   overflow: hidden;
 }
 
-.profile-reading-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 5px;
-  height: 100%;
-  background: linear-gradient(180deg, #10b981 0%, #3b82f6 100%);
-}
-
 .profile-reading-header {
   display: flex;
   align-items: center;
@@ -1045,18 +1130,17 @@
   align-items: center;
   gap: 8px;
   font-size: 0.82rem;
-  font-weight: 700;
-  color: #059669;
-  background: #ecfdf5;
+  font-weight: 500;
+  color: white;
+  background: var(--primary);
   padding: 5px 12px;
   border-radius: 20px;
-  border: 1px solid #d1fae5;
 }
 
 .profile-reading-percent {
   font-size: 1.05rem;
   font-weight: 800;
-  color: #2563eb;
+  color: var(--primary-text);
 }
 
 .profile-reading-content {
@@ -1126,7 +1210,7 @@
 
 .profile-progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+  background: linear-gradient(90deg, #1016b9 0%, #5a3bf6 100%);
   border-radius: 10px;
   transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1134,6 +1218,7 @@
 .profile-reading-actions {
   display: flex;
   align-items: center;
+  gap: 10px;
   justify-content: space-between;
   margin-top: 4px;
 }
@@ -1141,17 +1226,16 @@
 .profile-progress-subtext {
   font-size: 0.82rem;
   color: #64748b;
-  font-weight: 600;
 }
 
 .profile-continue-read-btn {
   background: #4f46e5;
   color: #ffffff;
   border: none;
+
   padding: 6px 14px;
   border-radius: 10px;
   font-size: 0.82rem;
-  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1163,6 +1247,7 @@
 
 /* O'QIB BO'LINGAN KITOBLAR SLAYDERI */
 .profile-finished-section {
+  margin-top: 8px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 20px;
@@ -1280,6 +1365,9 @@
 }
 
 @media (max-width: 640px) {
+  .profile-reading-grid {
+    grid-template-columns: 1fr;
+  }
   .profile-reading-content {
     flex-direction: column;
     align-items: flex-start;
