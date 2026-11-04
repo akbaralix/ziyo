@@ -20,6 +20,9 @@ import {
 import { FaDiamond } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import { sfx } from "../../utils/soundEffects.js";
+import backgroundImage from "../../assets/game/live-game-bg.jpg";
+import lobbyAudio from "../../assets/Jason Beauchamp - Kahoot Lobby Music.mp3";
+import lobbyStatsAudio from "../../assets/Video Project 4.m4a";
 import "./LiveHost.css";
 
 const OPTION_COLORS = [
@@ -56,11 +59,47 @@ export default function LiveHost() {
 
   const timerRef = useRef(null);
 
+  const audioRef = useRef(new Audio(lobbyAudio));
+  const audioStatsRef = useRef(new Audio(lobbyStatsAudio));
+
   const toggleAudio = () => {
     const muted = sfx.toggleMute();
     setIsMuted(muted);
+
+    if (muted) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
   };
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    audio.loop = true;
+
+    if (!isMuted) {
+      audio.play().catch((err) => console.log(err));
+    }
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, []);
+  // Game over musiqasini boshqarish uchun useEffect
+  useEffect(() => {
+    if (gameState === "answer" || gameState === "ended") {
+      audioRef.current.pause();
+      audioStatsRef.current
+        .play()
+        .catch((err) => console.log("Audio play error:", err));
+    }
+
+    return () => {
+      audioStatsRef.current.pause();
+      audioStatsRef.current.currentTime = 0;
+    };
+  }, [gameState]);
   const startCountdown = (initialTime) => {
     if (timerRef.current) clearInterval(timerRef.current);
     setTimeLeft(initialTime);
@@ -264,6 +303,7 @@ export default function LiveHost() {
   };
 
   const handleNextQuestion = () => {
+    audioRef.current.play();
     socket.emit("host:next", { sessionId });
   };
 
@@ -292,7 +332,10 @@ export default function LiveHost() {
     !creatorId || !currentUserId || String(creatorId) === String(currentUserId);
 
   return (
-    <div className="live-host-screen">
+    <div
+      className="live-host-screen"
+      style={{ backgroundImage: `url(${backgroundImage})` }}
+    >
       <header className="live-host-nav">
         <div className="host-nav-brand">
           <span className="live-quiz-title">{quizTitle}</span>

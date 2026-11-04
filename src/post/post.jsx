@@ -108,6 +108,7 @@ function Post({
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportReason, setReportReason] = useState("Spam yoki reklama");
   const [customReason, setCustomReason] = useState("");
+  const [showExplanation, setShowExplanation] = useState({});
 
   // Tahrirlash (Edit) modal holati
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -115,7 +116,7 @@ function Post({
     id: "",
     title: "",
     content: "",
-    category: "Dasturlash",
+    category: "Barchasi",
     tags: "",
   });
 
@@ -575,7 +576,6 @@ function Post({
                           if (isCorrect) {
                             cardStyle = {
                               borderColor: "#3210b9",
-                              background: "#f1ecfd",
                             };
                             letterStyle = {
                               background: "#3a10b9",
@@ -584,11 +584,10 @@ function Post({
                             };
                           } else if (isSelected && !quizState.isCorrect) {
                             cardStyle = {
-                              borderColor: "#ef4444",
-                              background: "#fef2f2",
+                              borderColor: "#fc0202",
                             };
                             letterStyle = {
-                              background: "#ef4444",
+                              background: "#ff3131",
                               color: "#fff",
                               borderColor: "#ef4444",
                             };
@@ -645,17 +644,24 @@ function Post({
                       >
                         {quizState.explanation && (
                           <div
+                            onClick={() =>
+                              setShowExplanation((prev) => ({
+                                ...prev,
+                                [post.id]: !prev[post.id],
+                              }))
+                            }
                             style={{
                               padding: "10px 14px",
-                              borderRadius: "10px",
-                              background: "#f3efff",
                               color: "#311eaf",
                               fontSize: "13px",
-                              border: "1px solid #dbeafe",
                             }}
                           >
-                            💡 <strong>Tushuntirish:</strong>{" "}
-                            {quizState.explanation}
+                            💡 <strong>Tushuntirish...</strong>
+                            {showExplanation[post.id] && (
+                              <p style={{ marginTop: "5px" }}>
+                                {quizState.explanation}
+                              </p>
+                            )}
                           </div>
                         )}
                       </div>

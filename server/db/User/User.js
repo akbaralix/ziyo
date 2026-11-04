@@ -55,10 +55,7 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
-    readBooks: {
-      type: Number,
-      default: 0,
-    },
+
     solvedQuizzes: {
       type: Number,
       default: 0,

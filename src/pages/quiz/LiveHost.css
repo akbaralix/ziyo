@@ -1,13 +1,12 @@
-/* ==========================================================================
-   Live Quiz - Host Screen Styles
-   ========================================================================== */
-
 .live-host-screen {
   min-height: 100vh;
   min-height: 100dvh;
+  background-image: url("../assets/game/live-game-bg.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+
   display: flex;
   flex-direction: column;
-  background: var(--bg-subtle);
   color: var(--text-primary);
   font-family: inherit;
   overflow-x: hidden;
@@ -21,7 +20,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
-  background: var(--bg-card);
+  /* background: var(--bg-card); */
   border-bottom: 1.5px solid var(--border-color);
   gap: 12px;
   position: sticky;
@@ -49,8 +48,7 @@
 
 .live-quiz-title {
   font-size: clamp(14px, 3.5vw, 17px);
-  font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-white);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -271,12 +269,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  min-height: 80px;
+  min-height: 50px;
 }
 
 .lobby-player-chip {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
   background: var(--bg-subtle);
@@ -289,8 +286,8 @@
 }
 
 .player-avatar-circle {
-  width: 36px;
-  height: 36px;
+  width: 46px;
+  height: 46px;
   background: var(--primary);
   color: var(--text-white);
   border-radius: var(--radius-full);
@@ -401,7 +398,7 @@
 }
 
 .host-option-card {
-  border-radius: var(--radius-2xl);
+  /* border-radius: var(--radius-2xl); */
   padding: clamp(14px, 3vw, 22px);
   display: flex;
   align-items: center;
@@ -448,7 +445,7 @@
 .answer-header-box h2 {
   font-size: clamp(18px, 4.5vw, 24px);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-white);
   margin: 0;
 }
 
@@ -520,7 +517,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--color-warning-dark);
+  color: var(--primary-text);
 }
 
 .leaderboard-list {
@@ -537,17 +534,17 @@
   border: 1.5px solid var(--border-color);
   color: var(--text-primary);
   padding: 10px 18px;
-  border-radius: var(--radius-pill);
+  border-radius: 8px;
   font-size: clamp(13px, 3vw, 15px);
 }
 
 .leaderboard-row.top-1 {
-  background: var(--color-warning-bg);
+  background: var(--primary);
   border-color: var(--color-warning-border);
+  color: var(--text-white);
 }
 
 .lb-rank {
-  color: var(--text-muted);
   width: 44px;
   font-weight: 600;
 }
@@ -561,8 +558,8 @@
 }
 
 .lb-avatar {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-full);
   object-fit: cover;
   border: 1.5px solid var(--border-color);
@@ -623,7 +620,7 @@
 
 .podium-title-box p {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--text-white);
   font-size: clamp(13px, 3vw, 15px);
 }
 
@@ -665,8 +662,8 @@
 }
 
 .pillar-avatar {
-  width: clamp(40px, 10vw, 52px);
-  height: clamp(40px, 10vw, 52px);
+  width: clamp(40px, 10vw, 82px);
+  height: clamp(40px, 10vw, 82px);
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
@@ -699,9 +696,9 @@
 }
 
 .pillar-player-name {
-  font-size: clamp(11px, 2.8vw, 14px);
+  font-size: clamp(13px, 3.8vw, 20px);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-white);
   text-align: center;
   width: 100%;
   overflow: hidden;
@@ -710,8 +707,9 @@
 }
 
 .pillar-score {
-  font-size: clamp(10px, 2.5vw, 12px);
-  color: var(--text-muted);
+  font-size: clamp(10px, 2.5vw, 15px);
+  color: var(--text-white);
+  font-weight: 500;
 }
 
 .pillar-block {
@@ -778,7 +776,6 @@
   background: var(--bg-subtle);
   border: 1.5px solid var(--border-color);
   color: var(--text-primary);
-  border-radius: var(--radius-pill);
   font-size: var(--font-sm);
 }
 
@@ -797,8 +794,8 @@
 }
 
 .ranking-table-avatar {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-full);
   object-fit: cover;
   border: 1.5px solid var(--border-color);
@@ -806,8 +803,8 @@
 }
 
 .ranking-table-avatar-fallback {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-full);
   background: var(--primary);
   color: var(--text-white);
@@ -821,6 +818,7 @@
 
 .name-col {
   flex: 1;
+  font-size: 17px;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;

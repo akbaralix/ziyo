@@ -342,7 +342,7 @@ function Profil() {
     level: (u?.xp || 0) > 1000 ? "Usta 🌟" : "Bilimdon ⚡",
     rank: computedRank,
     xp: u?.xp || 0,
-    readBooks: u?.readBooks || 0,
+    readingBook: u?.readingBook?.currentPage || 0,
     solvedQuizzes: u?.solvedQuizzes || 0,
   };
 
@@ -587,7 +587,7 @@ function Profil() {
     {
       id: 1,
       title: "O'qilgan kitoblar",
-      count: `${profileData.readBooks} ta`,
+      count: `${profileData.readingBook?.currentPage || 0} ta`,
       icon: <FaBook />,
       color: "#ffffff",
       bgColor: "#5134e4",
@@ -743,11 +743,6 @@ function Profil() {
         ))}
       </div>
 
-      {/* HOZIR O'QIYOTGAN KITOBLARI */}
-
-      {/* O'QIB BO'LINGAN KITOBLAR ("agar o'qib bo'lgan bo'lsa") */}
-
-      {/* Profile Navigation Tabs */}
       <div className="profile-tabs-wrapper">
         <div className="profile-nav-tabs">
           <button
@@ -879,12 +874,18 @@ function Profil() {
                               e.target.src = "/booksimg/O'tgan-kunlar.jpg";
                             }}
                           />
+                          <div
+                            style={{
+                              flex: 1,
+                              marginLeft: "12px",
+                            }}
+                          >
+                            <h4 className="profile-book-title">{book.title}</h4>
+                            <p className="profile-book-author">{book.author}</p>
+                          </div>
                         </div>
 
                         <div className="profile-book-details">
-                          <h4 className="profile-book-title">{book.title}</h4>
-                          <p className="profile-book-author">{book.author}</p>
-
                           <div className="profile-page-progress-info">
                             <MdOutlineAutoStories className="profile-book-icon" />
                             <span>

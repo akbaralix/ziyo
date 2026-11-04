@@ -18,12 +18,18 @@ import {
 } from "react-icons/fa";
 
 import { FaDiamond } from "react-icons/fa6";
+import quizLogoImg from "../../assets/game/quiz-log-img.jpg";
 
 import quizAvatar1 from "../../assets/quiz-avatar/quiz-avatar1.jpg";
 import quizAvatar2 from "../../assets/quiz-avatar/quiz-avatar2.jpg";
 import quizAvatar3 from "../../assets/quiz-avatar/quiz-avatar3.jpg";
 import quizAvatar4 from "../../assets/quiz-avatar/quiz-avatar4.jpg";
 import quizAvatar5 from "../../assets/quiz-avatar/quiz-avatar5.jpg";
+import quizAvatar6 from "../../assets/quiz-avatar/quiz-avatar6.jpg";
+import quizAvatar7 from "../../assets/quiz-avatar/quiz-avatar7.jpg";
+import quizAvatar8 from "../../assets/quiz-avatar/quiz-avatar8.jpg";
+import quizAvatar9 from "../../assets/quiz-avatar/quiz-avatar9.jpg";
+// import quizAvatar10 from "../../assets/quiz-avatar/quiz-avatar10.jpg";
 
 export const QUIZ_AVATARS = [
   { id: 1, src: quizAvatar1, name: "Qahramon 1" },
@@ -31,6 +37,11 @@ export const QUIZ_AVATARS = [
   { id: 3, src: quizAvatar3, name: "Qahramon 3" },
   { id: 4, src: quizAvatar4, name: "Qahramon 4" },
   { id: 5, src: quizAvatar5, name: "Qahramon 5" },
+  { id: 6, src: quizAvatar6, name: "Qahramon 6" },
+  { id: 7, src: quizAvatar7, name: "Qahramon 7" },
+  { id: 8, src: quizAvatar8, name: "Qahramon 8" },
+  { id: 9, src: quizAvatar9, name: "Qahramon 9" },
+  // { id: 10, src: quizAvatar10, name: "Qahramon 10" },
 ];
 
 import { joinByPin } from "../../api/quizApi.js";
@@ -446,7 +457,9 @@ export default function LivePlayer() {
       {playerState === "join" && (
         <div className="player-join-container">
           <div className="player-join-card">
-            <div className="join-logo-box">🎮</div>
+            <div className="join-logo-box">
+              <img src={quizLogoImg} alt="Ziyo QUIZ" className="join-logo" />
+            </div>
             <h2>Ziyo QUIZ</h2>
 
             {errorMsg && <div className="join-error-text">{errorMsg}</div>}

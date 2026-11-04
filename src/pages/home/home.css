@@ -39,7 +39,9 @@
   flex: 1;
   max-width: 420px;
   min-width: 0;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .searchbar:focus-within {
@@ -104,7 +106,9 @@
   justify-content: center;
   padding: 6px;
   border-radius: var(--radius-sm);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .notification button:hover {
@@ -119,9 +123,8 @@
   font-weight: 600;
   font-size: var(--font-base);
   color: var(--text-primary);
-  background: var(--bg-muted);
+
   padding: 5px 12px;
-  border-radius: var(--radius-xl);
 }
 
 .user-pointes svg {

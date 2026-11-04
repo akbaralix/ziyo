@@ -10,7 +10,7 @@ import {
   checkTelegramSession,
   registerTelegramUser,
 } from "../../api/authApi.js";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.jpg";
 import telegramImg from "../../assets/telegram.png";
 import "./login.css";
 import ModalOverlay from "../../components/ModalOverlay/ModalOverlay.jsx";
@@ -148,7 +148,7 @@ function Login() {
                   studyPlace: res.user.studyPlace,
                   course: res.user.course,
                   xp: res.user.xp || 0,
-                  readBooks: res.user.readBooks || 0,
+                  readingBook: res.user.readingBook?.currentPage || 0,
                   solvedQuizzes: res.user.solvedQuizzes || 0,
                 }),
               );
@@ -259,7 +259,7 @@ function Login() {
               studyPlace: res.user.studyPlace,
               course: res.user.course,
               xp: res.user.xp || 0,
-              readBooks: res.user.readBooks || 0,
+              readingBook: res.user.readingBook?.currentPage || 0,
               solvedQuizzes: res.user.solvedQuizzes || 0,
             }),
           );

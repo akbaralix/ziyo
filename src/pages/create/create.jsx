@@ -22,7 +22,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { createPost } from "../../api/postApi.js";
 import ModalOverlay from "../../components/ModalOverlay";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.jpg";
 import "./create.css";
 
 const CATEGORIES = [

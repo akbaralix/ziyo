@@ -493,13 +493,15 @@
   width: 42px;
   height: 42px;
   position: relative;
+  overflow: hidden;
 }
 
 .user-list-avatar {
-  width: 42px;
-  height: 42px;
+  width: 100%;
+  height: 100%;
   border-radius: var(--radius-full);
   object-fit: cover;
+
   border: 2px solid var(--border-color);
   background: var(--bg-muted);
 }

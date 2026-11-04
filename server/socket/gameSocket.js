@@ -341,7 +341,7 @@ export function initSocketIO(io) {
           // Tezroq javob bergan ko'proq ball oladi
           const timeFactor = Math.max(0, 1 - timeMs / timeLimit);
           const pointsEarned = isCorrect
-            ? Math.round(question.points * (0.5 + 0.5 * timeFactor))
+            ? Math.round(question.points * (1 + 5 * timeFactor))
             : 0;
 
           const player = session.players.find(

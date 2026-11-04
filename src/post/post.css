@@ -13,8 +13,8 @@
   width: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-2xl);
-  margin-bottom: 20px;
+  border-radius: 10px;
+  margin-bottom: 10px;
   overflow: hidden;
   box-sizing: border-box;
   box-shadow: var(--shadow-card);
@@ -834,6 +834,7 @@
   padding: 10px 14px;
   flex: 1;
   border: 1px solid var(--border-subtle);
+  position: relative;
 }
 
 .comment-user-header {
@@ -864,7 +865,8 @@
 
 .comment-form-container {
   padding: 12px 16px;
-  position: relative;
+  /* position: fixed; */
+  bottom: 0;
   border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;

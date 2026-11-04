@@ -7,7 +7,10 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: var(--bg-subtle);
+  background-image: url("src/assets/game/live-game-bg.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* background: var(--bg-subtle); */
   color: var(--text-primary);
   font-family: inherit;
   box-sizing: border-box;
@@ -20,7 +23,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 20px;
-  background: var(--bg-card);
+  background: #ffffff1b;
+  backdrop-filter: blur(8px);
   border-bottom: 1.5px solid var(--border-color);
   position: sticky;
   top: 0;
@@ -99,11 +103,18 @@
   margin-bottom: 8px;
   line-height: 1;
 }
+.join-logo-box img {
+  width: 108px;
+  height: 108px;
+  object-fit: cover;
+  border-radius: var(--radius-full);
+  margin-bottom: 8px;
+}
 
 .player-join-card h2 {
   font-size: clamp(20px, 6vw, 26px);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-white);
   margin: 0 0 16px 0;
 }
 
@@ -134,7 +145,7 @@
 .join-input-group label {
   font-size: var(--font-xs);
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-white);
   letter-spacing: 0.5px;
 }
 
@@ -200,15 +211,15 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  max-width: 380px;
+  max-width: 480px;
   width: 100%;
   box-sizing: border-box;
   box-shadow: var(--shadow-sm);
 }
 
 .pulse-avatar-circle {
-  width: 84px;
-  height: 84px;
+  width: 124px;
+  height: 124px;
   background: var(--primary);
   color: var(--text-white);
   border-radius: var(--radius-full);
@@ -286,8 +297,8 @@
 }
 
 .kahoot-avatar-item {
-  width: 48px;
-  height: 48px;
+  width: 70px;
+  height: 70px;
   border-radius: var(--radius-full);
   border: 2.5px solid var(--border-color);
   padding: 0;
@@ -450,12 +461,13 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
-  flex: 1;
-  min-height: 240px;
+  /* flex: 1; */
+  min-height: 140px;
+  margin-top: 10px;
 }
 
 .player-option-btn {
-  border-radius: var(--radius-2xl);
+  /* border-radius: var(--radius-2xl); */
   border: none;
   color: var(--text-white);
   padding: 18px 14px;
@@ -965,8 +977,9 @@
     max-width: 150px;
   }
   .player-options-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 2fr;
     gap: 8px;
+    margin-top: 20px;
   }
   .player-option-btn {
     min-height: 70 px;

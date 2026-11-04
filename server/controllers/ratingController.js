@@ -21,9 +21,9 @@ export const getLeaderboard = async (req, res) => {
     // Barcha ro'yxatdan o'tgan foydalanuvchilarni olish
     const users = await User.find(
       {},
-      "firstName lastName telegramUsername profilePic xp solvedQuizzes readBooks studyPlace course createdAt",
+      "firstName lastName telegramUsername profilePic xp solvedQuizzes readingBook studyPlace course createdAt",
     )
-      .sort({ xp: -1, solvedQuizzes: -1, readBooks: -1, createdAt: 1 })
+      .sort({ xp: -1, solvedQuizzes: -1, readingBook: -1, createdAt: 1 })
       .lean();
 
     const ratings = users.map((u, index) => {
@@ -41,7 +41,7 @@ export const getLeaderboard = async (req, res) => {
         xp: u.xp || 0,
         level: calculateLevel(u.xp || 0),
         solvedQuizzes: u.solvedQuizzes || 0,
-        readBooks: u.readBooks || 0,
+        readingBook: u.readingBook?.currentPage || 0,
         studyPlace: u.studyPlace || "",
         course: u.course || "",
         rank: index + 1,

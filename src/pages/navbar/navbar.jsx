@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import { PiPlusBold } from "react-icons/pi";
 import { GoHome, GoTrophy, GoPerson } from "react-icons/go";
 import { SiWikibooks } from "react-icons/si";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.jpg";
 import "./navbar.css";
 
 function Navbar({ isCollapsed, onToggle }) {

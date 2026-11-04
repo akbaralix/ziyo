@@ -228,12 +228,12 @@ export const calculateUserRank = async (user) => {
         {
           xp: user.xp || 0,
           solvedQuizzes: user.solvedQuizzes || 0,
-          readBooks: { $gt: user.readBooks || 0 },
+          readingBook: { $gt: user.readingBook.currentPage || 0 },
         },
         {
           xp: user.xp || 0,
           solvedQuizzes: user.solvedQuizzes || 0,
-          readBooks: user.readBooks || 0,
+          readingBook: { $gt: user.readingBook.currentPage || 0 },
           createdAt: { $lt: user.createdAt },
         },
       ],
@@ -545,7 +545,7 @@ export const updateReadingProgress = async (req, res) => {
           pages: totalPages,
           finishedAt: new Date(),
         });
-        user.readBooks = (user.readBooks || 0) + 1;
+        user.readingBook = (user.readingBook?.currentPage || 0) + 1;
         user.xp = (user.xp || 0) + 50; // Kitob tugatgani uchun +50 XP!
       }
     }
@@ -557,7 +557,7 @@ export const updateReadingProgress = async (req, res) => {
       message: "Kitob mutolaasi saqlandi",
       readingBook: user.readingBook,
       finishedBooks: user.finishedBooks,
-      readBooks: user.readBooks,
+      readingBook: user.readingBook,
       xp: user.xp,
     });
   } catch (error) {

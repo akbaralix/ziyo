@@ -301,7 +301,7 @@
 }
 
 .profile-tab-btn.active {
-  color: #0f172a;
+  color: var(--primary);
   font-weight: 500;
 }
 
@@ -389,8 +389,11 @@
   border-radius: 20px;
   width: 100%;
   max-width: 480px;
+  height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
+  position: relative;
+  scrollbar-width: none;
   animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -408,8 +411,13 @@
 .edit-modal-header {
   display: flex;
   align-items: center;
+  position: fixed;
+  z-index: 10;
   gap: 20px;
   padding: 18px 24px;
+  background: #ffffff;
+  max-width: 480px;
+  width: 100%;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -431,6 +439,7 @@
 }
 
 .edit-profile-form {
+  margin-top: 60px;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -1144,18 +1153,19 @@
 }
 
 .profile-reading-content {
-  display: flex;
   gap: 20px;
   align-items: center;
 }
 
 .profile-book-cover-wrap {
-  width: 76px;
-  height: 110px;
+  display: flex;
   flex-shrink: 0;
+}
+
+.profile-book-cover-wrap img {
+  width: 76px;
   border-radius: 10px;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
-  overflow: hidden;
+  height: 110px;
 }
 
 .profile-book-cover {
@@ -1372,7 +1382,7 @@
     flex-direction: column;
     align-items: flex-start;
   }
-  .profile-book-cover-wrap {
+  .profile-book-cover-wrap img {
     width: 60px;
     height: 88px;
   }

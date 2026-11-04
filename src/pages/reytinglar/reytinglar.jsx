@@ -115,7 +115,8 @@ function Reytinglar() {
     if (selectedCategory === "Kitobxonlik") {
       users.sort(
         (a, b) =>
-          (b.readBooks || 0) - (a.readBooks || 0) ||
+          (b.readingBook?.currentPage || 0) -
+            (a.readingBook?.currentPage || 0) ||
           b.calculatedXp - a.calculatedXp,
       );
     } else {
@@ -379,7 +380,7 @@ function Reytinglar() {
                         test
                       </span>
                       <span className="act-pill" title="O'qilgan kitoblar">
-                        <IoBookOutline /> {user.readBooks || 0} kitob
+                        <IoBookOutline /> {user.readingBook || 0} kitob
                       </span>
                     </div>
                   </div>
