@@ -44,14 +44,13 @@ const gamesList = [
   },
   {
     id: "puzzle",
-    title: "So‘z Topishmoq",
-    href: null,
+    title: "Jumanji",
+    href: "/oyinlar/jumanji/create",
     bgimg: puzzle,
-    description:
-      "Harflardan so‘zlar yasash va lug‘at boyligini oshirish uchun topshiriqlar.",
-    icon: "🔠",
-    category: "Til o‘rganish",
-    isReady: false,
+    description: "Jamoa bilan real-time, canvas va xavfli to'siqlar to'la sarguzasht!",
+    icon: "🎲",
+    category: "Jumanji Sarguzashti",
+    isReady: true,
   },
   {
     id: "arvoh",

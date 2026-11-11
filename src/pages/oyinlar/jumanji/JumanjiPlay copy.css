@@ -1,0 +1,718 @@
+/* LIGHT MODE & FULLY RESPONSIVE MOBILE STYLES FOR JUMANJI */
+
+.jumanji-play-page.light-mode {
+  min-height: 100vh;
+  background: #f1f5f9;
+  color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    sans-serif;
+  overflow-x: hidden;
+}
+
+/* 🏆 BARCHA EKRANIDA KATTA G'OLIB MODALI */
+.jumanji-winner-fullscreen-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 20px;
+  animation: winnerFadeIn 0.35s ease;
+}
+
+@keyframes winnerFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.jumanji-winner-fullscreen-card {
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 40px 30px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.25),
+    0 0 40px rgba(234, 179, 8, 0.3);
+  border: 2px solid #fde047;
+}
+
+.jumanji-winner-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: #f1f5f9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 20px;
+  transition: all 0.2s ease;
+}
+
+.jumanji-winner-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.jumanji-winner-trophy-box {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 16px auto;
+  background: linear-gradient(135deg, #fef08a, #fde047, #eab308);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(234, 179, 8, 0.4);
+  animation: bounceTrophy 1.5s infinite ease-in-out;
+}
+
+@keyframes bounceTrophy {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.jumanji-huge-trophy {
+  font-size: 54px;
+  color: #854d0e;
+}
+
+.jumanji-winner-title-badge {
+  display: inline-block;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.jumanji-winner-big-name {
+  font-size: 34px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 10px 0;
+  background: linear-gradient(135deg, #047857, #059669, #d97706);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.jumanji-winner-text {
+  font-size: 15px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 0 25px 0;
+}
+
+.jumanji-winner-restart-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s ease;
+}
+
+.jumanji-winner-restart-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45);
+}
+
+.jumanji-winner-wait-notice {
+  font-size: 14px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* MODAL ISM */
+.light-mode .jumanji-name-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.light-mode .jumanji-name-modal {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 35px 30px;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+}
+
+.light-mode .jumanji-modal-icon {
+  font-size: 42px;
+  margin-bottom: 12px;
+}
+
+.light-mode .jumanji-name-modal h2 {
+  font-size: 22px;
+  margin: 0 0 8px 0;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.light-mode .gold-text {
+  color: #d97706;
+  font-weight: 800;
+}
+
+.light-mode .jumanji-modal-desc {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 22px;
+}
+
+.light-mode .jumanji-name-modal input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  padding: 14px 16px;
+  border-radius: 14px;
+  color: #0f172a;
+  font-size: 16px;
+  margin-bottom: 20px;
+  outline: none;
+  text-align: center;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.light-mode .jumanji-name-modal input:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+  background: #fff;
+}
+
+.light-mode .jumanji-modal-submit-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  transition: all 0.2s ease;
+}
+
+/* HEADER */
+.light-mode .jumanji-play-header {
+  height: 60px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.light-mode .jumanji-header-left,
+.light-mode .jumanji-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.light-mode .jumanji-header-btn {
+  color: #334155;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 20px;
+  transition: all 0.2s ease;
+}
+
+.light-mode .jumanji-title-info h2 {
+  font-size: 15px;
+  margin: 0;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.light-mode .jumanji-share-btn {
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  color: #047857;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.light-mode .jumanji-sound-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.2s ease;
+}
+
+/* LAYOUT */
+.light-mode .jumanji-main-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+.light-mode .jumanji-board-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.light-mode .jumanji-canvas-container {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+  min-height: 280px;
+}
+
+.light-mode .jumanji-canvas-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.light-mode .jumanji-game-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* DOCK CONTROLS */
+.light-mode .jumanji-action-dock {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+}
+
+.light-mode .jumanji-lobby-dock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 15px;
+}
+
+.light-mode .jumanji-lobby-waiting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #047857;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.light-mode .jumanji-btn-primary {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  transition: all 0.2s ease;
+}
+
+.light-mode .jumanji-waiting-host {
+  color: #64748b;
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.light-mode .jumanji-playing-dock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 10px;
+}
+
+.light-mode .jumanji-turn-indicator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.light-mode .jumanji-player-avatar-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  flex-shrink: 0;
+}
+
+.light-mode .jumanji-turn-label {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.light-mode .jumanji-turn-name {
+  font-size: 15px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.light-mode .jumanji-dice-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.light-mode .jumanji-dice-box {
+  width: 48px;
+  height: 48px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #047857;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.light-mode .dice-react-icon {
+  color: #059669;
+}
+
+.light-mode .jumanji-dice-box.rolling {
+  animation: diceRollLight 0.5s infinite ease-in-out;
+  border-color: #10b981;
+}
+
+.light-mode .jumanji-roll-btn {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px solid #cbd5e1;
+  padding: 11px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.light-mode .jumanji-roll-btn.active-glow {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border-color: #059669;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.light-mode .jumanji-finished-dock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.light-mode .jumanji-winner-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.light-mode .sparkle-gold {
+  color: #d97706;
+}
+
+.light-mode .jumanji-winner-card span {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.light-mode .jumanji-winner-card strong {
+  font-size: 16px;
+  color: #047857;
+}
+
+/* SIDEBAR */
+.light-mode .jumanji-sidebar-panel {
+  background: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.light-mode .jumanji-sidebar-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.light-mode .jumanji-box-header {
+  padding: 12px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #047857;
+}
+
+.light-mode .jumanji-box-header h3 {
+  font-size: 12px;
+  margin: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.light-mode .jumanji-players-list {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.light-mode .jumanji-player-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.light-mode .jumanji-player-item.active-player-item {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.12);
+}
+
+.light-mode .jumanji-player-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.light-mode .jumanji-player-info {
+  flex: 1;
+}
+
+.light-mode .jumanji-player-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.light-mode .jumanji-me-tag {
+  background: #2563eb;
+  color: #fff;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.light-mode .jumanji-host-tag {
+  background: #d97706;
+  color: #fff;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.light-mode .jumanji-player-status {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.light-mode .trap-tag {
+  color: #d97706;
+  font-weight: 600;
+}
+
+/* 📱 MOBIL UCHUN MOSLASHUVCHANLIK (RESPONSIVE) */
+@media (max-width: 820px) {
+  .light-mode .jumanji-main-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .light-mode .jumanji-board-panel {
+    padding: 8px;
+    gap: 8px;
+    height: auto;
+  }
+
+  .light-mode .jumanji-canvas-container {
+    height: 380px;
+    min-height: 340px;
+  }
+
+  .light-mode .jumanji-sidebar-panel {
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
+    padding: 12px;
+  }
+
+  .light-mode .jumanji-players-list {
+    max-height: 160px;
+  }
+
+  .hide-on-mobile {
+    display: none;
+  }
+
+  .light-mode .jumanji-title-info h2 {
+    font-size: 13px;
+  }
+
+  .light-mode .jumanji-playing-dock {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .light-mode .jumanji-dice-controls {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .light-mode .jumanji-roll-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .jumanji-winner-fullscreen-card {
+    padding: 30px 20px;
+  }
+
+  .jumanji-winner-big-name {
+    font-size: 26px;
+  }
+}

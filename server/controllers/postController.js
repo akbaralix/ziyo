@@ -100,7 +100,7 @@ export const createPost = async (req, res) => {
 // 2. Barcha postlarni olish (Filtrlash va Like holati bilan, xavfsiz quiz)
 export const getPosts = async (req, res) => {
   try {
-    const { category, search, onlyMyPosts, userId, authorId } = req.query;
+    const { category, search, onlyMyPosts, userId, authorId, page, limit } = req.query;
     const currentUserId = req.user?._id;
 
     const filter = {};
@@ -155,7 +155,19 @@ export const getPosts = async (req, res) => {
       filter.$or = [{ title: searchRegex }, { content: searchRegex }];
     }
 
-    const posts = await Post.find(filter).sort({ createdAt: -1 }).lean();
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 0; // 0 bo'lsa barchasi (orqaga moslik uchun)
+
+    const totalPosts = await Post.countDocuments(filter);
+
+    let query = Post.find(filter).sort({ createdAt: -1 });
+
+    if (limitNum > 0) {
+      const skip = (pageNum - 1) * limitNum;
+      query = query.skip(skip).limit(limitNum);
+    }
+
+    const posts = await query.lean();
 
     const formattedPosts = posts.map((post) => {
       const isLiked =
@@ -213,6 +225,9 @@ export const getPosts = async (req, res) => {
     return res.json({
       success: true,
       posts: formattedPosts,
+      total: totalPosts,
+      page: pageNum,
+      hasMore: limitNum > 0 ? pageNum * limitNum < totalPosts : false,
     });
   } catch (error) {
     console.error("Postlarni olish xatosi:", error);

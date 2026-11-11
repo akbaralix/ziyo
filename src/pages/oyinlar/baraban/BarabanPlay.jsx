@@ -51,7 +51,9 @@ export default function BarabanPlay() {
   const initialGame = getInitialGame();
 
   const [game, setGame] = useState(() => initialGame);
-  const [activeNames, setActiveNames] = useState(() => (Array.isArray(initialGame?.names) ? initialGame.names : []));
+  const [activeNames, setActiveNames] = useState(() =>
+    Array.isArray(initialGame?.names) ? initialGame.names : [],
+  );
   const [removedNames, setRemovedNames] = useState([]);
   const [isSpinning, setIsSpinning] = useState(false);
 
@@ -94,7 +96,9 @@ export default function BarabanPlay() {
 
       const chosenIdx =
         availableIndexes.length > 0
-          ? availableIndexes[Math.floor(Math.random() * availableIndexes.length)]
+          ? availableIndexes[
+              Math.floor(Math.random() * availableIndexes.length)
+            ]
           : Math.floor(Math.random() * game.questions.length);
 
       setCurrentQuestion(game.questions[chosenIdx]);
@@ -113,7 +117,9 @@ export default function BarabanPlay() {
     if (game?.removeWinner && winner) {
       setActiveNames((prev) => prev.filter((n) => n !== winner));
       setRemovedNames((prev) => [...prev, winner]);
-      toast.info(`"${winner}" keyingi aylanish uchun barabandan olib tashlandi.`);
+      toast.info(
+        `"${winner}" keyingi aylanish uchun barabandan olib tashlandi.`,
+      );
     }
     setWinner(null);
     setCurrentQuestion(null);
@@ -161,7 +167,9 @@ export default function BarabanPlay() {
             <IoArrowBack />
           </button>
           <div>
-            <h1 className="play-title">{game?.title || "Aylanuvchi Baraban"}</h1>
+            <h1 className="play-title">
+              {game?.title || "Aylanuvchi Baraban"}
+            </h1>
             <div className="play-meta-tags">
               <span className="play-badge">
                 {activeNames.length} ta qatnashchi faol
@@ -194,7 +202,9 @@ export default function BarabanPlay() {
             type="button"
             className="baraban-secondary-btn"
             onClick={() =>
-              navigate(`/oyinlar/baraban/create${game?.id ? `?id=${game.id}` : ""}`)
+              navigate(
+                `/oyinlar/baraban/create${game?.id ? `?id=${game.id}` : ""}`,
+              )
             }
           >
             <IoSettingsOutline /> Tahrirlash
@@ -239,7 +249,7 @@ export default function BarabanPlay() {
                     className="baraban-primary-btn"
                     onClick={() =>
                       navigate(
-                        `/oyinlar/baraban/create${game?.id ? `?id=${game.id}` : ""}`
+                        `/oyinlar/baraban/create${game?.id ? `?id=${game.id}` : ""}`,
                       )
                     }
                   >
@@ -254,7 +264,8 @@ export default function BarabanPlay() {
                 disabled={isSpinning || activeNames.length === 0}
                 onClick={triggerSpin}
               >
-                <IoPlay /> {isSpinning ? "Aylanmoqda..." : "Barabanni aylantirish"}
+                <IoPlay />{" "}
+                {isSpinning ? "Aylanmoqda..." : "Barabanni aylantirish"}
               </button>
             )}
           </div>
@@ -310,7 +321,7 @@ export default function BarabanPlay() {
             </div>
 
             <div className="winner-content">
-              <span className="winner-announce-sub">G'olib tanlandi!</span>
+              <span className="winner-announce-sub">Nomzod tanlandi!</span>
               <h2 className="winner-name-highlight">{winner}</h2>
 
               {currentQuestion && (
@@ -318,7 +329,9 @@ export default function BarabanPlay() {
                   <div className="question-header-tag">
                     <IoHelpCircleOutline /> {winner} uchun test savoli:
                   </div>
-                  <h3 className="question-main-text">{currentQuestion.question}</h3>
+                  <h3 className="question-main-text">
+                    {currentQuestion.question}
+                  </h3>
 
                   <div className="question-options-list">
                     {currentQuestion.options.map((opt, idx) => {

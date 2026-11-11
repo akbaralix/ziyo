@@ -9,9 +9,14 @@ import {
 import { LuShare2, LuArrowUp, LuPencil, LuTrash2 } from "react-icons/lu";
 import { IoMdClose } from "react-icons/io";
 import { IoEyeOffOutline, IoAlertCircleOutline } from "react-icons/io5";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+  useQuery,
+} from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import user from "../assets/user.jpg";
 import {
@@ -120,21 +125,61 @@ function Post({
     tags: "",
   });
 
-  // TanStack Query orqali postlarni keshdan tezkor olish
-  const { data, isLoading: loading } = useQuery({
+  // Cheksiz yuklash (Infinite Scroll): har safar 10 tadan yuklash
+  const {
+    data,
+    isLoading: loading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery({
     queryKey: ["posts", selectedCategory, searchQuery, onlyMyPosts, userId],
-    queryFn: () =>
+    queryFn: ({ pageParam = 1 }) =>
       fetchPosts({
         category: selectedCategory,
         search: searchQuery,
         onlyMyPosts,
         userId,
+        page: pageParam,
+        limit: 10,
       }),
-    staleTime: 1000 * 60 * 5,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      // Agar server hasMore true desa yoki 10 ta to'liq kelgan bo'lsa keyingi sahifa mavjud
+      if (lastPage?.hasMore) {
+        return allPages.length + 1;
+      }
+      if (Array.isArray(lastPage?.posts) && lastPage.posts.length === 10) {
+        return allPages.length + 1;
+      }
+      return undefined;
+    },
+    staleTime: 1000 * 60 * 3,
   });
 
-  const posts = data?.posts || [];
+  // Barcha sahifalardagi postlarni birlashtirish
+  const posts = data?.pages
+    ? data.pages.flatMap((page) => page?.posts || [])
+    : [];
   const visiblePosts = posts.filter((p) => !hiddenPostIds.includes(p.id));
+
+  // Pastga yetganda avtomatik keyingi 10 ta postni yuklash (Intersection Observer)
+  const observerRef = useRef(null);
+  const lastPostRef = useCallback(
+    (node) => {
+      if (loading || isFetchingNextPage) return;
+      if (observerRef.current) observerRef.current.disconnect();
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      });
+
+      if (node) observerRef.current.observe(node);
+    },
+    [loading, isFetchingNextPage, hasNextPage, fetchNextPage],
+  );
 
   // TanStack Query orqali izohlarni olish
   const { data: commentsData, isLoading: commentsLoading } = useQuery({
@@ -153,7 +198,28 @@ function Post({
       await queryClient.cancelQueries({ queryKey: ["posts"] });
 
       queryClient.setQueriesData({ queryKey: ["posts"] }, (old) => {
-        if (!old || !old.posts) return old;
+        if (!old) return old;
+        // Infinite Query pages strukturasi
+        if (old.pages) {
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              posts: (page.posts || []).map((p) => {
+                if (p.id === postId) {
+                  const nextLiked = !p.isLiked;
+                  return {
+                    ...p,
+                    isLiked: nextLiked,
+                    likes: nextLiked ? p.likes + 1 : Math.max(0, p.likes - 1),
+                  };
+                }
+                return p;
+              }),
+            })),
+          };
+        }
+        if (!old.posts) return old;
         return {
           ...old,
           posts: old.posts.map((p) => {
@@ -292,7 +358,32 @@ function Post({
         }));
 
         queryClient.setQueriesData({ queryKey: ["posts"] }, (old) => {
-          if (!old || !old.posts) return old;
+          if (!old) return old;
+          // Infinite Query pages strukturasi
+          if (old.pages) {
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                posts: (page.posts || []).map((p) => {
+                  if (p.id === postId) {
+                    return {
+                      ...p,
+                      userQuizAnswer: {
+                        selected: selectOption,
+                        isCorrect: res.isCorrect,
+                        correctOption: res.correctOption,
+                        explanation: res.explanation,
+                      },
+                    };
+                  }
+                  return p;
+                }),
+              })),
+            };
+          }
+          // Oddiy query uchun fallback
+          if (!old.posts) return old;
           return {
             ...old,
             posts: old.posts.map((p) => {
@@ -516,10 +607,15 @@ function Post({
           </p>
         </div>
       ) : (
-        visiblePosts.map((post) => {
+        visiblePosts.map((post, index) => {
+          const isLast = index === visiblePosts.length - 1;
           const quizState = quizAnswers[post.id] || post.userQuizAnswer;
           return (
-            <div key={post.id} className="post-card">
+            <div
+              key={post.id}
+              className="post-card"
+              ref={isLast ? lastPostRef : null}
+            >
               <div className="post-header">
                 <div
                   className="post-user-info"
@@ -724,6 +820,14 @@ function Post({
             </div>
           );
         })
+      )}
+
+      {/* Pastga yuklanmoqda loaderi (Infinite Scroll) */}
+      {isFetchingNextPage && (
+        <div className="posts-bottom-loader">
+          <div className="posts-bottom-spinner" />
+          <span>Yuklanmoqda...</span>
+        </div>
       )}
 
       {/* ⁝ ACTION MENYU MODAL OVERLAY BILAN */}

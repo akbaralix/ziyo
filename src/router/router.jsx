@@ -14,6 +14,8 @@ import BarabanCreate from "../pages/oyinlar/baraban/BarabanCreate.jsx";
 import BarabanPlay from "../pages/oyinlar/baraban/BarabanPlay.jsx";
 import OctagonHome from "../pages/oktagon/OctagonHome.jsx";
 import OctagonBattle from "../pages/oktagon/OctagonBattle.jsx";
+import JumanjiCreate from "../pages/oyinlar/jumanji/JumanjiCreate.jsx";
+import JumanjiPlay from "../pages/oyinlar/jumanji/JumanjiPlay.jsx";
 
 function Router() {
   // FIX: token ni useState bilan kuzatamiz.
@@ -111,6 +113,13 @@ function Router() {
         path="/oyinlar/baraban/play/:id"
         element={token ? <BarabanPlay /> : <Navigate to="/login" replace />}
       />
+
+      {/* Jumanji routes */}
+      <Route
+        path="/oyinlar/jumanji/create"
+        element={token ? <JumanjiCreate /> : <Navigate to="/login" replace />}
+      />
+      <Route path="/jumanji/:roomId" element={<JumanjiPlay />} />
 
       {/* Oktagon routes */}
       <Route

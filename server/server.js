@@ -20,6 +20,7 @@ import quizRoutes from "./routes/quizRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
 import { initSocketIO } from "./socket/gameSocket.js";
 import { initOctagonSocket } from "./socket/octagonSocket.js";
+import { initJumanjiSocket } from "./socket/jumanjiSocket.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -58,10 +59,11 @@ app.get("/api/health", (req, res) => {
 // Socket.IO ishga tushirish
 initSocketIO(io);
 initOctagonSocket(io);
+initJumanjiSocket(io);
 
 await connectDB();
 
-const PORT = process.env.PORT || process.env.VITE_PORT || 3000;
+const PORT = process.env.PORT || process.env.VITE_PORT || 5000;
 
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server http://localhost:${PORT} da ishlayapti`);

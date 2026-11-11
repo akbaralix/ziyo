@@ -1115,3 +1115,39 @@
     gap: 14px;
   }
 }
+
+/* ==========================================================================
+   Infinite Scroll — Pastga yuklanish loaderi
+   ========================================================================== */
+
+.posts-bottom-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 0 32px;
+  color: var(--text-secondary, #64748b);
+  font-size: 14px;
+}
+
+.posts-bottom-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-color, #e2e8f0);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: posts-spin 0.7s linear infinite;
+}
+
+@keyframes posts-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.posts-end-message {
+  text-align: center;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 13px;
+  padding: 16px 0 32px;
+}

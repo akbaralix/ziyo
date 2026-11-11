@@ -229,7 +229,9 @@ export default function startBot() {
       }
     });
 
-    bot.launch();
+    bot.launch().catch((err) => {
+      console.warn("⚠️ Telegram bot polling xatosi (ehtimol boshqa joyda ishlab turibdi):", err.message);
+    });
 
     console.log("🤖 Telegram bot muvaffaqiyatli ishga tushirildi...");
     return bot;

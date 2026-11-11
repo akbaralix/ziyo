@@ -181,6 +181,60 @@ function Profil() {
   const myQuizzes = isMe ? myQuizzesResponse?.games || [] : [];
   const [startingQuizId, setStartingQuizId] = useState(null);
 
+  // LocalStorage dan Baraban o'yinlarini yuklash
+  const [barabanGames, setBarabanGames] = useState([]);
+
+  const loadBarabanGames = () => {
+    try {
+      const savedList = JSON.parse(
+        localStorage.getItem("ziyo_baraban_list") || "[]",
+      );
+      // Agar ro'yxat bo'sh bo'lsa, ziyo_active_baraban bormi tekshiramiz
+      if (savedList.length === 0) {
+        const active = localStorage.getItem("ziyo_active_baraban");
+        if (active) {
+          const parsed = JSON.parse(active);
+          if (parsed && parsed.title) {
+            savedList.push({
+              id: parsed.id || "default",
+              title: parsed.title,
+              namesCount: Array.isArray(parsed.names) ? parsed.names.length : 0,
+              questionsCount: Array.isArray(parsed.questions)
+                ? parsed.questions.length
+                : 0,
+              updatedAt: parsed.updatedAt || new Date().toISOString(),
+            });
+          }
+        }
+      }
+      setBarabanGames(savedList);
+    } catch {
+      setBarabanGames([]);
+    }
+  };
+
+  useEffect(() => {
+    if (isMe) {
+      loadBarabanGames();
+    }
+  }, [isMe]);
+
+  const handleDeleteBaraban = (gameId) => {
+    if (
+      window.confirm("Rostdan ham ushbu baraban o'yinini o'chirmoqchimisiz?")
+    ) {
+      try {
+        localStorage.removeItem(`ziyo_baraban_${gameId}`);
+        const updated = barabanGames.filter((g) => g.id !== gameId);
+        localStorage.setItem("ziyo_baraban_list", JSON.stringify(updated));
+        setBarabanGames(updated);
+        toast.success("Baraban o'yini o'chirildi!");
+      } catch {
+        toast.error("O'chirishda xatolik yuz berdi");
+      }
+    }
+  };
+
   const handleStartLiveQuiz = async (quizId) => {
     setStartingQuizId(quizId);
     try {
@@ -775,7 +829,7 @@ function Profil() {
                 onClick={() => setActiveTab("quizzes")}
               >
                 <IoExtensionPuzzleOutline />
-                <span>Viktorinalar (Live)</span>
+                <span>O'yinlar</span>
                 <span className="tab-count-badge">{myQuizzes.length}</span>
               </button>
 
@@ -978,8 +1032,9 @@ function Profil() {
       {/* TAB CONTENTS: QUIZZES */}
       {isMe && activeTab === "quizzes" && (
         <div className="profile-quizzes-section">
+          {/* 1. ZIYO LIVE VIKTORINALAR */}
           <div className="profile-posts-header">
-            <h3 className="profile-section-title">Live Viktorinalar</h3>
+            <h3 className="profile-section-title">Viktorinalar (Ziyo Live)</h3>
             <button
               type="button"
               className="create-new-inline-btn"
@@ -1041,19 +1096,108 @@ function Profil() {
               ))}
             </div>
           ) : (
-            <div className="profile-empty-tab">
-              <div className="empty-tab-icon">🎮</div>
+            <div className="profile-empty-tab" style={{ padding: "20px" }}>
+              <div className="empty-tab-icon">💡</div>
               <h4>Hali viktorinalar tuzmagansiz</h4>
               <p>
                 O'quvchilaringiz yoki do'stlaringiz uchun qiziqarli jonli
                 viktorina yarating!
               </p>
+            </div>
+          )}
+
+          {/* 2. AYLANUVCHI BARABAN O'YINLARI (LOCALSTORAGE) */}
+          <div className="profile-posts-header" style={{ marginTop: "24px" }}>
+            <h3 className="profile-section-title">
+              Aylanuvchi Baraban o'yinlari
+            </h3>
+            <button
+              type="button"
+              className="create-new-inline-btn"
+              onClick={() => navigate("/oyinlar/baraban/create")}
+            >
+              <FaPlus /> Yangi Baraban yaratish
+            </button>
+          </div>
+
+          {barabanGames.length > 0 ? (
+            <div className="profile-quizzes-grid">
+              {barabanGames.map((game) => (
+                <div
+                  key={game.id}
+                  className="profile-quiz-card baraban-profile-card"
+                >
+                  <div className="quiz-card-top">
+                    <span className="quiz-game-badge ">🎡 Baraban</span>
+                    <span className="quiz-play-count">
+                      👥 {game.namesCount || 0} ismlar
+                    </span>
+                  </div>
+
+                  <h4 className="profile-quiz-title">
+                    {game.title || "Aylanuvchi Baraban"}
+                  </h4>
+                  <p className="profile-quiz-desc">
+                    {game.questionsCount > 0
+                      ? `${game.questionsCount} ta savol biriktirilgan`
+                      : "Faqat ismlar bilan tasodifiy tanlash"}
+                  </p>
+
+                  <div className="profile-quiz-meta">
+                    <span>
+                      📅{" "}
+                      {new Date(
+                        game.updatedAt || Date.now(),
+                      ).toLocaleDateString("uz-UZ")}
+                    </span>
+                  </div>
+
+                  <div className="profile-quiz-actions">
+                    <button
+                      type="button"
+                      className="quiz-host-btn "
+                      onClick={() =>
+                        navigate(`/oyinlar/baraban/play/${game.id}`)
+                      }
+                    >
+                      🎯 O'ynash
+                    </button>
+                    <button
+                      type="button"
+                      className="quiz-edit-btn"
+                      onClick={() =>
+                        navigate(`/oyinlar/baraban/create?id=${game.id}`)
+                      }
+                      title="Tahrirlash"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      type="button"
+                      className="quiz-delete-btn"
+                      onClick={() => handleDeleteBaraban(game.id)}
+                      title="O'chirish"
+                    >
+                      <IoClose />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="profile-empty-tab" style={{ padding: "20px" }}>
+              <div className="empty-tab-icon">🎡</div>
+              <h4>Hali Baraban o'yinlari yaratmagansiz</h4>
+              <p>
+                O'quvchilar yoki do'stlaringizni tasodifiy tanlash uchun
+                aylanuvchi g'ildirak yarating!
+              </p>
               <button
                 type="button"
                 className="create-quiz-cta-btn"
-                onClick={() => navigate("/quiz/builder")}
+                onClick={() => navigate("/oyinlar/baraban/create")}
               >
-                <FaPlus /> Birinchi viktorinani tuzish
+                <FaPlus /> Baraban yaratish
               </button>
             </div>
           )}
