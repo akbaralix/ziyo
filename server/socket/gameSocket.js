@@ -365,8 +365,21 @@ export function initSocketIO(io) {
           player.score += pointsEarned;
           await session.save();
 
-          // Faqat o'yinchiga javob tasdiqi
-          socket.emit("player:answer:ok", { isCorrect, pointsEarned });
+          // Saralangan o'yinchilar bo'yicha joriy o'rinni hisoblash
+          const sortedPlayers = [...session.players].sort((a, b) => b.score - a.score);
+          const currentRank =
+            sortedPlayers.findIndex(
+              (p) => p._id.toString() === playerId.toString(),
+            ) + 1;
+
+          // Faqat o'yinchiga javob tasdiqi (joriy o'rni bilan birga)
+          socket.emit("player:answer:ok", {
+            isCorrect,
+            pointsEarned,
+            rank: currentRank,
+            totalPlayers: session.players.length,
+            score: player.score,
+          });
 
           // Barcha ishtirokchilar javob berganmi?
           const answeredCount = session.players.filter((p) =>
@@ -506,20 +519,22 @@ async function showAnswer(io, sessionId, session, questionIndex) {
   await freshSession.save();
 
   // Leaderboard hisoblash
-  const leaderboard = [...freshSession.players]
+  const allLeaderboard = [...freshSession.players]
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
     .map((p, i) => ({
       rank: i + 1,
+      id: p._id.toString(),
       name: p.name,
       score: p.score,
       profilePic: p.profilePic,
     }));
+  const leaderboard = allLeaderboard.slice(0, 5);
 
   io.to(`session:${sessionId}`).emit("question:ended", {
     correctIndex: question.correctIndex,
     explanation: question.explanation || "",
     leaderboard,
+    allLeaderboard,
     questionIndex,
   });
 }

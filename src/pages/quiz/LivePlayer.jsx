@@ -50,10 +50,10 @@ import { toast } from "react-toastify";
 import "./LivePlayer.css";
 
 const OPTION_COLORS = [
-  { bg: "#ef4444", text: "#ffffff", shape: <FaCaretUp /> },
-  { bg: "#3b82f6", text: "#ffffff", shape: <FaDiamond /> },
-  { bg: "#eab308", text: "#ffffff", shape: <FaCircle /> },
-  { bg: "#10b981", text: "#ffffff", shape: <FaSquare /> },
+  { bg: "rgb(226, 27, 60)", text: "#ffffff", shape: <FaCaretUp /> },
+  { bg: "rgb(19, 104, 206)", text: "#ffffff", shape: <FaDiamond /> },
+  { bg: "rgb(216, 158, 0)", text: "#ffffff", shape: <FaCircle /> },
+  { bg: "rgb(38, 137, 12)", text: "#ffffff", shape: <FaSquare /> },
 ];
 
 export default function LivePlayer() {
@@ -103,6 +103,13 @@ export default function LivePlayer() {
   const [answerFeedback, setAnswerFeedback] = useState(null); // { isCorrect, pointsEarned }
   const [correctIndex, setCorrectIndex] = useState(null);
   const [totalScore, setTotalScore] = useState(0);
+  const [currentRank, setCurrentRank] = useState(null); // Joriy reytingdagi o'rni
+  const [totalPlayersCount, setTotalPlayersCount] = useState(0);
+
+  // Kahoot Countdown state
+  const [isCountingDown, setIsCountingDown] = useState(false);
+  const isCountingDownRef = useRef(false);
+  const pendingQuestionRef = useRef(null);
 
   // Final Ended state & Review
   const [finalLeaderboard, setFinalLeaderboard] = useState([]);
@@ -228,20 +235,36 @@ export default function LivePlayer() {
       setPlayerState("join");
     });
 
+    // Game Started (Kahoot Countdown)
+    newSocket.on("game:started", () => {
+      setIsCountingDown(true);
+      isCountingDownRef.current = true;
+    });
+
     // Question Start
     newSocket.on("question:start", (data) => {
-      sfx.playStart();
-      setPlayerState("question");
-      setCurrentQuestion(data);
-      setSelectedOption(null);
-      setAnswerFeedback(null);
-      setCorrectIndex(null);
-      startTimer(data.timeLimit);
+      if (isCountingDownRef.current) {
+        pendingQuestionRef.current = data;
+      } else {
+        sfx.playStart();
+        setPlayerState("question");
+        setCurrentQuestion(data);
+        setSelectedOption(null);
+        setAnswerFeedback(null);
+        setCorrectIndex(null);
+        startTimer(data.timeLimit);
+      }
     });
 
     // Answer OK feedback for this player
     newSocket.on("player:answer:ok", (data) => {
       setAnswerFeedback(data);
+      if (data.rank) {
+        setCurrentRank(data.rank);
+      }
+      if (data.totalPlayers) {
+        setTotalPlayersCount(data.totalPlayers);
+      }
       if (data.isCorrect) {
         sfx.playCorrect();
         setTotalScore((prev) => prev + data.pointsEarned);
@@ -250,11 +273,25 @@ export default function LivePlayer() {
       }
     });
 
-    // Question Ended (Results)
+    // Question Ended (Results & Leaderboard Rank)
     newSocket.on("question:ended", (data) => {
       if (timerRef.current) clearInterval(timerRef.current);
       setCorrectIndex(data.correctIndex);
       setPlayerState("answer_result");
+
+      const lb = data.allLeaderboard || data.leaderboard || [];
+      if (lb.length > 0) {
+        const myName = (nameToUse || name || "").trim().toLowerCase();
+        const foundIdx = lb.findIndex(
+          (p) =>
+            (playerIdToUse && p.id && String(p.id) === String(playerIdToUse)) ||
+            (p.name && p.name.trim().toLowerCase() === myName),
+        );
+        if (foundIdx !== -1) {
+          setCurrentRank(foundIdx + 1);
+          setTotalPlayersCount(data.totalPlayers || lb.length);
+        }
+      }
     });
 
     // Game Ended
@@ -424,6 +461,22 @@ export default function LivePlayer() {
     }
   };
 
+  const handleCountdownComplete = () => {
+    setIsCountingDown(false);
+    isCountingDownRef.current = false;
+    setPlayerState("question");
+    if (pendingQuestionRef.current) {
+      const data = pendingQuestionRef.current;
+      pendingQuestionRef.current = null;
+      sfx.playStart();
+      setCurrentQuestion(data);
+      setSelectedOption(null);
+      setAnswerFeedback(null);
+      setCorrectIndex(null);
+      startTimer(data.timeLimit);
+    }
+  };
+
   const handleExitGame = () => {
     localStorage.removeItem("ziyo_live_player");
     if (socketRef.current) socketRef.current.disconnect();
@@ -448,6 +501,18 @@ export default function LivePlayer() {
               )}
             </span>
             <span className="player-badge-name">{name}</span>
+            {currentRank && (
+              <span className="player-badge-rank">
+                {currentRank === 1
+                  ? "🥇"
+                  : currentRank === 2
+                    ? "🥈"
+                    : currentRank === 3
+                      ? "🥉"
+                      : "🏅"}{" "}
+                #{currentRank}-o'rin
+              </span>
+            )}
             <span className="player-badge-score">⭐ {totalScore} ball</span>
           </div>
         )}
@@ -594,6 +659,17 @@ export default function LivePlayer() {
             {playerState === "answered" && (
               <div className="player-answered-notice">
                 <span>Javobingiz qabul qilindi! Natija kutilmoqda... ⏳</span>
+                {currentRank && (
+                  <div className="player-answered-rank-pill">
+                    {currentRank === 1
+                      ? "🥇 Siz 1-o'rindasiz!"
+                      : currentRank === 2
+                        ? "🥈 Siz 2-o'rindasiz!"
+                        : currentRank === 3
+                          ? "🥉 Siz 3-o'rindasiz!"
+                          : `🏅 Siz #${currentRank}-o'rindasiz`}
+                  </div>
+                )}
               </div>
             )}
 
@@ -608,7 +684,10 @@ export default function LivePlayer() {
                     key={idx}
                     type="button"
                     className={`player-option-btn ${isSelected ? "selected" : ""}`}
-                    style={{ backgroundColor: color.bg }}
+                    style={{
+                      backgroundColor: color.bg,
+                      boxShadow: "rgba(0, 0, 0, 0.2) 0px -6px 0px 0px inset",
+                    }}
                     disabled={selectedOption !== null || timeLeft <= 0}
                     onClick={() => handleSelectOption(idx)}
                   >
@@ -626,7 +705,7 @@ export default function LivePlayer() {
         <div className="player-feedback-view">
           {answerFeedback?.isCorrect ? (
             <motion.div
-              className="feedback-card correct"
+              className="feedback-card"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
             >
@@ -634,38 +713,67 @@ export default function LivePlayer() {
               <h2>Barakalla! To'g'ri javob! 🎉</h2>
               <p className="points-won">+{answerFeedback.pointsEarned} ball</p>
               <span className="total-score-text">
-                Umumiy ball: {totalScore}
+                Umumiy ball: <strong>{totalScore}</strong>
               </span>
+
+              {/* Joriy o'rin ko'rinishi */}
+              {currentRank && (
+                <div
+                  className={`feedback-rank-box rank-${currentRank <= 3 ? currentRank : "other"}`}
+                >
+                  <span className="feedback-rank-sublabel">
+                    Sizning joriy o'rningiz:
+                  </span>
+                  <div className="feedback-rank-main">
+                    {currentRank === 1 && "🥇 1-o'rin 🔥"}
+                    {currentRank === 2 && "🥈 2-o'rin"}
+                    {currentRank === 3 && "🥉 3-o'rin"}
+                    {currentRank > 3 && `🏅 #${currentRank}-o'rin`}
+                  </div>
+                  {totalPlayersCount > 0 && (
+                    <span className="feedback-rank-count">
+                      Jami {totalPlayersCount} ishtirokchi orasida
+                    </span>
+                  )}
+                </div>
+              )}
             </motion.div>
           ) : (
             <motion.div
-              className="feedback-card wrong"
+              className="feedback-card"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
             >
               <FaTimesCircle className="feedback-icon wrong" />
               <h2>Afsus, noto'g'ri! ❌</h2>
-              {correctIndex !== null &&
-                currentQuestion?.options?.[correctIndex] && (
-                  <p
-                    style={{
-                      margin: "4px 0",
-                      fontSize: "14px",
-                      color: "#fca5a5",
-                    }}
-                  >
-                    To'g'ri javob:{" "}
-                    <strong>{currentQuestion.options[correctIndex]}</strong>
-                  </p>
-                )}
-              <p className="points-won zero">+0 ball</p>
+
               <span className="total-score-text">
-                Umumiy ball: {totalScore}
+                Umumiy ball: <strong>{totalScore}</strong>
               </span>
+
+              {/* Joriy o'rin ko'rinishi */}
+              {currentRank && (
+                <div
+                  className={`feedback-rank-box rank-${currentRank <= 3 ? currentRank : "other"}`}
+                >
+                  <span className="feedback-rank-sublabel">
+                    Sizning joriy o'rningiz:
+                  </span>
+                  <div className="feedback-rank-main">
+                    {currentRank === 1 && "🥇 1-o'rin 🔥"}
+                    {currentRank === 2 && "🥈 2-o'rin"}
+                    {currentRank === 3 && "🥉 3-o'rin"}
+                    {currentRank > 3 && `🏅 #${currentRank}-o'rin`}
+                  </div>
+                  {totalPlayersCount > 0 && (
+                    <span className="feedback-rank-count">
+                      Jami {totalPlayersCount} ishtirokchi orasida
+                    </span>
+                  )}
+                </div>
+              )}
             </motion.div>
           )}
-
-          <div className="waiting-next-notice">Keyingi savol kutilmoqda...</div>
         </div>
       )}
 

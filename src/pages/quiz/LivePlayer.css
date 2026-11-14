@@ -7,7 +7,7 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background-image: url("src/assets/game/live-game-bg.jpg");
+  background-image: url("https://i.pinimg.com/1200x/c5/58/dd/c558ddd976db8c9b905505abdbbf028e.jpg");
   background-size: cover;
   background-repeat: no-repeat;
   /* background: var(--bg-subtle); */
@@ -25,7 +25,6 @@
   padding: 12px 20px;
   background: #ffffff1b;
   backdrop-filter: blur(8px);
-  border-bottom: 1.5px solid var(--border-color);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -36,14 +35,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--bg-subtle);
-  border: 1.5px solid var(--border-color);
   color: var(--text-secondary);
   padding: 4px 14px 4px 6px;
   border-radius: var(--radius-pill);
   font-size: var(--font-sm);
   font-weight: 600;
-  max-width: 260px;
+  max-width: 360px;
 }
 
 .player-badge-avatar-wrap {
@@ -77,6 +74,13 @@
 .player-badge-score {
   color: var(--primary);
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.player-badge-rank {
+  padding: 2px 8px;
+  font-weight: 700;
+  color: var(--primary);
   white-space: nowrap;
 }
 
@@ -163,12 +167,6 @@
   transition: all var(--transition-fast);
 }
 
-.join-input-group input:focus {
-  border-color: var(--primary);
-  background: var(--bg-card);
-  box-shadow: 0 0 0 3px var(--primary-light);
-}
-
 .player-enter-btn {
   background: var(--primary);
   color: var(--text-white);
@@ -202,8 +200,6 @@
 }
 
 .lobby-waiting-card {
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
   border-radius: var(--radius-pill);
   padding: 40px 24px;
   text-align: center;
@@ -243,7 +239,8 @@
 /* Kahoot-style Avatar Picker */
 .kahoot-avatar-picker-box {
   width: 100%;
-  background: var(--bg-subtle);
+  background: #ffffff84;
+  backdrop-filter: blur(8px);
   border: 1.5px solid var(--border-color);
   border-radius: var(--radius-2xl);
   padding: 14px 16px;
@@ -358,7 +355,6 @@
 .lobby-waiting-card p {
   margin: 0;
   font-size: var(--font-base);
-  color: var(--text-muted);
 }
 
 @keyframes spin {
@@ -372,7 +368,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px 16px max(20px, env(safe-area-inset-bottom));
+  padding: 10px 10px max(20px, env(safe-area-inset-bottom));
   gap: 14px;
   max-width: 640px;
   margin: 0 auto;
@@ -418,12 +414,11 @@
 }
 
 .player-q-text-card {
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-2xl);
-  padding: 20px 18px;
+  background: #f8f8f8c0;
+  backdrop-filter: blur(6px);
+  border-radius: 8px;
+  padding: 12px 18px;
   text-align: center;
-  box-shadow: var(--shadow-xs);
 }
 
 .player-q-text-card h3 {
@@ -444,6 +439,21 @@
   font-size: var(--font-sm);
   font-weight: 600;
   animation: fadeIn 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-answered-rank-pill {
+  display: inline-block;
+  background: #ffffff;
+  color: #1e293b;
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 @keyframes fadeIn {
@@ -467,7 +477,7 @@
 }
 
 .player-option-btn {
-  /* border-radius: var(--radius-2xl); */
+  border-radius: 4px;
   border: none;
   color: var(--text-white);
   padding: 18px 14px;
@@ -491,7 +501,7 @@
 }
 
 .player-option-btn.selected {
-  outline: 4px solid var(--text-primary);
+  outline: 4px solid var(--color-success);
   transform: scale(1.02);
 }
 
@@ -541,16 +551,6 @@
   box-sizing: border-box;
 }
 
-.feedback-card.correct {
-  background: var(--color-success-bg);
-  border: 2px solid var(--color-success-border);
-}
-
-.feedback-card.wrong {
-  background: var(--color-danger-bg);
-  border: 2px solid var(--color-danger-border);
-}
-
 .feedback-icon {
   font-size: 54px;
   line-height: 1;
@@ -572,26 +572,64 @@
 }
 
 .points-won {
+  background-color: #fefefead;
+  width: 100%;
+  padding: 5px;
+  border-radius: 4px;
   font-size: 26px;
   font-weight: 700;
-  color: var(--color-success-dark);
+  color: var(--text-white);
   margin: 0;
-}
-
-.points-won.zero {
-  color: var(--color-danger-dark);
 }
 
 .total-score-text {
   font-size: var(--font-base);
   font-weight: 500;
-  color: var(--text-muted);
 }
 
-.waiting-next-notice {
-  color: var(--text-light);
-  font-size: var(--font-sm);
-  font-style: italic;
+.feedback-rank-box {
+  margin-top: 12px;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 1.5px solid transparent;
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-sizing: border-box;
+}
+
+.feedback-rank-sublabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  opacity: 0.85;
+}
+
+.feedback-rank-main {
+  font-size: clamp(20px, 4.5vw, 24px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.feedback-rank-count {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ==================== 5. GAME ENDED ==================== */

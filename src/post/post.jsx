@@ -826,7 +826,6 @@ function Post({
       {isFetchingNextPage && (
         <div className="posts-bottom-loader">
           <div className="posts-bottom-spinner" />
-          <span>Yuklanmoqda...</span>
         </div>
       )}
 

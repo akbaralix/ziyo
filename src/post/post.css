@@ -1134,7 +1134,7 @@
   width: 32px;
   height: 32px;
   border: 3px solid var(--border-color, #e2e8f0);
-  border-top-color: #10b981;
+  border-top-color: var(--primary,);
   border-radius: 50%;
   animation: posts-spin 0.7s linear infinite;
 }

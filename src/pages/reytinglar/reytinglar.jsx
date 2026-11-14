@@ -17,7 +17,6 @@ import {
 import { FaCrown } from "react-icons/fa";
 import userPic from "../../assets/user.jpg";
 import { getRatings } from "../../api/ratingApi.js";
-import utyaWin from "/utyaicon1.gif";
 import "./reytinglar.css";
 
 const TIMEFRAMES = [
@@ -274,9 +273,7 @@ function Reytinglar() {
                 </div>
                 <div className="podium-pedestal pedestal-1">
                   <span className="pedestal-number">1</span>
-                  <span className="pedestal-label">
-                    G'olib <img src={utyaWin} alt="G'olib" />
-                  </span>
+                  <span className="pedestal-label">G'olib</span>
                 </div>
               </div>
             )}

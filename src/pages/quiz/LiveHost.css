@@ -20,8 +20,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 24px;
-  /* background: var(--bg-card); */
-  border-bottom: 1.5px solid var(--border-color);
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4));
   gap: 12px;
   position: sticky;
   top: 0;
@@ -129,8 +128,7 @@
 }
 
 .lobby-hero-card {
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
+  background: #f8f8f8dd;
   border-radius: var(--radius-pill);
   padding: clamp(20px, 4vw, 36px);
   display: flex;
@@ -157,12 +155,19 @@
   font-size: clamp(14px, 3.5vw, 17px);
   color: var(--text-muted);
   margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .lobby-url strong {
   color: var(--primary);
 }
-
+.live-copy-btn {
+  font-size: 18px;
+  color: var(--text-primary);
+  background: none;
+}
 .lobby-pin-box {
   display: flex;
   flex-direction: column;
@@ -186,8 +191,6 @@
 }
 
 .lobby-qr-box {
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
   padding: 14px;
   border-radius: var(--radius-2xl);
   display: flex;
@@ -211,22 +214,10 @@
 
 /* Joined Players Section */
 .lobby-players-section {
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
   padding: clamp(18px, 3vw, 26px);
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow: var(--shadow-sm);
-}
-
-.lobby-players-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
 }
 
 .lobby-players-header h3 {
@@ -372,14 +363,12 @@
 .host-question-banner {
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-2xl);
-  padding: clamp(20px, 4vw, 32px);
+  border-radius: 8px;
+  padding: clamp(10px, 2vw, 18px);
   text-align: center;
-  min-height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-sm);
 }
 
 .host-question-banner h1 {
@@ -398,7 +387,8 @@
 }
 
 .host-option-card {
-  /* border-radius: var(--radius-2xl); */
+  border-radius: 4px;
+  box-shadow: rgba(0, 0, 0, 0.2) 0px -6px 0px 0px inset;
   padding: clamp(14px, 3vw, 22px);
   display: flex;
   align-items: center;
@@ -476,16 +466,13 @@
 }
 
 .host-options-grid.small .host-option-card {
+  border-radius: 3px;
   padding: 12px 16px;
   font-size: clamp(13px, 3vw, 15px);
 }
 
-.correct-highlight {
-  outline: 3px solid var(--color-success);
-}
-
 .dimmed {
-  opacity: 0.35;
+  opacity: 0.5;
   filter: grayscale(0.6);
 }
 
@@ -500,14 +487,10 @@
 
 /* Leaderboard List */
 .host-leaderboard-card {
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
   padding: clamp(16px, 3vw, 24px);
   display: flex;
   flex-direction: column;
   gap: 12px;
-  box-shadow: var(--shadow-sm);
 }
 
 .host-leaderboard-card h3 {
@@ -517,7 +500,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--primary-text);
+  color: var(--text-white);
 }
 
 .leaderboard-list {
@@ -531,7 +514,6 @@
   align-items: center;
   justify-content: space-between;
   background: var(--bg-subtle);
-  border: 1.5px solid var(--border-color);
   color: var(--text-primary);
   padding: 10px 18px;
   border-radius: 8px;
@@ -589,7 +571,6 @@
 }
 
 .lb-score {
-  color: var(--primary);
   font-weight: 600;
 }
 
@@ -747,9 +728,7 @@
 /* Full rankings list */
 .podium-full-rankings {
   width: 100%;
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+
   padding: clamp(16px, 3vw, 24px);
   box-sizing: border-box;
 }
@@ -767,6 +746,7 @@
   gap: 8px;
   max-height: 240px;
   overflow-y: auto;
+  scrollbar-width: none;
 }
 
 .ranking-table-row {

@@ -16,20 +16,43 @@ import {
   FaCaretUp,
   FaCircle,
   FaSquare,
+  FaCopy,
 } from "react-icons/fa";
 import { FaDiamond } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import { sfx } from "../../utils/soundEffects.js";
+import KahootCountdown from "./KahootCountdown.jsx";
 import backgroundImage from "../../assets/game/live-game-bg.jpg";
-import lobbyAudio from "../../assets/Jason Beauchamp - Kahoot Lobby Music.mp3";
-import lobbyStatsAudio from "../../assets/Video Project 4.m4a";
+import lobbyAudio from "../../assets/kahoot-lobby-music.mp3";
+import liveResponseWait from "../../assets/live-kutish.mp3";
+import lobbyStatsAudio from "../../assets/video-project-4.m4a";
 import "./LiveHost.css";
 
 const OPTION_COLORS = [
-  { bg: "#ef4444", text: "#ffffff", shape: <FaCaretUp />, name: "Qizil" },
-  { bg: "#3b82f6", text: "#ffffff", shape: <FaDiamond />, name: "Ko'k" },
-  { bg: "#eab308", text: "#ffffff", shape: <FaCircle />, name: "Sariq" },
-  { bg: "#10b981", text: "#ffffff", shape: <FaSquare />, name: "Yashil" },
+  {
+    bg: "rgb(226, 27, 60)",
+    text: "#ffffff",
+    shape: <FaCaretUp />,
+    name: "Qizil",
+  },
+  {
+    bg: "rgb(19, 104, 206)",
+    text: "#ffffff",
+    shape: <FaDiamond />,
+    name: "Ko'k",
+  },
+  {
+    bg: "rgb(216, 158, 0)",
+    text: "#ffffff",
+    shape: <FaCircle />,
+    name: "Sariq",
+  },
+  {
+    bg: "rgb(38, 137, 12)",
+    text: "#ffffff",
+    shape: <FaSquare />,
+    name: "Yashil",
+  },
 ];
 
 export default function LiveHost() {
@@ -57,49 +80,110 @@ export default function LiveHost() {
   // Final Ended State
   const [finalLeaderboard, setFinalLeaderboard] = useState([]);
 
+  // Kahoot Countdown State
+  const [isCountingDown, setIsCountingDown] = useState(false);
+  const isCountingDownRef = useRef(false);
+  const pendingQuestionRef = useRef(null);
+
   const timerRef = useRef(null);
 
-  const audioRef = useRef(new Audio(lobbyAudio));
-  const audioStatsRef = useRef(new Audio(lobbyStatsAudio));
+  const audioRef = useRef(null);
+  const waitAudio = useRef(null);
+  const audioStatsRef = useRef(null);
+
+  if (!audioRef.current && typeof Audio !== "undefined") {
+    audioRef.current = new Audio(lobbyAudio);
+    audioRef.current.loop = true;
+    audioRef.current.preload = "auto";
+  }
+  if (!waitAudio.current && typeof Audio !== "undefined") {
+    waitAudio.current = new Audio(liveResponseWait);
+    waitAudio.current.loop = true;
+    waitAudio.current.preload = "auto";
+  }
+  if (!audioStatsRef.current && typeof Audio !== "undefined") {
+    audioStatsRef.current = new Audio(lobbyStatsAudio);
+    audioStatsRef.current.preload = "auto";
+  }
+
+  const safePlay = (audio) => {
+    if (!audio || isMuted) return;
+    try {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          if (err.name !== "AbortError") {
+            console.warn("Audio play notice:", err.message);
+          }
+        });
+      }
+    } catch (e) {
+      console.warn("Audio error:", e);
+    }
+  };
 
   const toggleAudio = () => {
     const muted = sfx.toggleMute();
     setIsMuted(muted);
-
-    if (muted) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play();
+    if (!muted) {
+      if (gameState === "lobby" && !isCountingDown) {
+        safePlay(audioRef.current);
+      } else if (gameState === "question") {
+        safePlay(waitAudio.current);
+      } else if (gameState === "answer" || gameState === "ended") {
+        safePlay(audioStatsRef.current);
+      }
     }
   };
 
+  // Brauzer autoplay ruxsati uchun ilk foydalanuvchi ta'sirini ushlash
   useEffect(() => {
-    const audio = audioRef.current;
-    audio.loop = true;
+    const handleFirstUserInteraction = () => {
+      if (
+        !isMuted &&
+        gameState === "lobby" &&
+        !isCountingDown &&
+        audioRef.current
+      ) {
+        safePlay(audioRef.current);
+      }
+      window.removeEventListener("click", handleFirstUserInteraction);
+      window.removeEventListener("keydown", handleFirstUserInteraction);
+    };
+
+    window.addEventListener("click", handleFirstUserInteraction);
+    window.addEventListener("keydown", handleFirstUserInteraction);
+
+    return () => {
+      window.removeEventListener("click", handleFirstUserInteraction);
+      window.removeEventListener("keydown", handleFirstUserInteraction);
+    };
+  }, [isMuted, gameState, isCountingDown]);
+
+  // O'yin musiqalarini holatlarga qarab boshqarish
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.pause();
+    if (waitAudio.current) waitAudio.current.pause();
+    if (audioStatsRef.current) audioStatsRef.current.pause();
 
     if (!isMuted) {
-      audio.play().catch((err) => console.log(err));
+      if (gameState === "lobby" && !isCountingDown) {
+        safePlay(audioRef.current);
+      } else if (gameState === "question") {
+        if (waitAudio.current) waitAudio.current.currentTime = 0;
+        safePlay(waitAudio.current);
+      } else if (gameState === "answer" || gameState === "ended") {
+        if (audioStatsRef.current) audioStatsRef.current.currentTime = 0;
+        safePlay(audioStatsRef.current);
+      }
     }
 
     return () => {
-      audio.pause();
-      audio.currentTime = 0;
+      if (audioRef.current) audioRef.current.pause();
+      if (waitAudio.current) waitAudio.current.pause();
+      if (audioStatsRef.current) audioStatsRef.current.pause();
     };
-  }, []);
-  // Game over musiqasini boshqarish uchun useEffect
-  useEffect(() => {
-    if (gameState === "answer" || gameState === "ended") {
-      audioRef.current.pause();
-      audioStatsRef.current
-        .play()
-        .catch((err) => console.log("Audio play error:", err));
-    }
-
-    return () => {
-      audioStatsRef.current.pause();
-      audioStatsRef.current.currentTime = 0;
-    };
-  }, [gameState]);
+  }, [gameState, isCountingDown, isMuted]);
   const startCountdown = (initialTime) => {
     if (timerRef.current) clearInterval(timerRef.current);
     setTimeLeft(initialTime);
@@ -249,18 +333,22 @@ export default function LiveHost() {
 
     // Game Started
     newSocket.on("game:started", () => {
-      sfx.playStart();
-      setGameState("question");
+      setIsCountingDown(true);
+      isCountingDownRef.current = true;
     });
 
     // Question Start
     newSocket.on("question:start", (data) => {
-      sfx.playStart();
-      setGameState("question");
-      setCurrentQuestion(data);
-      setAnsweredCount(0);
-      setCorrectIndex(null);
-      startCountdown(data.timeLimit);
+      if (isCountingDownRef.current) {
+        pendingQuestionRef.current = data;
+      } else {
+        sfx.playStart();
+        setGameState("question");
+        setCurrentQuestion(data);
+        setAnsweredCount(0);
+        setCorrectIndex(null);
+        startCountdown(data.timeLimit);
+      }
     });
 
     // Answer Progress
@@ -299,11 +387,28 @@ export default function LiveHost() {
       );
       return;
     }
+    setIsCountingDown(true);
+    isCountingDownRef.current = true;
     socket.emit("host:start", { sessionId });
   };
 
+  const handleCountdownComplete = () => {
+    setIsCountingDown(false);
+    isCountingDownRef.current = false;
+    setGameState("question");
+    if (pendingQuestionRef.current) {
+      const qData = pendingQuestionRef.current;
+      pendingQuestionRef.current = null;
+      sfx.playStart();
+      setCurrentQuestion(qData);
+      setAnsweredCount(0);
+      setCorrectIndex(null);
+      startCountdown(qData.timeLimit);
+    }
+  };
+
   const handleNextQuestion = () => {
-    audioRef.current.play();
+    audioStatsRef.current.pause();
     socket.emit("host:next", { sessionId });
   };
 
@@ -364,8 +469,27 @@ export default function LiveHost() {
               O'yinni yakunlash
             </button>
           )}
+          {/* O'yin boshlanganda headerdagi o'yinni boshlash tugmasi butunlay olib tashlanadi */}
+          {gameState === "lobby" && !isCountingDown && (
+            <button
+              type="button"
+              className="lobby-start-btn"
+              onClick={handleStartGame}
+              disabled={players.length === 0}
+            >
+              <FaPlay /> O'yinni boshlash
+            </button>
+          )}
         </div>
       </header>
+
+      {/* ==================== KAHOOT 4 BURCHAK COUNTDOWN ==================== */}
+      {isCountingDown && (
+        <KahootCountdown
+          quizTitle={quizTitle}
+          onComplete={handleCountdownComplete}
+        />
+      )}
 
       {/* ==================== 1. LOBBY STATE ==================== */}
       {gameState === "lobby" && (
@@ -374,7 +498,21 @@ export default function LiveHost() {
             <div className="lobby-instructions">
               <h2>O'yinga qo'shiling! 🚀</h2>
               <p className="lobby-url">
-                Brauzerda kiring: <strong>{window.location.host}/live</strong>
+                Brauzerda kiring:{" "}
+                <strong>
+                  {window.location.host}/live/{pin}
+                </strong>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      `${window.location.host}/live/${pin}`,
+                    );
+                    toast.success("O'yin URL manzili nusxalandi!");
+                  }}
+                  className="live-copy-btn"
+                >
+                  <FaCopy />
+                </button>
               </p>
               <div className="lobby-pin-box">
                 <span className="pin-label">O'YIN KODI (PIN):</span>
@@ -392,20 +530,6 @@ export default function LiveHost() {
 
           {/* Joined Players Area */}
           <div className="lobby-players-section">
-            <div className="lobby-players-header">
-              <h3>
-                <FaUsers /> Ishtirokchilar ({players.length})
-              </h3>
-              <button
-                type="button"
-                className="lobby-start-btn"
-                onClick={handleStartGame}
-                disabled={players.length === 0}
-              >
-                <FaPlay /> O'yinni boshlash
-              </button>
-            </div>
-
             <div className="lobby-players-grid">
               <AnimatePresence>
                 {players.map((p, idx) => (
@@ -511,7 +635,10 @@ export default function LiveHost() {
                 <div
                   key={idx}
                   className={`host-option-card ${isCorrect ? "correct-highlight" : "dimmed"}`}
-                  style={{ backgroundColor: optColor.bg }}
+                  style={{
+                    backgroundColor: optColor.bg,
+                    boxShadow: "rgba(0, 0, 0, 0.2) 0px -6px 0px 0px inset",
+                  }}
                 >
                   <span className="option-shape-icon">{optColor.shape}</span>
                   <span className="option-text-label">{opt}</span>
@@ -575,7 +702,6 @@ export default function LiveHost() {
         <div className="host-podium-view">
           <div className="podium-title-box">
             <h1>G'oliblarni tabriklaymiz! 🎉</h1>
-            <p>Ajoyib o'yin bo'ldi!</p>
           </div>
 
           {/* 3D Animated Podium */}
@@ -681,32 +807,34 @@ export default function LiveHost() {
             )}
           </div>
 
-          {/* Full participants table */}
-          <div className="podium-full-rankings">
-            <h3>Barcha ishtirokchilar natijalari</h3>
-            <div className="full-rankings-table">
-              {finalLeaderboard.map((player, idx) => (
-                <div key={idx} className="ranking-table-row">
-                  <span className="rank-col">#{idx + 1}</span>
-                  <div className="ranking-player-cell">
-                    {player.profilePic ? (
-                      <img
-                        src={player.profilePic}
-                        alt={player.name}
-                        className="ranking-table-avatar"
-                      />
-                    ) : (
-                      <span className="ranking-table-avatar-fallback">
-                        {player.name?.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                    <span className="name-col">{player.name}</span>
+          {/* Full participants table (1, 2, 3-o'rinlar podiumda bo'lgani uchun 4-o'rindan boshlab ko'rsatiladi) */}
+          {finalLeaderboard.length > 3 && (
+            <div className="podium-full-rankings">
+              <h3>Ishtirokchilar natijalari</h3>
+              <div className="full-rankings-table">
+                {finalLeaderboard.slice(3).map((player, idx) => (
+                  <div key={idx} className="ranking-table-row">
+                    <span className="rank-col">#{idx + 4}</span>
+                    <div className="ranking-player-cell">
+                      {player.profilePic ? (
+                        <img
+                          src={player.profilePic}
+                          alt={player.name}
+                          className="ranking-table-avatar"
+                        />
+                      ) : (
+                        <span className="ranking-table-avatar-fallback">
+                          {player.name?.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      <span className="name-col">{player.name}</span>
+                    </div>
+                    <span className="score-col">{player.score} ball</span>
                   </div>
-                  <span className="score-col">{player.score} ball</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="podium-actions">
             <button

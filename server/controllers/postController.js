@@ -100,10 +100,24 @@ export const createPost = async (req, res) => {
 // 2. Barcha postlarni olish (Filtrlash va Like holati bilan, xavfsiz quiz)
 export const getPosts = async (req, res) => {
   try {
-    const { category, search, onlyMyPosts, userId, authorId, page, limit } = req.query;
+    const { category, search, onlyMyPosts, userId, authorId, page, limit } =
+      req.query;
     const currentUserId = req.user?._id;
 
-    const filter = {};
+    // Barcha shartlarni to'playdigan massiv
+    const conditions = [];
+
+    // 1. Agar user login qilgan bo'lsa, o'zi allaqachon javob bergan quiz'larni yashirish
+    if (currentUserId) {
+      conditions.push({
+        $nor: [
+          {
+            type: "quiz",
+            "quizAnswers.user": currentUserId,
+          },
+        ],
+      });
+    }
 
     const targetUserId = userId || authorId;
     if (targetUserId) {
@@ -132,31 +146,38 @@ export const getPosts = async (req, res) => {
       }
 
       if (targetUserObjectId) {
-        filter.$or = [
-          { author: targetUserObjectId },
-          { "user.id": targetUserObjectId },
-        ];
+        conditions.push({
+          $or: [
+            { author: targetUserObjectId },
+            { "user.id": targetUserObjectId },
+          ],
+        });
       } else {
-        filter.author = new mongoose.Types.ObjectId();
+        conditions.push({ author: new mongoose.Types.ObjectId() });
       }
     } else if (onlyMyPosts === "true") {
       if (!currentUserId) {
         return res.json({ success: true, posts: [] });
       }
-      filter.author = currentUserId;
+      conditions.push({ author: currentUserId });
     }
 
     if (category && category !== "Barchasi") {
-      filter.category = new RegExp(`^${category}$`, "i");
+      conditions.push({ category: new RegExp(`^${category}$`, "i") });
     }
 
     if (search && search.trim()) {
       const searchRegex = new RegExp(search.trim(), "i");
-      filter.$or = [{ title: searchRegex }, { content: searchRegex }];
+      conditions.push({
+        $or: [{ title: searchRegex }, { content: searchRegex }],
+      });
     }
 
+    // Barcha shartlarni $and orqali birlashtiramiz
+    const filter = conditions.length > 0 ? { $and: conditions } : {};
+
     const pageNum = parseInt(page, 10) || 1;
-    const limitNum = parseInt(limit, 10) || 0; // 0 bo'lsa barchasi (orqaga moslik uchun)
+    const limitNum = parseInt(limit, 10) || 0; // 0 bo'lsa barchasi
 
     const totalPosts = await Post.countDocuments(filter);
 
@@ -183,7 +204,6 @@ export const getPosts = async (req, res) => {
           ? post.author.toString() === currentUserId.toString()
           : false;
 
-      // Foydalanuvchining quiz javobi holati
       let userQuizAnswer = null;
       if (
         post.type === "quiz" &&
@@ -575,7 +595,9 @@ export const reportPost = async (req, res) => {
     const reporter = req.user
       ? {
           id: req.user._id,
-          name: `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() || "Foydalanuvchi",
+          name:
+            `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim() ||
+            "Foydalanuvchi",
           username: req.user.telegramUsername || "user",
         }
       : {
