@@ -35,13 +35,21 @@ export default function BarabanCreate() {
   const existingGame = getExistingGame();
 
   // Form State
-  const [title, setTitle] = useState(() => existingGame?.title || "Aylanuvchi Baraban");
-  const [names, setNames] = useState(() => (Array.isArray(existingGame?.names) ? existingGame.names : []));
+  const [title, setTitle] = useState(
+    () => existingGame?.title || "Aylanuvchi Baraban",
+  );
+  const [names, setNames] = useState(() =>
+    Array.isArray(existingGame?.names) ? existingGame.names : [],
+  );
   const [nameInput, setNameInput] = useState("");
-  const [removeWinner, setRemoveWinner] = useState(() => (existingGame?.removeWinner !== undefined ? existingGame.removeWinner : true));
+  const [removeWinner, setRemoveWinner] = useState(() =>
+    existingGame?.removeWinner !== undefined ? existingGame.removeWinner : true,
+  );
 
   // Questions State
-  const [questions, setQuestions] = useState(() => (Array.isArray(existingGame?.questions) ? existingGame.questions : []));
+  const [questions, setQuestions] = useState(() =>
+    Array.isArray(existingGame?.questions) ? existingGame.questions : [],
+  );
   const [showManualQuestionModal, setShowManualQuestionModal] = useState(false);
   const [newQuestion, setNewQuestion] = useState({
     question: "",
@@ -278,9 +286,6 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
               >
                 <IoPlayOutline /> Sinov uchun aylantirish
               </button>
-              <p className="wheel-tip">
-                Har bir kiritilgan ism doira bo‘ylab avtomatik joylashadi.
-              </p>
             </div>
           </div>
         </div>
@@ -299,57 +304,6 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
               maxLength={80}
             />
           </div>
-
-          {/* Setting: Remove Winner rule */}
-          <div className="baraban-card">
-            <h3 className="section-title">Baraban qoidasi</h3>
-            <p className="section-subtitle">
-              Baraban aylanganda tushgan ism keyingi aylanishda nima qilinsin?
-            </p>
-
-            <div className="rule-options-container">
-              <label
-                className={`rule-radio-card ${removeWinner ? "active" : ""}`}
-                onClick={() => setRemoveWinner(true)}
-              >
-                <input
-                  type="radio"
-                  name="removeWinner"
-                  checked={removeWinner}
-                  onChange={() => setRemoveWinner(true)}
-                />
-                <div className="rule-text">
-                  <span className="rule-title">
-                    Ism barabandan olib tashlansin
-                  </span>
-                  <span className="rule-desc">
-                    Tushgan ism keyingi safar qayta tushmaydi (har bir o'quvchi
-                    bir marta tanlanadi).
-                  </span>
-                </div>
-              </label>
-
-              <label
-                className={`rule-radio-card ${!removeWinner ? "active" : ""}`}
-                onClick={() => setRemoveWinner(false)}
-              >
-                <input
-                  type="radio"
-                  name="removeWinner"
-                  checked={!removeWinner}
-                  onChange={() => setRemoveWinner(false)}
-                />
-                <div className="rule-text">
-                  <span className="rule-title">Ism barabanda qolsin</span>
-                  <span className="rule-desc">
-                    Tushgan ism barabanda saqlanib qoladi va keyingi safar ham
-                    qayta tushishi mumkin.
-                  </span>
-                </div>
-              </label>
-            </div>
-          </div>
-
           {/* Participants */}
           <div className="baraban-card">
             <div className="section-header-row">
@@ -412,6 +366,55 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
                   </span>
                 ))
               )}
+            </div>
+          </div>
+          {/* Setting: Remove Winner rule */}
+          <div className="baraban-card">
+            <h3 className="section-title">Baraban qoidasi</h3>
+            <p className="section-subtitle">
+              Baraban aylanganda tushgan ism keyingi aylanishda nima qilinsin?
+            </p>
+
+            <div className="rule-options-container">
+              <label
+                className={`rule-radio-card ${removeWinner ? "active" : ""}`}
+                onClick={() => setRemoveWinner(true)}
+              >
+                <input
+                  type="radio"
+                  name="removeWinner"
+                  checked={removeWinner}
+                  onChange={() => setRemoveWinner(true)}
+                />
+                <div className="rule-text">
+                  <span className="rule-title">
+                    Ism barabandan olib tashlansin
+                  </span>
+                  <span className="rule-desc">
+                    Tushgan ism keyingi safar qayta tushmaydi (har bir o'quvchi
+                    bir marta tanlanadi).
+                  </span>
+                </div>
+              </label>
+
+              <label
+                className={`rule-radio-card ${!removeWinner ? "active" : ""}`}
+                onClick={() => setRemoveWinner(false)}
+              >
+                <input
+                  type="radio"
+                  name="removeWinner"
+                  checked={!removeWinner}
+                  onChange={() => setRemoveWinner(false)}
+                />
+                <div className="rule-text">
+                  <span className="rule-title">Ism barabanda qolsin</span>
+                  <span className="rule-desc">
+                    Tushgan ism barabanda saqlanib qoladi va keyingi safar ham
+                    qayta tushishi mumkin.
+                  </span>
+                </div>
+              </label>
             </div>
           </div>
 

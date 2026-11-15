@@ -29,3 +29,9 @@
     opacity: 1;
   }
 }
+
+@media (max-width: 520px) {
+  .modal-overlay-container {
+    padding: 0px;
+  }
+}

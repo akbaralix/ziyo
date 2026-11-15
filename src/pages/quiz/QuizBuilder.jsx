@@ -66,7 +66,7 @@ export default function QuizBuilder() {
   const getAiPrompt = () => {
     const topic = aiTopic.trim() || "Umumiy bilimlar";
     const count = Math.min(Math.max(Number(aiCount) || 8, 8), 25);
-    return `Siz ta'lim bo'yicha ekspert AI siz. Menga '${topic}' mavzusida ${count} ta test savolini aniq ushbu JSON formatda tuzib bering:
+    return `Siz ta'lim bo'yicha ekspert AI siz. Menga '${topic}' mavzusida ${count} ta test savolini aniq, qisqa variantli qilib ushbu JSON formatda tuzib bering:
 [
   {
     "text": "Savol matni",
@@ -361,11 +361,31 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
     }
   };
 
-  const optionColors = [
-    { name: "Qizil", bg: "#ef4444", shape: <FaCaretUp /> },
-    { name: "Ko'k", bg: "#3b82f6", shape: <FaDiamond /> },
-    { name: "Sariq", bg: "#eab308", shape: <FaCircle /> },
-    { name: "Yashil", bg: "#10b981", shape: <FaSquare /> },
+  const OPTION_COLORS = [
+    {
+      bg: "rgb(226, 27, 60)",
+      text: "#ffffff",
+      shape: <FaCaretUp />,
+      name: "Qizil",
+    },
+    {
+      bg: "rgb(19, 104, 206)",
+      text: "#ffffff",
+      shape: <FaDiamond />,
+      name: "Ko'k",
+    },
+    {
+      bg: "rgb(216, 158, 0)",
+      text: "#ffffff",
+      shape: <FaCircle />,
+      name: "Sariq",
+    },
+    {
+      bg: "rgb(38, 137, 12)",
+      text: "#ffffff",
+      shape: <FaSquare />,
+      name: "Yashil",
+    },
   ];
 
   return (
@@ -506,7 +526,7 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
           {/* Options Grid (Kahoot-Style) */}
           <div className="options-editor-grid">
             {currentQ.options.map((opt, optIdx) => {
-              const color = optionColors[optIdx % optionColors.length];
+              const color = OPTION_COLORS[optIdx % OPTION_COLORS.length];
               const isCorrect = currentQ.correctIndex === optIdx;
 
               return (
@@ -640,10 +660,6 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
               </span>
               <div>
                 <h2>AI yordamida test yaratish</h2>
-                <p className="aiQuiz-subtitle">
-                  Mavzu va savollar sonini kiriting, promptni nusxalang va
-                  olingan JSON natijasini yuklang.
-                </p>
               </div>
             </div>
             <button

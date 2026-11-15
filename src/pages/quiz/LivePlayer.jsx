@@ -29,7 +29,6 @@ import quizAvatar6 from "../../assets/quiz-avatar/quiz-avatar6.jpg";
 import quizAvatar7 from "../../assets/quiz-avatar/quiz-avatar7.jpg";
 import quizAvatar8 from "../../assets/quiz-avatar/quiz-avatar8.jpg";
 import quizAvatar9 from "../../assets/quiz-avatar/quiz-avatar9.jpg";
-// import quizAvatar10 from "../../assets/quiz-avatar/quiz-avatar10.jpg";
 
 export const QUIZ_AVATARS = [
   { id: 1, src: quizAvatar1, name: "Qahramon 1" },
@@ -41,7 +40,6 @@ export const QUIZ_AVATARS = [
   { id: 7, src: quizAvatar7, name: "Qahramon 7" },
   { id: 8, src: quizAvatar8, name: "Qahramon 8" },
   { id: 9, src: quizAvatar9, name: "Qahramon 9" },
-  // { id: 10, src: quizAvatar10, name: "Qahramon 10" },
 ];
 
 import { joinByPin } from "../../api/quizApi.js";
@@ -66,7 +64,7 @@ export default function LivePlayer() {
     try {
       const u = JSON.parse(localStorage.getItem("ziyo_user"));
       if (u && (u.firstName || u.lastName))
-        return `${u.firstName || ""} ${u.lastName || ""}`.trim();
+        return `${u.firstName || ""}`.trim();
       const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
       if (p && p.name) return p.name;
     } catch {}
@@ -100,10 +98,10 @@ export default function LivePlayer() {
   const [timeLeft, setTimeLeft] = useState(0);
 
   // Answer result state
-  const [answerFeedback, setAnswerFeedback] = useState(null); // { isCorrect, pointsEarned }
+  const [answerFeedback, setAnswerFeedback] = useState(null);
   const [correctIndex, setCorrectIndex] = useState(null);
   const [totalScore, setTotalScore] = useState(0);
-  const [currentRank, setCurrentRank] = useState(null); // Joriy reytingdagi o'rni
+  const [currentRank, setCurrentRank] = useState(null);
   const [totalPlayersCount, setTotalPlayersCount] = useState(0);
 
   // Kahoot Countdown state
@@ -115,7 +113,7 @@ export default function LivePlayer() {
   const [finalLeaderboard, setFinalLeaderboard] = useState([]);
   const [questionsReview, setQuestionsReview] = useState([]);
   const [myRank, setMyRank] = useState(null);
-  const [endViewTab, setEndViewTab] = useState("leaderboard"); // 'leaderboard' | 'review'
+  const [endViewTab, setEndViewTab] = useState("leaderboard");
   const [myAnswerHistory, setMyAnswerHistory] = useState([]);
 
   const timerRef = useRef(null);
@@ -179,7 +177,6 @@ export default function LivePlayer() {
       if (data.score !== undefined) setTotalScore(data.score);
       if (data.myAnswerHistory) setMyAnswerHistory(data.myAnswerHistory);
 
-      // Sessiyani localStorage da saqlash (sahifa yangilanganda qayta ulanish uchun)
       localStorage.setItem(
         "ziyo_live_player",
         JSON.stringify({
@@ -193,7 +190,6 @@ export default function LivePlayer() {
 
       setIsJoining(false);
 
-      // O'yin holatini tiklash
       if (data.status === "question" && data.currentQuestion) {
         setCurrentQuestion(data.currentQuestion);
         setCorrectIndex(null);
@@ -235,13 +231,11 @@ export default function LivePlayer() {
       setPlayerState("join");
     });
 
-    // Game Started (Kahoot Countdown)
     newSocket.on("game:started", () => {
       setIsCountingDown(true);
       isCountingDownRef.current = true;
     });
 
-    // Question Start
     newSocket.on("question:start", (data) => {
       if (isCountingDownRef.current) {
         pendingQuestionRef.current = data;
@@ -256,7 +250,6 @@ export default function LivePlayer() {
       }
     });
 
-    // Answer OK feedback for this player
     newSocket.on("player:answer:ok", (data) => {
       setAnswerFeedback(data);
       if (data.rank) {
@@ -273,7 +266,6 @@ export default function LivePlayer() {
       }
     });
 
-    // Question Ended (Results & Leaderboard Rank)
     newSocket.on("question:ended", (data) => {
       if (timerRef.current) clearInterval(timerRef.current);
       setCorrectIndex(data.correctIndex);
@@ -294,7 +286,6 @@ export default function LivePlayer() {
       }
     });
 
-    // Game Ended
     newSocket.on("game:ended", (data) => {
       if (timerRef.current) clearInterval(timerRef.current);
       setPlayerState("ended");
@@ -318,7 +309,56 @@ export default function LivePlayer() {
     });
   };
 
-  // Auto verify PIN if urlPin is given or check stored session
+  // Handle Join (event parametrini ixtiyoriy qilamiz)
+  const handleJoin = async (e) => {
+    if (e && typeof e.preventDefault === "function") {
+      e.preventDefault();
+    }
+    setErrorMsg("");
+
+    if (!pin.trim() || !name.trim()) {
+      const msg = "PIN kod va ismingizni kiriting!";
+      setErrorMsg(msg);
+      return;
+    }
+
+    setIsJoining(true);
+    try {
+      const res = await joinByPin(pin.trim());
+      if (!res.sessionId) {
+        const msg = "Bunday o'yin topilmadi!";
+        setErrorMsg(msg);
+        toast.error(msg);
+        setIsJoining(false);
+        return;
+      }
+
+      setSessionId(res.sessionId);
+
+      let saved = null;
+      try {
+        saved = JSON.parse(localStorage.getItem("ziyo_live_player"));
+      } catch {}
+
+      const existingPlayerId =
+        saved && saved.sessionId === res.sessionId ? saved.playerId : null;
+
+      connectToGame({
+        pinToUse: pin.trim(),
+        sessionIdToUse: res.sessionId,
+        playerIdToUse: existingPlayerId,
+        nameToUse: name.trim(),
+        profilePicToUse: profilePic,
+      });
+    } catch (err) {
+      const msg = err.message || "Ulanishda xatolik yuz berdi";
+      setErrorMsg(msg);
+      toast.error(msg);
+      setIsJoining(false);
+    }
+  };
+
+  // Auto verify PIN or stored session / auto login
   useEffect(() => {
     let saved = null;
     try {
@@ -355,62 +395,20 @@ export default function LivePlayer() {
     };
   }, [urlPin]);
 
-  // Handle Join
-  const handleJoin = async (e) => {
-    e.preventDefault();
-    setErrorMsg("");
+  // Agar user tizimga kirgan bo'lsa va PIN mavjud bo'lsa, avtomatik ulanish
+  useEffect(() => {
+    const userIsLogin =
+      !!localStorage.getItem("ziyo_user") ||
+      !!localStorage.getItem("ziyo_user_profile");
 
-    if (!pin.trim() || !name.trim()) {
-      const msg = "PIN kod va ismingizni kiriting!";
-      setErrorMsg(msg);
-      toast.warning(msg);
-      return;
+    if (userIsLogin && pin && name.trim() && playerState === "join") {
+      handleJoin();
     }
+  }, [pin, name]);
 
-    setIsJoining(true);
-    try {
-      // 1. Verify PIN via REST API
-      const res = await joinByPin(pin.trim());
-      if (!res.sessionId) {
-        const msg = "Bunday o'yin topilmadi!";
-        setErrorMsg(msg);
-        toast.error(msg);
-        setIsJoining(false);
-        return;
-      }
-
-      setSessionId(res.sessionId);
-
-      // Check if existing player info matches
-      let saved = null;
-      try {
-        saved = JSON.parse(localStorage.getItem("ziyo_live_player"));
-      } catch {}
-
-      const existingPlayerId =
-        saved && saved.sessionId === res.sessionId ? saved.playerId : null;
-
-      // 2. Connect Socket
-      connectToGame({
-        pinToUse: pin.trim(),
-        sessionIdToUse: res.sessionId,
-        playerIdToUse: existingPlayerId,
-        nameToUse: name.trim(),
-        profilePicToUse: profilePic,
-      });
-    } catch (err) {
-      const msg = err.message || "Ulanishda xatolik yuz berdi";
-      setErrorMsg(msg);
-      toast.error(msg);
-      setIsJoining(false);
-    }
-  };
-
-  // Avatar tanlash funksiyasi (Kahoot uslubida)
   const handleSelectAvatar = (avatarSrc) => {
     setProfilePic(avatarSrc);
 
-    // LocalStorage-ga saqlash
     try {
       const saved = JSON.parse(
         localStorage.getItem("ziyo_live_player") || "{}",
@@ -419,7 +417,6 @@ export default function LivePlayer() {
       localStorage.setItem("ziyo_live_player", JSON.stringify(saved));
     } catch {}
 
-    // Serverga yuborish (real-vaqtda host va barchaga yangilanadi)
     const activeSocket = socketRef.current || socket;
     if (activeSocket && sessionId && playerId) {
       activeSocket.emit("player:update-avatar", {
@@ -430,7 +427,6 @@ export default function LivePlayer() {
     }
   };
 
-  // Tasodifiy avatar tanlash
   const handleRandomAvatar = () => {
     const available = QUIZ_AVATARS.filter((a) => a.src !== profilePic);
     const pick =
@@ -439,7 +435,6 @@ export default function LivePlayer() {
     handleSelectAvatar(pick.src);
   };
 
-  // Submit Answer
   const handleSelectOption = (index) => {
     if (selectedOption !== null || timeLeft <= 0) return;
     setSelectedOption(index);
@@ -458,22 +453,6 @@ export default function LivePlayer() {
         questionIndex: currentQuestion.questionIndex,
         chosenIndex: index,
       });
-    }
-  };
-
-  const handleCountdownComplete = () => {
-    setIsCountingDown(false);
-    isCountingDownRef.current = false;
-    setPlayerState("question");
-    if (pendingQuestionRef.current) {
-      const data = pendingQuestionRef.current;
-      pendingQuestionRef.current = null;
-      sfx.playStart();
-      setCurrentQuestion(data);
-      setSelectedOption(null);
-      setAnswerFeedback(null);
-      setCorrectIndex(null);
-      startTimer(data.timeLimit);
     }
   };
 
@@ -587,7 +566,6 @@ export default function LivePlayer() {
               Boshlovchi o'yinni boshlashini kuting...
             </p>
 
-            {/* Kahoot-uslubidagi avatar tanlagich */}
             <div className="kahoot-avatar-picker-box">
               <div className="picker-header">
                 <span className="picker-title">🎭 Avataringizni tanlang</span>
@@ -610,7 +588,9 @@ export default function LivePlayer() {
                       type="button"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`kahoot-avatar-item ${isSelected ? "selected" : ""}`}
+                      className={`kahoot-avatar-item ${
+                        isSelected ? "selected" : ""
+                      }`}
                       onClick={() => handleSelectAvatar(av.src)}
                       title={av.name}
                     >
@@ -637,7 +617,6 @@ export default function LivePlayer() {
       {(playerState === "question" || playerState === "answered") &&
         currentQuestion && (
           <div className="player-question-view">
-            {/* Top Timer & Question Number */}
             <div className="player-q-topbar">
               <span className="player-q-num">
                 Savol {currentQuestion.questionIndex + 1} /{" "}
@@ -650,12 +629,10 @@ export default function LivePlayer() {
               </div>
             </div>
 
-            {/* Question Text (Visible on player screen) */}
             <div className="player-q-text-card">
               <h3>{currentQuestion.text}</h3>
             </div>
 
-            {/* Answer confirmation status if already clicked */}
             {playerState === "answered" && (
               <div className="player-answered-notice">
                 <span>Javobingiz qabul qilindi! Natija kutilmoqda... ⏳</span>
@@ -673,7 +650,6 @@ export default function LivePlayer() {
               </div>
             )}
 
-            {/* Options Grid (4 Large Colored Tappable Cards) */}
             <div className="player-options-grid">
               {currentQuestion.options.map((opt, idx) => {
                 const color = OPTION_COLORS[idx % OPTION_COLORS.length];
@@ -683,7 +659,9 @@ export default function LivePlayer() {
                   <button
                     key={idx}
                     type="button"
-                    className={`player-option-btn ${isSelected ? "selected" : ""}`}
+                    className={`player-option-btn ${
+                      isSelected ? "selected" : ""
+                    }`}
                     style={{
                       backgroundColor: color.bg,
                       boxShadow: "rgba(0, 0, 0, 0.2) 0px -6px 0px 0px inset",
@@ -716,10 +694,11 @@ export default function LivePlayer() {
                 Umumiy ball: <strong>{totalScore}</strong>
               </span>
 
-              {/* Joriy o'rin ko'rinishi */}
               {currentRank && (
                 <div
-                  className={`feedback-rank-box rank-${currentRank <= 3 ? currentRank : "other"}`}
+                  className={`feedback-rank-box rank-${
+                    currentRank <= 3 ? currentRank : "other"
+                  }`}
                 >
                   <span className="feedback-rank-sublabel">
                     Sizning joriy o'rningiz:
@@ -751,10 +730,11 @@ export default function LivePlayer() {
                 Umumiy ball: <strong>{totalScore}</strong>
               </span>
 
-              {/* Joriy o'rin ko'rinishi */}
               {currentRank && (
                 <div
-                  className={`feedback-rank-box rank-${currentRank <= 3 ? currentRank : "other"}`}
+                  className={`feedback-rank-box rank-${
+                    currentRank <= 3 ? currentRank : "other"
+                  }`}
                 >
                   <span className="feedback-rank-sublabel">
                     Sizning joriy o'rningiz:
@@ -817,25 +797,27 @@ export default function LivePlayer() {
               </span>
             </div>
 
-            {/* Sub-tabs: Leaderboard vs Mistakes Review */}
             <div className="ended-subtabs">
               <button
                 type="button"
-                className={`ended-tab-btn ${endViewTab === "leaderboard" ? "active" : ""}`}
+                className={`ended-tab-btn ${
+                  endViewTab === "leaderboard" ? "active" : ""
+                }`}
                 onClick={() => setEndViewTab("leaderboard")}
               >
                 <FaListOl /> Top ishtirokchilar
               </button>
               <button
                 type="button"
-                className={`ended-tab-btn ${endViewTab === "review" ? "active" : ""}`}
+                className={`ended-tab-btn ${
+                  endViewTab === "review" ? "active" : ""
+                }`}
                 onClick={() => setEndViewTab("review")}
               >
                 <FaBookOpen /> Xatolar ustida ishlash
               </button>
             </div>
 
-            {/* TAB 1: Leaderboard */}
             {endViewTab === "leaderboard" && (
               <div className="player-top3-list">
                 <h4>Top ishtirokchilar reytingi:</h4>
@@ -850,7 +832,9 @@ export default function LivePlayer() {
                   return (
                     <div
                       key={idx}
-                      className={`top3-item ${idx === 0 ? "first" : ""} ${isCurrent ? "me-highlight" : ""}`}
+                      className={`top3-item ${
+                        idx === 0 ? "first" : ""
+                      } ${isCurrent ? "me-highlight" : ""}`}
                     >
                       <div className="top3-item-left">
                         <span className="top3-rank-icon">
@@ -885,7 +869,6 @@ export default function LivePlayer() {
               </div>
             )}
 
-            {/* TAB 2: Review Mistakes / Xatolar ustida ishlash */}
             {endViewTab === "review" && (
               <div className="player-review-list">
                 <h4>Savollar va tahlil:</h4>
@@ -914,47 +897,13 @@ export default function LivePlayer() {
                             )}
                           </span>
                         </div>
-
-                        <div className="review-options">
-                          {q.options.map((opt, oIdx) => {
-                            const isCorrectOpt = oIdx === q.correctIndex;
-                            const isMyPick = myAns?.chosenIndex === oIdx;
-
-                            return (
-                              <div
-                                key={oIdx}
-                                className={`review-opt-item ${
-                                  isCorrectOpt
-                                    ? "opt-correct"
-                                    : isMyPick
-                                      ? "opt-wrong"
-                                      : ""
-                                }`}
-                              >
-                                <span>{opt}</span>
-                                {isCorrectOpt && (
-                                  <span className="badge-tag">To'g'ri</span>
-                                )}
-                                {isMyPick && !isCorrectOpt && (
-                                  <span className="badge-tag wrong">
-                                    Siz tanlagan
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {q.explanation && (
-                          <div className="review-explanation">
-                            💡 <strong>Tushuntirish:</strong> {q.explanation}
-                          </div>
-                        )}
                       </div>
                     );
                   })
                 ) : (
-                  <p className="no-review-text">Savollar tahlili yuklanmadi.</p>
+                  <p className="no-review-text">
+                    Tahlil ma'lumotlari mavjud emas.
+                  </p>
                 )}
               </div>
             )}
@@ -964,7 +913,7 @@ export default function LivePlayer() {
               className="exit-game-btn"
               onClick={handleExitGame}
             >
-              <FaArrowLeft /> Bosh sahifaga qaytish
+              <FaArrowLeft /> Asosiy sahifaga qaytish
             </button>
           </motion.div>
         </div>

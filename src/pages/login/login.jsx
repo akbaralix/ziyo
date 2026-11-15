@@ -142,7 +142,7 @@ function Login() {
                 "ziyo_user_profile",
                 JSON.stringify({
                   name: `${res.user.firstName} ${res.user.lastName}`,
-                  username: res.user.telegramUsername || "user",
+                  username: res.user.username || "user",
                   profilePic: res.user.profilePic || "",
                   bio: res.user.bio || "",
                   studyPlace: res.user.studyPlace,
@@ -153,7 +153,7 @@ function Login() {
                 }),
               );
             }
-            toast.success("Xush kelibsiz! Tizimga muvaffaqiyatli kirdingiz.");
+            toast.success(`Xush kelibsiz! ${res.user.firstName} 🎉`);
             setTimeout(() => {
               navigate("/");
             }, 800);

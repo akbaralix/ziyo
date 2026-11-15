@@ -128,7 +128,7 @@
 }
 
 .lobby-hero-card {
-  background: #f8f8f8dd;
+  background: #f8f8f8d3;
   border-radius: var(--radius-pill);
   padding: clamp(20px, 4vw, 36px);
   display: flex;
@@ -298,7 +298,7 @@
 }
 
 .lobby-no-players {
-  color: var(--text-light);
+  color: var(--text-white);
   font-size: var(--font-base);
   display: flex;
   align-items: center;

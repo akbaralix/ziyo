@@ -21,11 +21,11 @@ import {
 import { FaDiamond } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import { sfx } from "../../utils/soundEffects.js";
-import KahootCountdown from "./KahootCountdown.jsx";
+import KahootCountdown from "./countdown.jsx";
 import backgroundImage from "../../assets/game/live-game-bg.jpg";
-import lobbyAudio from "../../assets/kahoot-lobby-music.mp3";
+import lobbyAudio from "../../assets/Jason Beauchamp - Kahoot Lobby Music.mp3";
 import liveResponseWait from "../../assets/live-kutish.mp3";
-import lobbyStatsAudio from "../../assets/video-project-4.m4a";
+import lobbyStatsAudio from "../../assets/Video Project 4.m4a";
 import "./LiveHost.css";
 
 const OPTION_COLORS = [
@@ -136,7 +136,6 @@ export default function LiveHost() {
     }
   };
 
-  // Brauzer autoplay ruxsati uchun ilk foydalanuvchi ta'sirini ushlash
   useEffect(() => {
     const handleFirstUserInteraction = () => {
       if (
@@ -160,7 +159,6 @@ export default function LiveHost() {
     };
   }, [isMuted, gameState, isCountingDown]);
 
-  // O'yin musiqalarini holatlarga qarab boshqarish
   useEffect(() => {
     if (audioRef.current) audioRef.current.pause();
     if (waitAudio.current) waitAudio.current.pause();
@@ -184,6 +182,7 @@ export default function LiveHost() {
       if (audioStatsRef.current) audioStatsRef.current.pause();
     };
   }, [gameState, isCountingDown, isMuted]);
+
   const startCountdown = (initialTime) => {
     if (timerRef.current) clearInterval(timerRef.current);
     setTimeLeft(initialTime);
@@ -275,15 +274,17 @@ export default function LiveHost() {
       if (data.creatorId || data.hostId) {
         setCreatorId(String(data.creatorId || data.hostId));
       }
-      if (data.players) setPlayers(data.players);
 
-      // Generate QR Code
+      // O'yinchilar massivini xavfsiz qabul qilish
+      if (data.players && Array.isArray(data.players)) {
+        setPlayers(data.players);
+      }
+
       const joinUrl = `${window.location.origin}/live/${data.pin}`;
       QRCode.toDataURL(joinUrl, { width: 220, margin: 1 })
         .then((url) => setQrDataUrl(url))
         .catch(console.error);
 
-      // Resume game state if already active
       if (data.status === "question" && data.currentQuestion) {
         setGameState("question");
         setCurrentQuestion(data.currentQuestion);
@@ -303,41 +304,40 @@ export default function LiveHost() {
       }
     });
 
-    // New Player Joined
+    // 💡 Yangi o'yinchi qo'shilganda dublikat bo'lmasligi va tez chiqishi uchun tekshiruv
     newSocket.on("player:new", (player) => {
       sfx.playJoin();
       setPlayers((prev) => {
-        const exists = prev.some((p) => p.id === player.id);
+        const playerId = player.id || player._id;
+        const exists = prev.some((p) => (p.id || p._id) === playerId);
         if (exists) {
           return prev.map((p) =>
-            p.id === player.id ? { ...p, ...player } : p,
+            (p.id || p._id) === playerId ? { ...p, ...player } : p,
           );
         }
         return [...prev, player];
       });
     });
 
-    // Player Left
+    // O'yinchi chiqib ketganda
     newSocket.on("player:left", ({ playerId }) => {
-      setPlayers((prev) => prev.filter((p) => p.id !== playerId));
+      setPlayers((prev) => prev.filter((p) => (p.id || p._id) !== playerId));
     });
 
-    // Player Avatar Updated
+    // O'yinchi avatarni o'zgartirganda
     newSocket.on("player:avatar:updated", ({ playerId, profilePic }) => {
       setPlayers((prev) =>
         prev.map((p) =>
-          p.id === playerId || p._id === playerId ? { ...p, profilePic } : p,
+          (p.id || p._id) === playerId ? { ...p, profilePic } : p,
         ),
       );
     });
 
-    // Game Started
     newSocket.on("game:started", () => {
       setIsCountingDown(true);
       isCountingDownRef.current = true;
     });
 
-    // Question Start
     newSocket.on("question:start", (data) => {
       if (isCountingDownRef.current) {
         pendingQuestionRef.current = data;
@@ -351,12 +351,10 @@ export default function LiveHost() {
       }
     });
 
-    // Answer Progress
     newSocket.on("answer:progress", (data) => {
       setAnsweredCount(data.answered);
     });
 
-    // Question Ended (Show Answers)
     newSocket.on("question:ended", (data) => {
       if (timerRef.current) clearInterval(timerRef.current);
       setGameState("answer");
@@ -364,13 +362,11 @@ export default function LiveHost() {
       setLeaderboard(data.leaderboard || []);
     });
 
-    // Game Ended (Podium)
     newSocket.on("game:ended", (data) => {
       if (timerRef.current) clearInterval(timerRef.current);
       setGameState("ended");
       setFinalLeaderboard(data.leaderboard || []);
       sfx.playFanfare();
-      // Confetti fire
       triggerConfetti();
     });
 
@@ -415,7 +411,6 @@ export default function LiveHost() {
   const handleEndGameEarly = () => {
     const currentUserId = getCurrentUserId();
 
-    // Faqat o'yin yaratuvchisi o'yinni tugata oladi
     if (
       creatorId &&
       currentUserId &&
@@ -457,7 +452,7 @@ export default function LiveHost() {
           </button>
 
           <div className="host-players-badge">
-            <FaUsers /> {players.length} ishtirokchi
+            <FaUsers /> {players.length}
           </div>
 
           {gameState !== "ended" && isCreator && (
@@ -469,7 +464,7 @@ export default function LiveHost() {
               O'yinni yakunlash
             </button>
           )}
-          {/* O'yin boshlanganda headerdagi o'yinni boshlash tugmasi butunlay olib tashlanadi */}
+
           {gameState === "lobby" && !isCountingDown && (
             <button
               type="button"
@@ -483,7 +478,6 @@ export default function LiveHost() {
         </div>
       </header>
 
-      {/* ==================== KAHOOT 4 BURCHAK COUNTDOWN ==================== */}
       {isCountingDown && (
         <KahootCountdown
           quizTitle={quizTitle}
@@ -491,7 +485,6 @@ export default function LiveHost() {
         />
       )}
 
-      {/* ==================== 1. LOBBY STATE ==================== */}
       {gameState === "lobby" && (
         <div className="host-lobby-view">
           <div className="lobby-hero-card">
@@ -528,13 +521,12 @@ export default function LiveHost() {
             )}
           </div>
 
-          {/* Joined Players Area */}
           <div className="lobby-players-section">
             <div className="lobby-players-grid">
               <AnimatePresence>
                 {players.map((p, idx) => (
                   <motion.div
-                    key={p.id || idx}
+                    key={p.id || p._id || idx}
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0, opacity: 0 }}
@@ -548,7 +540,7 @@ export default function LiveHost() {
                           className="player-avatar-img"
                         />
                       ) : (
-                        p.name.charAt(0).toUpperCase()
+                        p.name?.charAt(0).toUpperCase()
                       )}
                     </span>
                     <span className="player-chip-name">{p.name}</span>
@@ -567,10 +559,8 @@ export default function LiveHost() {
         </div>
       )}
 
-      {/* ==================== 2. QUESTION STATE ==================== */}
       {gameState === "question" && currentQuestion && (
         <div className="host-question-view">
-          {/* Top Bar: Progress, Question Counter, Timer */}
           <div className="question-top-bar">
             <span className="question-counter">
               Savol {currentQuestion.questionIndex + 1} /{" "}
@@ -588,12 +578,10 @@ export default function LiveHost() {
             </span>
           </div>
 
-          {/* Question Text */}
           <div className="host-question-banner">
             <h1>{currentQuestion.text}</h1>
           </div>
 
-          {/* Options Grid */}
           <div className="host-options-grid">
             {currentQuestion.options.map((opt, idx) => {
               const optColor = OPTION_COLORS[idx % OPTION_COLORS.length];
@@ -612,7 +600,6 @@ export default function LiveHost() {
         </div>
       )}
 
-      {/* ==================== 3. ANSWER & LEADERBOARD STATE ==================== */}
       {gameState === "answer" && currentQuestion && (
         <div className="host-answer-view">
           <div className="answer-header-box">
@@ -626,7 +613,6 @@ export default function LiveHost() {
             </button>
           </div>
 
-          {/* Options with correct indicator */}
           <div className="host-options-grid small">
             {currentQuestion.options.map((opt, idx) => {
               const optColor = OPTION_COLORS[idx % OPTION_COLORS.length];
@@ -650,7 +636,6 @@ export default function LiveHost() {
             })}
           </div>
 
-          {/* Top 5 Leaderboard */}
           <div className="host-leaderboard-card">
             <h3>
               <FaTrophy /> Yetakchilar jadvali
@@ -697,16 +682,13 @@ export default function LiveHost() {
         </div>
       )}
 
-      {/* ==================== 4. PODIUM / GAME ENDED ==================== */}
       {gameState === "ended" && (
         <div className="host-podium-view">
           <div className="podium-title-box">
             <h1>G'oliblarni tabriklaymiz! 🎉</h1>
           </div>
 
-          {/* 3D Animated Podium */}
           <div className="podium-container">
-            {/* 2nd Place */}
             {finalLeaderboard[1] && (
               <motion.div
                 className="podium-pillar pillar-2"
@@ -739,7 +721,6 @@ export default function LiveHost() {
               </motion.div>
             )}
 
-            {/* 1st Place */}
             {finalLeaderboard[0] && (
               <motion.div
                 className="podium-pillar pillar-1"
@@ -773,7 +754,6 @@ export default function LiveHost() {
               </motion.div>
             )}
 
-            {/* 3rd Place */}
             {finalLeaderboard[2] && (
               <motion.div
                 className="podium-pillar pillar-3"
@@ -807,7 +787,6 @@ export default function LiveHost() {
             )}
           </div>
 
-          {/* Full participants table (1, 2, 3-o'rinlar podiumda bo'lgani uchun 4-o'rindan boshlab ko'rsatiladi) */}
           {finalLeaderboard.length > 3 && (
             <div className="podium-full-rankings">
               <h3>Ishtirokchilar natijalari</h3>

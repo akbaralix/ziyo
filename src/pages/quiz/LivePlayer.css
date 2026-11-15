@@ -44,8 +44,8 @@
 }
 
 .player-badge-avatar-wrap {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   border-radius: var(--radius-full);
   overflow: hidden;
   display: inline-flex;
@@ -643,9 +643,10 @@
 }
 
 .ended-card {
-  background: var(--bg-card);
+  background: #f8f8f8c0;
+  backdrop-filter: blur(6px);
   border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border-radius: 5px;
   padding: 32px 20px;
   text-align: center;
   display: flex;
@@ -671,9 +672,6 @@
 }
 
 .my-rank-banner {
-  background: var(--color-warning-bg);
-  border: 1.5px solid var(--color-warning-border);
-  border-radius: var(--radius-2xl);
   padding: 18px 16px;
   width: 100%;
   display: flex;
@@ -700,8 +698,8 @@
 
 .my-rank-crown {
   position: absolute;
-  top: -12px;
-  right: -6px;
+  top: -20px;
+  right: 18px;
   font-size: 24px;
   animation: bounce 1.5s infinite;
 }
@@ -738,9 +736,9 @@
   background: transparent;
   border: none;
   color: var(--text-muted);
-  padding: 8px 12px;
+  padding: 8px 2px;
   border-radius: var(--radius-pill);
-  font-size: var(--font-sm);
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   display: flex;
@@ -1005,11 +1003,15 @@
 }
 
 /* Mobile responsive */
-@media (max-width: 360px) {
+@media (max-width: 560px) {
+  .player-ended-view {
+    padding: 10px;
+  }
   .player-top-header {
     padding: 8px 12px;
   }
-
+}
+@media (max-width: 360px) {
   .player-name-badge {
     font-size: 11px;
     max-width: 150px;
