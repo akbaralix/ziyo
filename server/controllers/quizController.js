@@ -49,6 +49,7 @@ export async function getMyQuizGames(req, res) {
       .select("-questions"); // Ko'p ma'lumot uchun savolsiz
     res.json({ games });
   } catch (err) {
+    console.error("getMyQuizGames error:", err);
     res.status(500).json({ error: "Server xatosi" });
   }
 }
@@ -63,6 +64,7 @@ export async function getQuizGameById(req, res) {
     if (!quiz) return res.status(404).json({ error: "Viktorina topilmadi" });
     res.json({ quiz });
   } catch (err) {
+    console.error("getQuizGameById error:", err);
     res.status(500).json({ error: "Server xatosi" });
   }
 }
@@ -79,6 +81,7 @@ export async function updateQuizGame(req, res) {
     if (!quiz) return res.status(404).json({ error: "Viktorina topilmadi" });
     res.json({ success: true, quiz });
   } catch (err) {
+    console.error("updateQuizGame error:", err);
     res.status(500).json({ error: "Server xatosi" });
   }
 }
@@ -93,6 +96,7 @@ export async function deleteQuizGame(req, res) {
     if (!quiz) return res.status(404).json({ error: "Viktorina topilmadi" });
     res.json({ success: true });
   } catch (err) {
+    console.error("deleteQuizGame error:", err);
     res.status(500).json({ error: "Server xatosi" });
   }
 }
@@ -165,6 +169,7 @@ export async function joinByPin(req, res) {
       playersCount: session.players.length,
     });
   } catch (err) {
+    console.error("joinByPin error:", err);
     res.status(500).json({ error: "Server xatosi" });
   }
 }
@@ -191,6 +196,7 @@ export async function getSessionResults(req, res) {
 
     res.json({ leaderboard, quizTitle: session.quiz?.title });
   } catch (err) {
+    console.error("getSessionResults error:", err);
     res.status(500).json({ error: "Server xatosi" });
   }
 }

@@ -367,7 +367,6 @@ function Profil() {
 
   const isSchool = studyPlaceType === "maktab";
   const isTeacher = studyPlaceType === "ustoz";
-  const isInstitute = studyPlaceType === "institut";
 
   const studyLabel = isTeacher
     ? "Ustoz"

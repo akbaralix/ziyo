@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import {
@@ -50,7 +50,7 @@ export default function BarabanPlay() {
 
   const initialGame = getInitialGame();
 
-  const [game, setGame] = useState(() => initialGame);
+  const game = initialGame;
   const [activeNames, setActiveNames] = useState(() =>
     Array.isArray(initialGame?.names) ? initialGame.names : [],
   );

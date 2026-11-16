@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import QRCode from "qrcode";
@@ -26,6 +26,7 @@ import backgroundImage from "../../assets/game/live-game-bg.jpg";
 import lobbyAudio from "../../assets/Jason Beauchamp - Kahoot Lobby Music.mp3";
 import liveResponseWait from "../../assets/live-kutish.mp3";
 import lobbyStatsAudio from "../../assets/Video Project 4.m4a";
+import LiveReactions from "./LiveReactions.jsx";
 import "./LiveHost.css";
 
 const OPTION_COLORS = [
@@ -91,36 +92,48 @@ export default function LiveHost() {
   const waitAudio = useRef(null);
   const audioStatsRef = useRef(null);
 
-  if (!audioRef.current && typeof Audio !== "undefined") {
+  const safePlay = useCallback(
+    (audio) => {
+      if (!audio || isMuted) return;
+      try {
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            if (err.name !== "AbortError") {
+              console.warn("Audio play notice:", err.message);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn("Audio error:", e);
+      }
+    },
+    [isMuted],
+  );
+
+  useEffect(() => {
+    if (typeof Audio === "undefined") return undefined;
+
     audioRef.current = new Audio(lobbyAudio);
     audioRef.current.loop = true;
     audioRef.current.preload = "auto";
-  }
-  if (!waitAudio.current && typeof Audio !== "undefined") {
+
     waitAudio.current = new Audio(liveResponseWait);
     waitAudio.current.loop = true;
     waitAudio.current.preload = "auto";
-  }
-  if (!audioStatsRef.current && typeof Audio !== "undefined") {
+
     audioStatsRef.current = new Audio(lobbyStatsAudio);
     audioStatsRef.current.preload = "auto";
-  }
 
-  const safePlay = (audio) => {
-    if (!audio || isMuted) return;
-    try {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          if (err.name !== "AbortError") {
-            console.warn("Audio play notice:", err.message);
-          }
-        });
-      }
-    } catch (e) {
-      console.warn("Audio error:", e);
-    }
-  };
+    return () => {
+      audioRef.current?.pause();
+      waitAudio.current?.pause();
+      audioStatsRef.current?.pause();
+      audioRef.current = null;
+      waitAudio.current = null;
+      audioStatsRef.current = null;
+    };
+  }, []);
 
   const toggleAudio = () => {
     const muted = sfx.toggleMute();
@@ -157,7 +170,7 @@ export default function LiveHost() {
       window.removeEventListener("click", handleFirstUserInteraction);
       window.removeEventListener("keydown", handleFirstUserInteraction);
     };
-  }, [isMuted, gameState, isCountingDown]);
+  }, [isMuted, gameState, isCountingDown, safePlay]);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.pause();
@@ -181,7 +194,7 @@ export default function LiveHost() {
       if (waitAudio.current) waitAudio.current.pause();
       if (audioStatsRef.current) audioStatsRef.current.pause();
     };
-  }, [gameState, isCountingDown, isMuted]);
+  }, [gameState, isCountingDown, isMuted, safePlay]);
 
   const startCountdown = (initialTime) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -254,9 +267,35 @@ export default function LiveHost() {
       import.meta.env.VITE_API_URL || "https://ziyo.onrender.com";
     const newSocket = io(socketUrl, {
       auth: { token },
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
 
     setSocket(newSocket);
+
+    // Internet uzilib qayta ulanganda avtomatik qayta ulanish va sinxronlash
+    const handleOnline = () => {
+      toast.info("Internet aloqasi tiklandi. O'yin holati yangilanmoqda...", {
+        autoClose: 2000,
+      });
+      if (!newSocket.connected) {
+        newSocket.connect();
+      } else {
+        newSocket.emit("host:join", { sessionId });
+      }
+    };
+
+    const handleOffline = () => {
+      toast.warning("Internet uzildi! Ulanish kutilmoqda...", {
+        autoClose: 3500,
+      });
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     newSocket.on("connect", () => {
       newSocket.emit("host:join", { sessionId });
@@ -286,21 +325,31 @@ export default function LiveHost() {
         .catch(console.error);
 
       if (data.status === "question" && data.currentQuestion) {
+        setIsCountingDown(false);
+        isCountingDownRef.current = false;
         setGameState("question");
         setCurrentQuestion(data.currentQuestion);
         setAnsweredCount(data.answeredCount || 0);
         setCorrectIndex(null);
         startCountdown(data.timeLeft ?? data.currentQuestion.timeLimit);
       } else if (data.status === "answer" && data.currentQuestion) {
+        setIsCountingDown(false);
+        isCountingDownRef.current = false;
         if (timerRef.current) clearInterval(timerRef.current);
         setGameState("answer");
         setCurrentQuestion(data.currentQuestion);
         setCorrectIndex(data.correctIndex);
         setLeaderboard(data.leaderboard || []);
       } else if (data.status === "ended") {
+        setIsCountingDown(false);
+        isCountingDownRef.current = false;
         if (timerRef.current) clearInterval(timerRef.current);
         setGameState("ended");
         setFinalLeaderboard(data.leaderboard || []);
+      } else {
+        setIsCountingDown(false);
+        isCountingDownRef.current = false;
+        setGameState("lobby");
       }
     });
 
@@ -371,6 +420,8 @@ export default function LiveHost() {
     });
 
     return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
       if (timerRef.current) clearInterval(timerRef.current);
       newSocket.disconnect();
     };
@@ -825,6 +876,16 @@ export default function LiveHost() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Kahoot-style Live Reaksiyalar (Host va barcha ishtirokchilar uchun) */}
+      {sessionId && socket && (
+        <LiveReactions
+          socket={socket}
+          sessionId={sessionId}
+          senderName="Boshlovchi"
+          showTrigger={true}
+        />
       )}
     </div>
   );

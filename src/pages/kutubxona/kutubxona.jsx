@@ -55,7 +55,6 @@ function Kutubxona() {
   const [bookmarks, setBookmarks] = useState([]);
   const [showBookmarksPanel, setShowBookmarksPanel] = useState(false);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
-  const [isRenderingPage, setIsRenderingPage] = useState(false);
   const [renderError, setRenderError] = useState(null);
   const [pageInputValue, setPageInputValue] = useState("1");
 
@@ -79,7 +78,6 @@ function Kutubxona() {
   const renderPage = useCallback(async (pageNum, pdf, scale) => {
     if (!pdf || !canvasRef.current) return;
 
-    setIsRenderingPage(true);
     setRenderError(null);
 
     try {
@@ -142,13 +140,11 @@ function Kutubxona() {
       const renderTask = page.render(renderContext);
       renderTaskRef.current = renderTask;
       await renderTask.promise;
-      setIsRenderingPage(false);
     } catch (err) {
       if (err?.name !== "RenderingCancelledException") {
         console.error("Sahifa chizishda xatolik:", err);
         setRenderError("Sahifani ko'rsatishda xatolik yuz berdi");
       }
-      setIsRenderingPage(false);
     }
   }, []);
 

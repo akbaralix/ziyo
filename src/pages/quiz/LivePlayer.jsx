@@ -45,6 +45,7 @@ export const QUIZ_AVATARS = [
 import { joinByPin } from "../../api/quizApi.js";
 import { sfx } from "../../utils/soundEffects.js";
 import { toast } from "react-toastify";
+import LiveReactions from "./LiveReactions.jsx";
 import "./LivePlayer.css";
 
 const OPTION_COLORS = [
@@ -53,6 +54,7 @@ const OPTION_COLORS = [
   { bg: "rgb(216, 158, 0)", text: "#ffffff", shape: <FaCircle /> },
   { bg: "rgb(38, 137, 12)", text: "#ffffff", shape: <FaSquare /> },
 ];
+const REACT_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "👏", "🎉"];
 
 export default function LivePlayer() {
   const { pin: urlPin } = useParams();
@@ -99,15 +101,16 @@ export default function LivePlayer() {
 
   // Answer result state
   const [answerFeedback, setAnswerFeedback] = useState(null);
-  const [correctIndex, setCorrectIndex] = useState(null);
+  const [, setCorrectIndex] = useState(null);
   const [totalScore, setTotalScore] = useState(0);
   const [currentRank, setCurrentRank] = useState(null);
   const [totalPlayersCount, setTotalPlayersCount] = useState(0);
 
   // Kahoot Countdown state
-  const [isCountingDown, setIsCountingDown] = useState(false);
+  const [, setIsCountingDown] = useState(false);
   const isCountingDownRef = useRef(false);
   const pendingQuestionRef = useRef(null);
+  const [showReactionIcons, setshowReactionIcons] = useState(false);
 
   // Final Ended state & Review
   const [finalLeaderboard, setFinalLeaderboard] = useState([]);
@@ -118,6 +121,54 @@ export default function LivePlayer() {
 
   const timerRef = useRef(null);
   const socketRef = useRef(null);
+  const sessionInfoRef = useRef({
+    pin: "",
+    sessionId: "",
+    playerId: null,
+    name: "",
+    profilePic: "",
+  });
+
+  // Internet uzilib qayta ulanganda avtomatik sinxronizatsiya
+  useEffect(() => {
+    const handleOnline = () => {
+      toast.info("Internet aloqasi tiklandi. O'yin yangilanmoqda...", {
+        autoClose: 2000,
+      });
+      const currentSocket = socketRef.current;
+      if (currentSocket) {
+        if (!currentSocket.connected) {
+          currentSocket.connect();
+        } else {
+          const s = sessionInfoRef.current;
+          let savedLocal = {};
+          try {
+            savedLocal =
+              JSON.parse(localStorage.getItem("ziyo_live_player")) || {};
+          } catch {}
+          currentSocket.emit("player:join", {
+            sessionId: s.sessionId || savedLocal.sessionId,
+            playerId: s.playerId || savedLocal.playerId,
+            name: s.name || savedLocal.name,
+            profilePic: s.profilePic || savedLocal.profilePic,
+          });
+        }
+      }
+    };
+
+    const handleOffline = () => {
+      toast.warning("Internet uzildi! Aloqa qayta tiklanishi kutilmoqda...", {
+        autoClose: 3500,
+      });
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   const startTimer = (seconds) => {
     if (timerRef.current) clearInterval(timerRef.current);
@@ -149,42 +200,75 @@ export default function LivePlayer() {
       socketRef.current.disconnect();
     }
 
+    const activePic = profilePicToUse || profilePic || quizAvatar1;
+
+    sessionInfoRef.current = {
+      pin: pinToUse,
+      sessionId: sessionIdToUse,
+      playerId: playerIdToUse,
+      name: nameToUse,
+      profilePic: activePic,
+    };
+
     const token = localStorage.getItem("token");
     const socketUrl =
       import.meta.env.VITE_API_URL || "https://ziyo.onrender.com";
     const newSocket = io(socketUrl, {
       auth: { token },
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
 
     socketRef.current = newSocket;
     setSocket(newSocket);
 
-    const activePic = profilePicToUse || profilePic || quizAvatar1;
-
     newSocket.on("connect", () => {
+      let savedLocal = {};
+      try {
+        savedLocal =
+          JSON.parse(localStorage.getItem("ziyo_live_player")) || {};
+      } catch {}
+
+      const s = sessionInfoRef.current;
+      const currentPid = s.playerId || savedLocal.playerId || null;
+      const currentSid = s.sessionId || savedLocal.sessionId || sessionIdToUse;
+      const currentName = s.name || savedLocal.name || nameToUse;
+      const currentPic = s.profilePic || savedLocal.profilePic || activePic;
+
       newSocket.emit("player:join", {
-        sessionId: sessionIdToUse,
-        playerId: playerIdToUse,
-        name: nameToUse,
-        profilePic: activePic,
+        sessionId: currentSid,
+        playerId: currentPid,
+        name: currentName,
+        profilePic: currentPic,
       });
     });
 
     newSocket.on("player:joined", (data) => {
       setPlayerId(data.playerId);
-      if (data.name) setName(data.name);
-      if (data.profilePic) setProfilePic(data.profilePic);
+      sessionInfoRef.current.playerId = data.playerId;
+      if (data.name) {
+        setName(data.name);
+        sessionInfoRef.current.name = data.name;
+      }
+      if (data.profilePic) {
+        setProfilePic(data.profilePic);
+        sessionInfoRef.current.profilePic = data.profilePic;
+      }
       if (data.score !== undefined) setTotalScore(data.score);
       if (data.myAnswerHistory) setMyAnswerHistory(data.myAnswerHistory);
 
       localStorage.setItem(
         "ziyo_live_player",
         JSON.stringify({
-          pin: pinToUse,
-          sessionId: sessionIdToUse,
+          pin: sessionInfoRef.current.pin || pinToUse,
+          sessionId: sessionInfoRef.current.sessionId || sessionIdToUse,
           playerId: data.playerId,
-          name: data.name || nameToUse,
-          profilePic: data.profilePic || activePic,
+          name: data.name || sessionInfoRef.current.name || nameToUse,
+          profilePic:
+            data.profilePic || sessionInfoRef.current.profilePic || activePic,
         }),
       );
 
@@ -208,17 +292,24 @@ export default function LivePlayer() {
         setCorrectIndex(data.correctIndex);
         setAnswerFeedback(data.myAnswer);
         setPlayerState("answer_result");
+        if (data.myRank) setCurrentRank(data.myRank);
+        if (data.totalPlayers) setTotalPlayersCount(data.totalPlayers);
       } else if (data.status === "ended") {
         if (timerRef.current) clearInterval(timerRef.current);
         setPlayerState("ended");
+        if (data.leaderboard) setFinalLeaderboard(data.leaderboard);
+        if (data.questionsReview) setQuestionsReview(data.questionsReview);
+        if (data.myRank) setMyRank(data.myRank);
       } else {
         setPlayerState("lobby");
       }
     });
 
     newSocket.on("player:avatar:updated", (data) => {
-      if (data.playerId === playerIdToUse) {
+      const currentPid = sessionInfoRef.current.playerId;
+      if (data.playerId === currentPid) {
         setProfilePic(data.profilePic);
+        sessionInfoRef.current.profilePic = data.profilePic;
       }
     });
 
@@ -227,8 +318,10 @@ export default function LivePlayer() {
       setErrorMsg(msg);
       toast.error(msg);
       setIsJoining(false);
-      localStorage.removeItem("ziyo_live_player");
-      setPlayerState("join");
+      if (msg.includes("topilmadi")) {
+        localStorage.removeItem("ziyo_live_player");
+        setPlayerState("join");
+      }
     });
 
     newSocket.on("game:started", () => {
@@ -455,7 +548,20 @@ export default function LivePlayer() {
       });
     }
   };
+  const handleSendEmoji = (emoji) => {
+    setshowReactionIcons(false);
 
+    // Faol socketni aniqlab olamiz
+    const activeSocket = socketRef.current || socket;
+
+    if (activeSocket && sessionId) {
+      activeSocket.emit("send_reaction", {
+        emoji: emoji,
+        sessionId: sessionId, // Xonani aniqlash uchun sessionId yuboriladi
+        name: name, // Kim yuborgani ko'rinishi uchun (ixtiyoriy)
+      });
+    }
+  };
   const handleExitGame = () => {
     localStorage.removeItem("ziyo_live_player");
     if (socketRef.current) socketRef.current.disconnect();
@@ -560,12 +666,10 @@ export default function LivePlayer() {
                 name.charAt(0).toUpperCase()
               )}
             </div>
-
             <h2>Siz o'yindasiz, {name}! 🎉</h2>
             <p className="lobby-wait-text">
               Boshlovchi o'yinni boshlashini kuting...
             </p>
-
             <div className="kahoot-avatar-picker-box">
               <div className="picker-header">
                 <span className="picker-title">🎭 Avataringizni tanlang</span>
@@ -917,6 +1021,15 @@ export default function LivePlayer() {
             </button>
           </motion.div>
         </div>
+      )}
+      {/* Kahoot-style Live Reaksiyalar (barcha qatnashchilar va hostda ko'rinadi) */}
+      {playerState !== "join" && (
+        <LiveReactions
+          socket={socketRef.current || socket}
+          sessionId={sessionId}
+          senderName={name || "O'yinchi"}
+          showTrigger={true}
+        />
       )}
     </div>
   );

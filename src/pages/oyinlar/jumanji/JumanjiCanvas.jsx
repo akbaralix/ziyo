@@ -52,7 +52,6 @@ export default function JumanjiCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let animationFrameId;
 
     const render = () => {
       const width = canvas.width;
@@ -116,38 +115,30 @@ export default function JumanjiCanvas({
 
         let fill = "#d8c797";
         let stroke = "#927648";
-        let textColor = "#3c3424";
         let shadowColor = "rgba(0, 0, 0, 0.38)";
 
         if (tile.type === "start") {
           fill = "#426342";
           stroke = "#c8aa63";
-          textColor = "#fff0bd";
         } else if (tile.type === "finish") {
           fill = "#8c642c";
           stroke = "#f5d681";
-          textColor = "#fff0bd";
           shadowColor = "rgba(234, 179, 8, 0.42)";
         } else if (tile.type === "bomb") {
           fill = "#733f32";
           stroke = "#d47b57";
-          textColor = "#ffe2bd";
         } else if (tile.type === "backward") {
           fill = "#80502e";
           stroke = "#d6a15d";
-          textColor = "#ffebc2";
         } else if (tile.type === "forward") {
           fill = "#49663b";
           stroke = "#a8bd69";
-          textColor = "#f3e9bd";
         } else if (tile.type === "trap") {
           fill = "#756039";
           stroke = "#d9bd69";
-          textColor = "#fff0bd";
         } else if (tile.type === "mystery") {
           fill = "#55425c";
           stroke = "#b895c7";
-          textColor = "#f4dfff";
         }
 
         ctx.save();
@@ -339,7 +330,6 @@ export default function JumanjiCanvas({
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, [tiles, players, activePlayerId, diceValue, isRolling, lastEvent, animatedPositions]);
 

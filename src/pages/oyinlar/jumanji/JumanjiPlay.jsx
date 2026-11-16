@@ -79,7 +79,9 @@ export default function JumanjiPlay() {
 
   const [animatedPositions, setAnimatedPositions] = useState({});
   const animatedPositionsRef = useRef({});
-  animatedPositionsRef.current = animatedPositions;
+  useEffect(() => {
+    animatedPositionsRef.current = animatedPositions;
+  }, [animatedPositions]);
 
   // Marraga yetgandan so'ng g'alaba ekranini ochish
   const triggerVictory = (winner) => {
@@ -251,7 +253,7 @@ export default function JumanjiPlay() {
     };
   }, [roomId]);
 
-  const animateStepByStep = (playerId, fromPos, toPos, onComplete) => {
+  function animateStepByStep(playerId, fromPos, toPos, onComplete) {
     if (fromPos === toPos) {
       if (onComplete) onComplete();
       return;
@@ -302,7 +304,7 @@ export default function JumanjiPlay() {
     };
 
     hopNext();
-  };
+  }
 
   const handleJoinWithName = (e) => {
     e.preventDefault();

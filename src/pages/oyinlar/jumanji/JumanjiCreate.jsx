@@ -4,22 +4,14 @@ import { io } from "socket.io-client";
 import { toast } from "react-toastify";
 import {
   IoArrowBack,
-  IoDiceOutline,
-  IoSparkles,
   IoPlayCircle,
-  IoPeopleOutline,
-  IoFlameOutline,
-  IoShieldCheckmarkOutline,
-  IoWarningOutline,
 } from "react-icons/io5";
-import puzzle from "../../../assets/game/puzzle.jpg";
 import "./JumanjiCreate.css";
 
 export default function JumanjiCreate() {
   const navigate = useNavigate();
 
   // User checking
-  const token = localStorage.getItem("token") || "";
   const currentUser = (() => {
     try {
       const u = JSON.parse(localStorage.getItem("ziyo_user"));

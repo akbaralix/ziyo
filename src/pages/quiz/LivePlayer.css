@@ -200,17 +200,16 @@
 }
 
 .lobby-waiting-card {
-  border-radius: var(--radius-pill);
   padding: 40px 24px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
   gap: 16px;
   max-width: 480px;
   width: 100%;
   box-sizing: border-box;
-  box-shadow: var(--shadow-sm);
 }
 
 .pulse-avatar-circle {
@@ -236,6 +235,71 @@
   border-radius: var(--radius-full);
 }
 
+.reaction-btn {
+  position: absolute;
+  right: 30px;
+  bottom: 0px;
+}
+.reaction-btn button {
+  background: none;
+  font-size: 25px;
+}
+
+.reaction-card {
+  background-color: #f8f8f899;
+  backdrop-filter: blur(8px);
+  position: absolute;
+  width: 280px;
+  border-radius: 8px;
+  margin: 0 auto;
+  margin-bottom: 20px;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.emoji-item button {
+  background: none;
+  border: 1px solid #fbfbfbc0;
+  padding: 1px 12px;
+  font-size: 25px;
+  border-radius: 4px;
+}
+/* Suzib chiquvchi emojilar konteyneri */
+.floating-emojis-container {
+  position: fixed;
+  bottom: 80px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none; /* Bosishga xalaqit bermaydi */
+  z-index: 9999;
+}
+
+/* Har bir emoji elementi */
+.floating-emoji {
+  font-size: 2.5rem;
+  position: absolute;
+  bottom: 0;
+  animation: floatUp 2s ease-out forwards;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(-40px) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-150px) scale(1);
+    opacity: 0;
+  }
+}
 /* Kahoot-style Avatar Picker */
 .kahoot-avatar-picker-box {
   width: 100%;
@@ -268,8 +332,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
+  background: #f8f8f899;
   color: var(--primary);
   font-size: var(--font-xs);
   font-weight: 600;
@@ -308,12 +371,6 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.kahoot-avatar-item:hover {
-  transform: translateY(-3px) scale(1.08);
-  border-color: var(--primary);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
-}
-
 .kahoot-avatar-item.selected {
   border-color: var(--primary);
   box-shadow:
@@ -342,7 +399,7 @@
   align-items: center;
   justify-content: center;
   font-size: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  z-index: 100;
 }
 
 .lobby-waiting-card h2 {
@@ -557,7 +614,7 @@
 }
 
 .feedback-icon.correct {
-  color: var(--color-success);
+  color: #05ff33;
 }
 
 .feedback-icon.wrong {
@@ -1009,6 +1066,9 @@
   }
   .player-top-header {
     padding: 8px 12px;
+  }
+  .lobby-waiting-card {
+    padding: 0;
   }
 }
 @media (max-width: 360px) {

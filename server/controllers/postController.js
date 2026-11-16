@@ -140,7 +140,7 @@ export const getPosts = async (req, res) => {
           if (foundUser) {
             targetUserObjectId = foundUser._id;
           }
-        } catch (e) {
+        } catch {
           // ignore
         }
       }

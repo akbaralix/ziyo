@@ -21,7 +21,6 @@ import { GiCrocJaws } from "react-icons/gi";
 import "./JumanjiBoard.css";
 
 const COLS = 8;
-const ROWS = 5;
 
 // Har bir katak uchun mos React Icon
 export function getTileIcon(tile, idx) {

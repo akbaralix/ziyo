@@ -265,6 +265,7 @@ export const getMe = async (req, res) => {
       user: userObj,
     });
   } catch (error) {
+    console.error("getProfile error:", error);
     return res.status(500).json({
       success: false,
       message: "Profil ma'lumotlarini olishda xatolik.",
@@ -557,7 +558,6 @@ export const updateReadingProgress = async (req, res) => {
       message: "Kitob mutolaasi saqlandi",
       readingBook: user.readingBook,
       finishedBooks: user.finishedBooks,
-      readingBook: user.readingBook,
       xp: user.xp,
     });
   } catch (error) {

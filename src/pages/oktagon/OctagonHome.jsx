@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   IoArrowBack,
   IoFlash,
-  IoShieldCheckmark,
   IoTrophy,
   IoSettingsOutline,
   IoClose,

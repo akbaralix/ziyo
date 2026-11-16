@@ -1,5 +1,4 @@
 import GameSession from "../db/Quiz/GameSession.js";
-import QuizGame from "../db/Quiz/QuizGame.js";
 import User from "../db/User/User.js";
 import jwt from "jsonwebtoken";
 
@@ -27,6 +26,7 @@ export function initSocketIO(io) {
 
         socket.sessionId = sessionId;
         socket.role = "host";
+        socket.playerName = "Boshlovchi";
         socket.join(`session:${sessionId}`);
 
         const creatorId =
@@ -57,20 +57,50 @@ export function initSocketIO(io) {
               )
             : 0;
           const timeLeft = Math.max(0, currentQ.timeLimit - elapsed);
-          const answeredCount = session.players.filter((p) =>
-            p.answers.some((a) => a.questionIndex === session.currentQuestion),
-          ).length;
 
-          baseData.currentQuestion = {
-            questionIndex: session.currentQuestion,
-            totalQuestions: session.quiz.questions.length,
-            text: currentQ.text,
-            options: currentQ.options,
-            timeLimit: currentQ.timeLimit,
-            points: currentQ.points,
-          };
-          baseData.timeLeft = timeLeft;
-          baseData.answeredCount = answeredCount;
+          // Agar vaqt tugab bo'lgan bo'lsa, avtomatik javob holatiga o'tkazish
+          if (timeLeft <= 0) {
+            clearTimeout(sessionTimers[`${sessionId}_q`]);
+            await showAnswer(io, sessionId, session, session.currentQuestion);
+            const freshSession = await GameSession.findById(sessionId).populate("quiz");
+            const freshQ = freshSession.quiz.questions[freshSession.currentQuestion];
+            const leaderboard = [...freshSession.players]
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 5)
+              .map((p, i) => ({
+                rank: i + 1,
+                name: p.name,
+                score: p.score,
+                profilePic: p.profilePic,
+              }));
+
+            baseData.status = "answer";
+            baseData.currentQuestion = {
+              questionIndex: freshSession.currentQuestion,
+              totalQuestions: freshSession.quiz.questions.length,
+              text: freshQ.text,
+              options: freshQ.options,
+              timeLimit: freshQ.timeLimit,
+              points: freshQ.points,
+            };
+            baseData.correctIndex = freshQ.correctIndex;
+            baseData.leaderboard = leaderboard;
+          } else {
+            const answeredCount = session.players.filter((p) =>
+              p.answers.some((a) => a.questionIndex === session.currentQuestion),
+            ).length;
+
+            baseData.currentQuestion = {
+              questionIndex: session.currentQuestion,
+              totalQuestions: session.quiz.questions.length,
+              text: currentQ.text,
+              options: currentQ.options,
+              timeLimit: currentQ.timeLimit,
+              points: currentQ.points,
+            };
+            baseData.timeLeft = timeLeft;
+            baseData.answeredCount = answeredCount;
+          }
         } else if (
           session.status === "answer" &&
           session.currentQuestion >= 0
@@ -111,6 +141,7 @@ export function initSocketIO(io) {
 
         socket.emit("host:joined", baseData);
       } catch (err) {
+        console.error("host:join error:", err);
         socket.emit("error", { msg: "Server xatosi" });
       }
     });
@@ -120,10 +151,7 @@ export function initSocketIO(io) {
       "player:join",
       async ({ sessionId, playerId, name, profilePic }) => {
         try {
-          const session = await GameSession.findOne({
-            _id: sessionId,
-            status: { $ne: "ended" },
-          }).populate("quiz");
+          const session = await GameSession.findById(sessionId).populate("quiz");
 
           if (!session) {
             return socket.emit("player:join:error", {
@@ -131,7 +159,7 @@ export function initSocketIO(io) {
             });
           }
 
-          // Qayta ulanayotgan o'yinchini aniqlash
+          // Qayta ulanayotgan o'yinchini aniqlash (ID, name yoki userId orqali)
           let player = null;
           if (playerId) {
             player = session.players.find(
@@ -141,6 +169,11 @@ export function initSocketIO(io) {
           if (!player && name) {
             player = session.players.find(
               (p) => p.name.trim().toLowerCase() === name.trim().toLowerCase(),
+            );
+          }
+          if (!player && socket.userId) {
+            player = session.players.find(
+              (p) => p.userId && p.userId.toString() === socket.userId.toString(),
             );
           }
 
@@ -154,8 +187,17 @@ export function initSocketIO(io) {
 
             socket.playerId = player._id.toString();
             socket.sessionId = sessionId;
+            socket.playerName = player.name;
             socket.role = "player";
             socket.join(`session:${sessionId}`);
+
+            // Hostga o'yinchi ro'yxatini yangilash uchun xabar beramiz
+            io.to(`session:${sessionId}`).emit("player:new", {
+              id: player._id,
+              name: player.name,
+              profilePic: player.profilePic,
+              score: player.score,
+            });
 
             const myAnswer =
               session.currentQuestion >= 0
@@ -185,22 +227,72 @@ export function initSocketIO(io) {
                 : 0;
               const timeLeft = Math.max(0, currentQ.timeLimit - elapsed);
 
-              responseData.currentQuestion = {
-                questionIndex: session.currentQuestion,
-                totalQuestions: session.quiz.questions.length,
-                text: currentQ.text,
-                options: currentQ.options,
-                timeLimit: currentQ.timeLimit,
-                points: currentQ.points,
-              };
-              responseData.timeLeft = timeLeft;
-              responseData.hasAnswered = !!myAnswer;
-              responseData.chosenIndex = myAnswer ? myAnswer.chosenIndex : null;
+              // Agar internet uzilgan paytda savol vaqti tugab bo'lgan bo'lsa
+              if (timeLeft <= 0) {
+                clearTimeout(sessionTimers[`${sessionId}_q`]);
+                await showAnswer(io, sessionId, session, session.currentQuestion);
+                const freshSession = await GameSession.findById(sessionId).populate("quiz");
+                const freshQ = freshSession.quiz.questions[freshSession.currentQuestion];
+                const allLeaderboard = [...freshSession.players]
+                  .sort((a, b) => b.score - a.score)
+                  .map((p, i) => ({
+                    rank: i + 1,
+                    id: p._id.toString(),
+                    name: p.name,
+                    score: p.score,
+                    profilePic: p.profilePic,
+                  }));
+                const myRank = allLeaderboard.findIndex(p => p.id === player._id.toString()) + 1;
+
+                responseData.status = "answer";
+                responseData.currentQuestion = {
+                  questionIndex: freshSession.currentQuestion,
+                  totalQuestions: freshSession.quiz.questions.length,
+                  text: freshQ.text,
+                  options: freshQ.options,
+                  timeLimit: freshQ.timeLimit,
+                  points: freshQ.points,
+                };
+                responseData.correctIndex = freshQ.correctIndex;
+                responseData.myAnswer = myAnswer
+                  ? {
+                      isCorrect: myAnswer.isCorrect,
+                      pointsEarned: myAnswer.pointsEarned,
+                    }
+                  : null;
+                responseData.leaderboard = allLeaderboard.slice(0, 5);
+                responseData.allLeaderboard = allLeaderboard;
+                responseData.myRank = myRank;
+                responseData.totalPlayers = freshSession.players.length;
+              } else {
+                responseData.currentQuestion = {
+                  questionIndex: session.currentQuestion,
+                  totalQuestions: session.quiz.questions.length,
+                  text: currentQ.text,
+                  options: currentQ.options,
+                  timeLimit: currentQ.timeLimit,
+                  points: currentQ.points,
+                };
+                responseData.timeLeft = timeLeft;
+                responseData.hasAnswered = !!myAnswer;
+                responseData.chosenIndex = myAnswer ? myAnswer.chosenIndex : null;
+              }
             } else if (
               session.status === "answer" &&
               session.currentQuestion >= 0
             ) {
               const currentQ = session.quiz.questions[session.currentQuestion];
+              const allLeaderboard = [...session.players]
+                .sort((a, b) => b.score - a.score)
+                .map((p, i) => ({
+                  rank: i + 1,
+                  id: p._id.toString(),
+                  name: p.name,
+                  score: p.score,
+                  profilePic: p.profilePic,
+                }));
+              const myRank = allLeaderboard.findIndex(p => p.id === player._id.toString()) + 1;
+
               responseData.currentQuestion = {
                 questionIndex: session.currentQuestion,
                 totalQuestions: session.quiz.questions.length,
@@ -216,6 +308,32 @@ export function initSocketIO(io) {
                     pointsEarned: myAnswer.pointsEarned,
                   }
                 : null;
+              responseData.leaderboard = allLeaderboard.slice(0, 5);
+              responseData.allLeaderboard = allLeaderboard;
+              responseData.myRank = myRank;
+              responseData.totalPlayers = session.players.length;
+            } else if (session.status === "ended") {
+              const finalLeaderboard = [...session.players]
+                .sort((a, b) => b.score - a.score)
+                .map((p, i) => ({
+                  rank: i + 1,
+                  id: p._id.toString(),
+                  name: p.name,
+                  score: p.score,
+                  profilePic: p.profilePic,
+                }));
+              const myRank = finalLeaderboard.findIndex(p => p.id === player._id.toString()) + 1;
+              const questionsReview = (session.quiz?.questions || []).map((q) => ({
+                text: q.text,
+                correctIndex: q.correctIndex,
+                explanation: q.explanation || "",
+              }));
+
+              responseData.status = "ended";
+              responseData.leaderboard = finalLeaderboard;
+              responseData.allLeaderboard = finalLeaderboard;
+              responseData.myRank = myRank;
+              responseData.questionsReview = questionsReview;
             }
 
             socket.emit("player:joined", responseData);
@@ -244,6 +362,7 @@ export function initSocketIO(io) {
           const savedPlayer = session.players[session.players.length - 1];
           socket.playerId = savedPlayer._id.toString();
           socket.sessionId = sessionId;
+          socket.playerName = savedPlayer.name;
           socket.role = "player";
           socket.join(`session:${sessionId}`);
 
@@ -297,6 +416,34 @@ export function initSocketIO(io) {
         }
       },
     );
+
+    socket.on("send_reaction", ({ emoji, sessionId, user, name }) => {
+      try {
+        const sId = sessionId || socket.sessionId;
+        if (!sId || !emoji) return;
+
+        const senderName =
+          name ||
+          user?.name ||
+          socket.playerName ||
+          (socket.role === "host" ? "Boshlovchi" : "O'yinchi");
+
+        const reactionData = {
+          id: `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          emoji,
+          sessionId: sId,
+          name: senderName,
+          playerId: socket.playerId || null,
+          role: socket.role || "player",
+          timestamp: Date.now(),
+        };
+
+        io.to(`session:${sId}`).emit("receive_reaction", reactionData);
+        io.to(`session:${sId}`).emit("recive_reaction", reactionData);
+      } catch (err) {
+        console.error("send_reaction error:", err);
+      }
+    });
 
     // ===================== O'YINNI BOSHLASH (HOST) =====================
     socket.on("host:start", async ({ sessionId }) => {
@@ -366,7 +513,9 @@ export function initSocketIO(io) {
           await session.save();
 
           // Saralangan o'yinchilar bo'yicha joriy o'rinni hisoblash
-          const sortedPlayers = [...session.players].sort((a, b) => b.score - a.score);
+          const sortedPlayers = [...session.players].sort(
+            (a, b) => b.score - a.score,
+          );
           const currentRank =
             sortedPlayers.findIndex(
               (p) => p._id.toString() === playerId.toString(),

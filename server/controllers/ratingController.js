@@ -16,8 +16,6 @@ const calculateLevel = (xp = 0) => {
  */
 export const getLeaderboard = async (req, res) => {
   try {
-    const { timeframe, category } = req.query;
-
     // Barcha ro'yxatdan o'tgan foydalanuvchilarni olish
     const users = await User.find(
       {},

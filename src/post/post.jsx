@@ -9,7 +9,7 @@ import {
 import { LuShare2, LuArrowUp, LuPencil, LuTrash2 } from "react-icons/lu";
 import { IoMdClose } from "react-icons/io";
 import { IoEyeOffOutline, IoAlertCircleOutline } from "react-icons/io5";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   useInfiniteQuery,

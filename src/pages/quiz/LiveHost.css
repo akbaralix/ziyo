@@ -357,7 +357,7 @@
 
 .countdown-circle-badge.urgent {
   background: var(--color-danger);
-  animation: pulse 0.8s infinite;
+  animation: pulse 0.7s infinite;
 }
 
 .host-question-banner {
@@ -383,7 +383,6 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
-  flex: 1;
 }
 
 .host-option-card {

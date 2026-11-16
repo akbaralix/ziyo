@@ -188,7 +188,7 @@ export function initOctagonSocket(io) {
       removeFromQueue(socket.id);
 
       // Agar faol jangda bo'lsa, raqibga g'alaba berish
-      for (const [roomId, battle] of activeBattles.entries()) {
+      for (const battle of activeBattles.values()) {
         if (battle.status === "active") {
           if (
             battle.player1.socketId === socket.id ||
