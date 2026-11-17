@@ -158,7 +158,8 @@
   padding: 13px 18px;
   border-radius: var(--radius-pill);
   border: 1.5px solid var(--border-color);
-  background: var(--bg-subtle);
+  background: #f8f8f8bd;
+  backdrop-filter: blur(8px);
   color: var(--text-primary);
   font-size: var(--font-base);
   outline: none;

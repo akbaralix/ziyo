@@ -121,6 +121,7 @@ export default function LivePlayer() {
 
   const timerRef = useRef(null);
   const socketRef = useRef(null);
+  const hasAutoJoinedUrlPinRef = useRef(false);
   const sessionInfoRef = useRef({
     pin: "",
     sessionId: "",
@@ -488,16 +489,19 @@ export default function LivePlayer() {
     };
   }, [urlPin]);
 
-  // Agar user tizimga kirgan bo'lsa va PIN mavjud bo'lsa, avtomatik ulanish
+  // Faqat URL orqali PIN kelganda (QR-kod yoki havola orqali ochilganda) va user login bo'lsa bir marta avtomatik kirish
   useEffect(() => {
-    const userIsLogin =
-      !!localStorage.getItem("ziyo_user") ||
-      !!localStorage.getItem("ziyo_user_profile");
+    if (urlPin && !hasAutoJoinedUrlPinRef.current) {
+      const userIsLogin =
+        !!localStorage.getItem("ziyo_user") ||
+        !!localStorage.getItem("ziyo_user_profile");
 
-    if (userIsLogin && pin && name.trim() && playerState === "join") {
-      handleJoin();
+      if (userIsLogin && name.trim() && playerState === "join") {
+        hasAutoJoinedUrlPinRef.current = true;
+        handleJoin();
+      }
     }
-  }, [pin, name]);
+  }, [urlPin, name]);
 
   const handleSelectAvatar = (avatarSrc) => {
     setProfilePic(avatarSrc);

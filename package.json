@@ -23,6 +23,7 @@
     "mongoose": "^9.10.4",
     "node-telegram-bot-api": "^2.1.0",
     "pdfjs-dist": "^6.4.299",
+    "pptxgenjs": "^4.0.1",
     "qrcode": "^1.5.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

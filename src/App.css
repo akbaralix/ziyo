@@ -1,6 +1,7 @@
 .app-layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
   max-width: 100%;
 }
@@ -10,6 +11,7 @@
   min-width: 0;
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: clip;
 }
 

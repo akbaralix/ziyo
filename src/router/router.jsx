@@ -16,6 +16,7 @@ import OctagonHome from "../pages/oktagon/OctagonHome.jsx";
 import OctagonBattle from "../pages/oktagon/OctagonBattle.jsx";
 import JumanjiCreate from "../pages/oyinlar/jumanji/JumanjiCreate.jsx";
 import JumanjiPlay from "../pages/oyinlar/jumanji/JumanjiPlay.jsx";
+import SlaydYaratish from "../pages/slayd/slaydyaratish.jsx";
 
 function Router() {
   // FIX: token ni useState bilan kuzatamiz.
@@ -94,6 +95,10 @@ function Router() {
         element={token ? <Oyinlar /> : <Navigate to="/login" replace />}
       />
 
+      <Route
+        path="/slayd"
+        element={token ? <SlaydYaratish /> : <Navigate to="/login" replace />}
+      />
       <Route
         path="/yaratish/oyinlar"
         element={<Navigate to="/oyinlar" replace />}

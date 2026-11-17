@@ -325,6 +325,15 @@ function Create() {
           >
             <img src="/ziyo-game.webp" alt="" /> <span>Ziyo O'yinlari</span>
           </button>
+
+          <button
+            type="button"
+            className={`type-btn ${postType === "fact" ? "active" : ""}`}
+            onClick={() => navigate("/slayd")}
+          >
+            <img src="/fact-create.webp" alt="" />
+            <span>Slayd yaratish</span>
+          </button>
         </div>
       </div>
 

@@ -55,7 +55,6 @@ const DISCIPLINES = [
     subtitle: "Dinamik sonlar & Aql charxi",
     description:
       "Parametrik formulalar, tenglamalar, foizlar va mantiq. Har safar mutlaqo yangi va takrorlanmas misollar!",
-    badge: "Cheksiz savollar",
     color: "#461fe2",
     bgSoft: "#f5f3ff",
   },

@@ -1,0 +1,1273 @@
+/* ==========================================================================
+   Ziyo Slayd / Gamma Taqdimot Dizayn Tizimi
+   Loyihaning umumiy uslubiga 100% uyg'unlashtirilgan stillar
+   ========================================================================== */
+
+.create-slayd-container {
+  padding: 24px 20px 80px;
+  min-height: calc(100vh - 80px);
+  position: relative;
+  max-width: 900px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  font-family: var(--font-family-base, "Poppins", sans-serif);
+}
+
+.create-back-btn {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm, 10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--text-secondary, #475569);
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.04));
+}
+
+.create-back-btn:hover {
+  background: var(--bg-hover, #f1f5f9);
+  color: var(--primary, #461fe2);
+  border-color: var(--primary-border, #e0e7ff);
+  transform: translateX(-2px);
+}
+
+.create-header-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex-direction: column;
+  margin-top: 24px;
+}
+.create-header-text h2 {
+  font-size: 2.75rem;
+  margin-bottom: 10px;
+  color: var(--text-primary, #0f172a);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.create-header-text p {
+  font-size: 1.15rem;
+  color: var(--text-secondary, #64748b);
+  max-width: 520px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.create-action {
+  margin: 0 auto;
+  margin-top: 48px;
+  max-width: 680px;
+  position: relative;
+}
+
+.slide-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+  z-index: 20;
+}
+
+.create-action-row {
+  margin-bottom: 14px;
+}
+
+.create-action-row button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--bg-card, #ffffff);
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-top: 2.5px solid var(--primary, #461fe2);
+  border-radius: var(--radius-pill, 33px);
+  padding: 9px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-primary, #0f172a);
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+}
+
+.create-action-row button:hover {
+  background-color: var(--bg-subtle, #f8fafc);
+  border-color: var(--primary, #461fe2);
+}
+
+.board-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 250px;
+  background-color: var(--bg-card, #ffffff);
+  padding: 8px;
+  border-radius: var(--radius-lg, 16px);
+  position: absolute;
+  top: 48px;
+  left: 0;
+  max-height: 280px;
+  scrollbar-width: thin;
+  overflow-y: auto;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border-color, #e2e8f0);
+  z-index: 100;
+  animation: fadeInDown 0.15s ease;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.board-container button {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 13.5px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-secondary, #334155);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.board-container button:hover {
+  background-color: var(--primary-light, #f5f3ff);
+  color: var(--primary, #461fe2);
+}
+
+.board-container button.active-count {
+  background-color: var(--primary-soft, #ede9fe);
+  color: var(--primary, #461fe2);
+  font-weight: 700;
+}
+
+.create-slayd-input {
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.create-slayd-input input {
+  width: 100%;
+  padding: 16px 48px 16px 20px;
+  font-size: 16px;
+  font-family: inherit;
+  background: var(--bg-card, #ffffff);
+  border-radius: var(--radius-lg, 16px);
+  border: 1.5px solid var(--border-color, #cbd5e1);
+  outline: none;
+  box-sizing: border-box;
+  box-shadow: var(--shadow-sm, 0 2px 6px rgba(0, 0, 0, 0.04));
+  transition: all 0.2s ease;
+  color: var(--text-primary, #0f172a);
+}
+
+.create-slayd-input input:focus {
+  border-color: var(--primary, #461fe2);
+  box-shadow: 0 0 0 4px rgba(70, 31, 226, 0.14);
+}
+
+.create-slayd-input input::placeholder {
+  color: var(--text-light, #94a3b8);
+}
+
+.input-clear-btn {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-light, #94a3b8);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.input-clear-btn:hover {
+  color: var(--text-primary, #0f172a);
+}
+
+/* Tezkor tavsiya qilingan mavzular (Suggestion Chips) */
+.quick-topics-wrapper {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quick-topics-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.quick-topics-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-topic-chip {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-pill, 33px);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-xs);
+}
+
+.quick-topic-chip:hover {
+  border-color: var(--primary, #461fe2);
+  color: var(--primary, #461fe2);
+  background: var(--primary-light, #f5f3ff);
+  transform: translateY(-1px);
+}
+
+.css-1e54vvi {
+  display: flex;
+  justify-content: center;
+}
+
+.create-slyde {
+  background: var(--primary, #461fe2);
+  color: #ffffff;
+  padding: 12px 32px;
+  border-radius: var(--radius-pill, 33px);
+  min-width: 15em;
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-family: inherit;
+  margin-top: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 8px 22px rgba(70, 31, 226, 0.28);
+  transition: all 0.25s ease;
+  animation: motion 0.4s ease;
+}
+
+.create-slyde:hover:not(:disabled) {
+  background: var(--primary-hover, #3716b5);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(70, 31, 226, 0.36);
+}
+
+.create-slyde:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes motion {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Yaratish paytidagi zamonaviy progress holati */
+.create-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 48px;
+  gap: 16px;
+}
+
+.loading-spinner-ring {
+  width: 44px;
+  height: 44px;
+  border: 4px solid var(--border-color, #e2e8f0);
+  border-top-color: var(--primary, #461fe2);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-status-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  animation: pulseText 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseText {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ==========================================================================
+   GAMMA USLUBIDAGI INTERAKTIV ISH MAYDONI (WORKSPACE)
+   ========================================================================== */
+
+.gamma-workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--bg-main, #f0f2f5);
+  font-family: var(--font-family-base, "Poppins", sans-serif);
+  overflow: hidden;
+  position: relative;
+}
+
+.gamma-topbar {
+  height: 64px;
+  background: var(--bg-card, #ffffff);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 30;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.gamma-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.gamma-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm, 10px);
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-card, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text-secondary, #475569);
+  transition: all 0.2s ease;
+}
+
+.gamma-icon-btn:hover {
+  background: var(--bg-hover, #f8fafc);
+  color: var(--primary, #461fe2);
+  border-color: var(--border-hover, #cbd5e1);
+}
+
+.gamma-doc-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-primary, #0f172a);
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid transparent;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.gamma-themes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.theme-icon {
+  font-size: 20px;
+  color: var(--text-muted, #64748b);
+  margin-right: 4px;
+}
+
+.theme-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill, 20px);
+  border: 1.5px solid transparent;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.15s ease;
+}
+
+.theme-pill:hover {
+  transform: translateY(-1px);
+}
+
+.theme-pill.active {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px rgba(70, 31, 226, 0.35);
+}
+
+.theme-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.gamma-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.gamma-btn-secondary,
+.gamma-btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm, 10px);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.gamma-btn-secondary {
+  background: var(--bg-subtle, #f1f5f9);
+  color: var(--text-secondary, #334155);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.gamma-btn-secondary:hover {
+  background: var(--bg-hover, #e2e8f0);
+  color: var(--text-primary, #0f172a);
+}
+
+.gamma-btn-primary {
+  background: var(--primary, #461fe2);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(70, 31, 226, 0.25);
+}
+
+.gamma-btn-primary:hover {
+  background: var(--primary-hover, #3716b5);
+  transform: translateY(-1px);
+}
+
+/* Ishchi maydon */
+.gamma-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Chap panel: Slaydlar eskizi */
+.gamma-sidebar {
+  width: 240px;
+  background: var(--bg-card, #ffffff);
+  border-right: 1px solid var(--border-color, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  flex-shrink: 0;
+}
+
+.gamma-sidebar-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.gamma-thumb {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-md, 12px);
+  border: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.gamma-thumb:hover {
+  background: var(--bg-subtle, #f8fafc);
+}
+
+.gamma-thumb.active {
+  background: var(--primary-light, #f5f3ff);
+  border-color: var(--primary, #461fe2);
+}
+
+.thumb-number {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+  width: 18px;
+  padding-top: 4px;
+}
+
+.thumb-preview {
+  flex: 1;
+  height: 80px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--border-color, #cbd5e1);
+  padding: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.thumb-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.thumb-layout-tag {
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--primary-light, rgba(70, 31, 226, 0.12));
+  color: var(--primary, #461fe2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
+  text-transform: uppercase;
+}
+
+.thumb-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: none;
+  gap: 4px;
+}
+
+.gamma-thumb:hover .thumb-controls {
+  display: flex;
+}
+
+.thumb-btn {
+  background: rgba(15, 23, 42, 0.75);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 0.15s;
+}
+
+.thumb-btn:hover {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.thumb-btn.delete:hover {
+  background: var(--color-danger, #ef4444);
+}
+
+.gamma-add-slide-btn {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: var(--radius-md, 12px);
+  border: 1.5px dashed var(--border-hover, #cbd5e1);
+  background: var(--bg-subtle, #f8fafc);
+  color: var(--text-secondary, #334155);
+  font-weight: 600;
+  font-size: 13px;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gamma-add-slide-btn:hover {
+  border-color: var(--primary, #461fe2);
+  color: var(--primary, #461fe2);
+  background: var(--primary-light, #f5f3ff);
+}
+
+/* Markaziy Canvas */
+.gamma-canvas {
+  flex: 1;
+  overflow-y: auto;
+  padding: 40px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  scroll-behavior: smooth;
+}
+
+/* Slayd Kartasi */
+.gamma-slide-card {
+  width: 100%;
+  max-width: 960px;
+  min-height: 520px;
+  border-radius: var(--radius-xl, 20px);
+  padding: 38px 46px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.07);
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+}
+
+.gamma-slide-card.selected-card {
+  box-shadow: 0 16px 44px rgba(70, 31, 226, 0.16);
+  border-color: rgba(70, 31, 226, 0.3);
+}
+
+/* Slayd Yuqori Paneli */
+.slide-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.slide-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slide-badge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill, 20px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.layout-picker-select {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: var(--bg-card, #ffffff);
+  color: var(--text-secondary, #334155);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.layout-picker-select:hover,
+.layout-picker-select:focus {
+  border-color: var(--primary, #461fe2);
+}
+
+.slide-quick-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-action-btn {
+  background: transparent;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: var(--radius-xs, 6px);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--text-muted, #64748b);
+  transition: all 0.15s;
+}
+
+.card-action-btn:hover {
+  background: var(--bg-hover, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+}
+
+.card-action-btn.delete:hover {
+  background: #fee2e2;
+  color: var(--color-danger, #ef4444);
+  border-color: #fca5a5;
+}
+
+/* Sarlavhalar */
+.editable-title {
+  width: 100%;
+  font-size: 30px;
+  font-weight: 800;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm, 8px);
+  padding: 4px 8px;
+  margin-left: -8px;
+  outline: none;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.editable-title:hover,
+.editable-title:focus {
+  border-color: rgba(70, 31, 226, 0.25);
+  background: rgba(70, 31, 226, 0.04);
+}
+
+.editable-subtitle {
+  width: 100%;
+  font-size: 16.5px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm, 8px);
+  padding: 4px 8px;
+  margin: 4px 0 20px -8px;
+  outline: none;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.editable-subtitle:hover,
+.editable-subtitle:focus {
+  border-color: rgba(70, 31, 226, 0.25);
+  background: rgba(70, 31, 226, 0.04);
+}
+
+/* ================= 1. COVER LAYOUT ================= */
+.layout-cover-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  flex: 1;
+  padding: 30px 0;
+}
+
+.cover-title {
+  font-size: 44px !important;
+  font-weight: 900 !important;
+  line-height: 1.25;
+  margin-bottom: 14px;
+}
+
+.cover-subtitle {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  margin-bottom: 28px !important;
+}
+
+.cover-footer-text {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0.95;
+  border-left: 3px solid rgba(70, 31, 226, 0.35);
+  padding-left: 20px;
+}
+
+/* ================= 2. SPLIT LAYOUT ================= */
+.slide-body-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 36px;
+  align-items: center;
+  flex: 1;
+}
+
+.slide-text-area {
+  display: flex;
+  flex-direction: column;
+}
+
+.editable-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bullet-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.bullet-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+
+.editable-bullet-input {
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.55;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 6px;
+  padding: 4px 8px;
+  resize: none;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.editable-bullet-input:hover,
+.editable-bullet-input:focus {
+  border-color: rgba(70, 31, 226, 0.25);
+  background: rgba(70, 31, 226, 0.04);
+}
+
+.remove-bullet-btn {
+  background: none;
+  border: none;
+  color: var(--text-light, #94a3b8);
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.bullet-row:hover .remove-bullet-btn {
+  opacity: 1;
+}
+
+.add-bullet-btn {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 8px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm, 6px);
+  transition: background 0.15s;
+}
+
+.add-bullet-btn:hover {
+  background: rgba(70, 31, 226, 0.08);
+}
+
+.slide-visual-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gamma-styled-image {
+  width: 100%;
+  height: 290px;
+  object-fit: cover;
+  border-radius: var(--radius-md, 14px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s ease;
+}
+
+.gamma-styled-image:hover {
+  transform: scale(1.015);
+}
+
+.image-caption-tag {
+  font-size: 11.5px;
+  color: var(--text-muted, #94a3b8);
+  font-style: italic;
+  text-align: right;
+}
+
+/* ================= 3. CARDS LAYOUT ================= */
+.gamma-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  flex: 1;
+  margin-top: 10px;
+}
+
+.gamma-card-item {
+  border-radius: var(--radius-md, 14px);
+  padding: 24px 20px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.gamma-card-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.card-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-item-num {
+  font-size: 12px;
+  font-weight: 800;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.editable-card-title {
+  font-size: 17px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 6px;
+  padding: 4px 6px;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+}
+
+.editable-card-title:hover,
+.editable-card-title:focus {
+  border-color: rgba(70, 31, 226, 0.25);
+  background: rgba(70, 31, 226, 0.04);
+}
+
+.editable-card-desc {
+  font-size: 14px;
+  line-height: 1.55;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 6px;
+  padding: 4px 6px;
+  width: 100%;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  flex: 1;
+}
+
+.editable-card-desc:hover,
+.editable-card-desc:focus {
+  border-color: rgba(70, 31, 226, 0.25);
+  background: rgba(70, 31, 226, 0.04);
+}
+
+/* ================= 4. STATS LAYOUT ================= */
+.gamma-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px;
+  flex: 1;
+  margin-top: 16px;
+  align-items: stretch;
+}
+
+.gamma-stat-card {
+  border-radius: var(--radius-lg, 16px);
+  padding: 28px 22px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  border-top-width: 4px !important;
+  transition: transform 0.2s ease;
+}
+
+.gamma-stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.editable-stat-value {
+  font-size: 38px;
+  font-weight: 900;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 6px;
+  padding: 2px 6px;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+  letter-spacing: -0.02em;
+}
+
+.editable-stat-value:hover,
+.editable-stat-value:focus {
+  border-color: rgba(70, 31, 226, 0.25);
+  background: rgba(70, 31, 226, 0.04);
+}
+
+.editable-stat-label {
+  font-size: 16px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 6px;
+  padding: 2px 6px;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+}
+
+.editable-stat-label:hover,
+.editable-stat-label:focus {
+  border-color: rgba(70, 31, 226, 0.25);
+  background: rgba(70, 31, 226, 0.04);
+}
+
+.editable-stat-desc {
+  font-size: 13.5px;
+  line-height: 1.45;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 6px;
+  padding: 2px 6px;
+  width: 100%;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  opacity: 0.85;
+}
+
+.editable-stat-desc:hover,
+.editable-stat-desc:focus {
+  border-color: rgba(70, 31, 226, 0.25);
+  background: rgba(70, 31, 226, 0.04);
+}
+
+/* ================= 5. PROCESS LAYOUT ================= */
+.gamma-process-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  flex: 1;
+  margin-top: 16px;
+}
+
+.gamma-process-step {
+  border-radius: var(--radius-md, 14px);
+  padding: 24px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+
+.process-step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step-num-badge {
+  font-size: 13px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill, 20px);
+  color: white;
+}
+
+/* ================= 6. COMPARISON LAYOUT ================= */
+.gamma-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  flex: 1;
+  margin-top: 16px;
+}
+
+.gamma-comparison-col {
+  border-radius: var(--radius-lg, 16px);
+  padding: 26px 22px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.comparison-col-header {
+  font-size: 18px;
+  font-weight: 700;
+  padding-bottom: 10px;
+  border-bottom: 2px solid;
+}
+
+/* ================= 7. CONCLUSION LAYOUT ================= */
+.gamma-conclusion-box {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.quote-bubble {
+  border-left: 4px solid;
+  padding: 18px 26px;
+  border-radius: 0 14px 14px 0;
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.editable-quote {
+  font-size: 20px;
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.5;
+  border: 1px solid transparent;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  resize: none;
+  font-family: inherit;
+}
+
+/* Slayd pastki panel */
+.slide-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+}
+
+/* PDF / Chop etish rejimi */
+@media print {
+  .gamma-topbar,
+  .gamma-sidebar,
+  .slide-quick-toolbar,
+  .add-bullet-btn,
+  .remove-bullet-btn,
+  .thumb-controls {
+    display: none !important;
+  }
+  .gamma-workspace,
+  .gamma-main,
+  .gamma-canvas {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  .gamma-slide-card {
+    box-shadow: none !important;
+    page-break-after: always;
+    margin: 0 !important;
+    max-width: 100% !important;
+    min-height: 600px;
+    border: 1px solid #e2e8f0 !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .create-header-text h2 {
+    font-size: 2rem;
+  }
+  .create-header-text p {
+    font-size: 0.95rem;
+  }
+  .create-action {
+    margin-top: 32px;
+  }
+  .create-action-row button {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+  .create-slayd-input input {
+    padding: 13px 40px 13px 14px;
+    font-size: 14.5px;
+  }
+  .create-slyde {
+    font-size: 0.95rem;
+    min-width: 13em;
+  }
+  .slide-body-grid {
+    grid-template-columns: 1fr;
+  }
+  .gamma-cards-grid,
+  .gamma-stats-grid,
+  .gamma-process-grid,
+  .gamma-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+  .gamma-sidebar {
+    display: none;
+  }
+  .gamma-slide-card {
+    padding: 24px 18px;
+  }
+  .editable-title {
+    font-size: 22px;
+  }
+  .cover-title {
+    font-size: 28px !important;
+  }
+  .gamma-topbar {
+    padding: 0 12px;
+  }
+  .gamma-themes {
+    display: none;
+  }
+}
