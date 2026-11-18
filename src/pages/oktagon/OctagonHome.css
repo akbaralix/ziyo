@@ -483,11 +483,37 @@
 }
 
 @media (max-width: 600px) {
+  .octagon-home-page {
+    padding: 14px 12px 90px;
+  }
+
+  .octagon-home-header {
+    margin-bottom: 18px;
+    gap: 10px;
+  }
+
+  .octagon-circle-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 18px;
+  }
+
+  .octagon-user-stat-badge {
+    padding: 6px 14px;
+    font-size: var(--font-sm);
+  }
+
+  .discipline-card {
+    padding: 18px 16px;
+    border-radius: var(--radius-2xl);
+  }
+
   .octagon-settings-modal {
     max-width: 100%;
     border-radius: var(--radius-2xl);
     padding: 20px 16px;
   }
+
   .diff-xp-stakes {
     flex-direction: column;
     gap: 4px;

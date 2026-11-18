@@ -389,6 +389,49 @@
   flex-shrink: 0;
 }
 
+/* Tabs for AI Modal */
+.aiQuiz-tab-nav {
+  padding: 16px 24px 0 24px;
+  background: var(--bg-card);
+}
+
+.aiQuiz-tab-pill-box {
+  display: flex;
+  background: var(--bg-subtle);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
+  padding: 4px;
+  gap: 4px;
+}
+
+.aiQuiz-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.aiQuiz-tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.aiQuiz-tab-btn.active {
+  background: var(--primary);
+  color: var(--text-white);
+  box-shadow: var(--shadow-xs);
+}
+
 .aiQuiz-body {
   padding: 20px 24px;
   overflow-y: auto;
@@ -398,10 +441,6 @@
 }
 
 .ai-step-card {
-  background: var(--bg-subtle);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-2xl);
-  padding: 18px 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -453,6 +492,61 @@
 .ai-input-field input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.ai-select-field {
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: var(--font-sm);
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.ai-select-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.ai-generating-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--primary-light);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-xl);
+  color: var(--primary);
+  font-size: var(--font-sm);
+  font-weight: 500;
+}
+
+.ai-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid var(--primary-border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+.spin-icon {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .prompt-display-box {
@@ -531,7 +625,7 @@
 }
 
 .aiQuiz-footer {
-  padding: 16px 24px;
+  padding: 10px 20px;
   border-top: 1.5px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -573,8 +667,14 @@
   transition: background-color var(--transition-fast);
 }
 
-.aiQuiz-submit-btn:hover {
+.aiQuiz-submit-btn:hover:not(:disabled) {
   background: var(--primary-hover);
+}
+
+.aiQuiz-submit-btn:disabled,
+.aiQuiz-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Main Content */
@@ -676,9 +776,10 @@
 
 .option-edit-card {
   background: var(--bg-card);
-  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.15) 0px -0.25rem 0px 0px inset;
+  border-radius: 5px;
+  min-height: 5rem;
   border: 1.5px solid var(--border-color);
-  border-left-width: 6px;
   padding: 10px 14px;
   display: flex;
   align-items: center;
@@ -686,21 +787,14 @@
   transition: all var(--transition-fast);
 }
 
-.option-edit-card.is-correct {
-  background: var(--primary-light);
-  border-color: var(--primary-border);
-  border-left-width: 6px;
-}
-
 .option-shape-badge {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-md);
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-white);
-  font-size: 14px;
+  font-size: 1.5rem;
   flex-shrink: 0;
 }
 
@@ -712,22 +806,21 @@
   font-family: inherit;
   border-radius: var(--radius-md);
   font-size: var(--font-base);
-  color: var(--text-primary);
+  color: var(--text-white);
+  border: none;
   outline: none;
   background: transparent;
 }
-
-.option-edit-input:focus {
-  background: var(--bg-subtle);
-  border-color: var(--border-hover);
+.option-edit-input::placeholder {
+  color: var(--text-white);
 }
 
 .correct-toggle-btn {
   width: 34px;
   height: 34px;
   border-radius: var(--radius-full);
-  border: 2px solid var(--border-hover);
-  background: var(--bg-card);
+  border: 3px solid var(--bg-card);
+  background: none;
   color: var(--border-hover);
   display: flex;
   align-items: center;
@@ -951,6 +1044,16 @@
     font-size: 25px;
   }
 
+  .aiQuiz-tab-nav {
+    padding: 12px 16px 0 16px;
+  }
+
+  .aiQuiz-tab-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    gap: 6px;
+  }
+
   .aiQuiz-body {
     padding: 14px 16px;
     gap: 12px;
@@ -975,11 +1078,18 @@
     font-size: 11.5px;
   }
 
-  .ai-input-field input {
+  .ai-input-field input,
+  .ai-select-field {
     padding: 9px 14px;
     font-size: 13px;
     border-radius: var(--radius-2xl);
     width: 100%;
+  }
+
+  .ai-generating-indicator {
+    padding: 10px 12px;
+    font-size: 12px;
+    gap: 8px;
   }
 
   .prompt-display-box {

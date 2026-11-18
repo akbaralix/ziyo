@@ -597,11 +597,14 @@ function Post({
         <div
           style={{
             textAlign: "center",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
             color: "#212121",
             padding: "40px 20px",
           }}
         >
-          <img src="/utyaduckicon12.png" alt="" />
+          <img width={130} src="/utyaduckicon12.png" alt="" />
           <p style={{ fontSize: "20px" }}>
             Hozircha hech qanday post mavjud emas
           </p>

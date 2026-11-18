@@ -183,6 +183,7 @@
 }
 
 .pin-digits {
+  cursor: pointer;
   font-size: clamp(38px, 9vw, 64px);
   font-weight: 700;
   color: var(--primary);
@@ -267,7 +268,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--bg-subtle);
+  background: #c8ccd2;
   border: 1.5px solid var(--border-color);
   color: var(--text-primary);
   padding: 8px 10px;
@@ -363,6 +364,8 @@
 .host-question-banner {
   background: var(--bg-card);
   border: 1.5px solid var(--border-color);
+  background-color: rgb(38, 137, 12);
+  box-shadow: rgba(0, 0, 0, 0.2) 0px -6px 0px 0px inset;
   border-radius: 8px;
   padding: clamp(10px, 2vw, 18px);
   text-align: center;
@@ -887,5 +890,8 @@
   }
   .host-option-card {
     padding: 14px 16px;
+  }
+  .lobby-url {
+    flex-direction: column;
   }
 }

@@ -124,12 +124,11 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
-/* Reaction Dock / Picker card */
 .live-reaction-picker {
-  background: rgba(22, 24, 38, 0.92);
+  background: rgba(22, 24, 38, 0.712);
   backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.16);
+  scrollbar-width: none;
   border-radius: 28px;
   padding: 8px 12px;
   display: flex;

@@ -41,7 +41,7 @@ function App() {
           onToggle={() => setIsCollapsed((prev) => !prev)}
         />
       )}
-      <main className="app-content">
+      <main className={`app-content ${!showNavbar ? "no-navbar" : ""}`}>
         <Router />
       </main>
     </div>

@@ -1,8 +1,3 @@
-/* ==========================================================================
-   Ziyo Slayd / Gamma Taqdimot Dizayn Tizimi
-   Loyihaning umumiy uslubiga 100% uyg'unlashtirilgan stillar
-   ========================================================================== */
-
 .create-slayd-container {
   padding: 24px 20px 80px;
   min-height: calc(100vh - 80px);
@@ -120,8 +115,14 @@
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .board-container button {
@@ -313,7 +314,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-status-text {
@@ -324,8 +327,13 @@
 }
 
 @keyframes pulseText {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ==========================================================================
@@ -655,7 +663,9 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
   border: 1px solid rgba(226, 232, 240, 0.85);
 }
 
@@ -755,7 +765,9 @@
   margin-left: -8px;
   outline: none;
   font-family: inherit;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .editable-title:hover,
@@ -775,7 +787,9 @@
   margin: 4px 0 20px -8px;
   outline: none;
   font-family: inherit;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .editable-subtitle:hover,
@@ -946,7 +960,9 @@
   flex-direction: column;
   gap: 12px;
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .gamma-card-item:hover {
@@ -1269,5 +1285,28 @@
   }
   .gamma-themes {
     display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .create-slayd-container {
+    padding: 16px 12px 90px;
+  }
+
+  .create-header-text h2 {
+    font-size: 1.6rem;
+  }
+
+  .create-header-text p {
+    font-size: 0.88rem;
+  }
+
+  .create-slyde {
+    min-width: 100%;
+  }
+
+  .gamma-slide-card {
+    padding: 18px 14px;
+    border-radius: var(--radius-lg);
   }
 }

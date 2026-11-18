@@ -1,54 +1,201 @@
-// Jumanji Real-time Game Socket Handler
-// Board has 40 tiles (0 to 39, with 39 being the goal / JUMANJI!)
-// Special tiles with events:
-// - BOMBA: portlaydi va 3-5 qadam orqaga tushadi
-// - ORQAGA: 2-4 qadam orqaga chekinadi
-// - OLGA (Moshina / Gepard): 2-4 qadam oldinga sakraydi
-// - TIMSOH / ILON / CHANGALZOR (Tuzoq): keyingi navbatni o'tkazib yuboradi (skip turn)
-// - SAVOL / SIRLI QUTI: bonus XP yoki +2 qadam
-// - JUMANJI (39-katak): MARRA!
-
 const TILES_CONFIG = [
   { id: 0, type: "start", label: "START", desc: "Boshlang'ich nuqta 🏕️" },
   { id: 1, type: "normal", label: "1", desc: "Sokin so'qmoq" },
-  { id: 2, type: "forward", label: "+2", steps: 2, desc: "Gepard izidan! +2 qadam oldinga 🐆" },
+  {
+    id: 2,
+    type: "forward",
+    label: "+2",
+    steps: 2,
+    desc: "Gepard izidan! +2 qadam oldinga 🐆",
+  },
   { id: 3, type: "normal", label: "3", desc: "Bambukzor" },
-  { id: 4, type: "trap", label: "🕸️", desc: "Bahaybat o'rgimchak to'ri! 1 navbat o'tkazib yuboriladi 🕷️" },
-  { id: 5, type: "bomb", label: "💣", steps: -3, desc: "Portlovchi vulqon toshi! -3 qadam orqaga 💥" },
+  {
+    id: 4,
+    type: "trap",
+    label: "🕸️",
+    desc: "Bahaybat o'rgimchak to'ri! 1 navbat o'tkazib yuboriladi 🕷️",
+  },
+  {
+    id: 5,
+    type: "bomb",
+    label: "💣",
+    steps: -3,
+    desc: "Portlovchi vulqon toshi! -3 qadam orqaga 💥",
+  },
   { id: 6, type: "normal", label: "6", desc: "Lianalar orasida" },
-  { id: 7, type: "backward", label: "-2", steps: -2, desc: "Zaharli o'tlar! -2 qadam orqaga 🍃" },
-  { id: 8, type: "mystery", label: "❓", desc: "Sirli Jumanji sandig'i: omad sinovi! 🎁" },
+  {
+    id: 7,
+    type: "backward",
+    label: "-2",
+    steps: -2,
+    desc: "Zaharli o'tlar! -2 qadam orqaga 🍃",
+  },
+  {
+    id: 8,
+    type: "mystery",
+    label: "❓",
+    desc: "Sirli Jumanji sandig'i: omad sinovi! 🎁",
+  },
   { id: 9, type: "normal", label: "9", desc: "Qadimgi toshlar" },
-  { id: 10, type: "trap", label: "🐊", desc: "Timsohlar daryosi! 1 navbat dam olasiz 🐊" },
-  { id: 11, type: "forward", label: "+3", steps: 3, desc: "Karkidonlar podasi surib ketdi! +3 qadam oldinga 🦏" },
+  {
+    id: 10,
+    type: "trap",
+    label: "🐊",
+    desc: "Timsohlar daryosi! 1 navbat dam olasiz 🐊",
+  },
+  {
+    id: 11,
+    type: "forward",
+    label: "+3",
+    steps: 3,
+    desc: "Karkidonlar podasi surib ketdi! +3 qadam oldinga 🦏",
+  },
   { id: 12, type: "normal", label: "12", desc: "Kaltakesaklar g'ori" },
-  { id: 13, type: "bomb", label: "💣", steps: -4, desc: "Qadimgi mina portladi! -4 qadam orqaga 💥" },
+  {
+    id: 13,
+    type: "bomb",
+    label: "💣",
+    steps: -4,
+    desc: "Qadimgi mina portladi! -4 qadam orqaga 💥",
+  },
   { id: 14, type: "normal", label: "14", desc: "Sokin sharshara" },
-  { id: 15, type: "backward", label: "-3", steps: -3, desc: "Maymunlar bosqini! -3 qadam quvib yuborishdi 🐒" },
-  { id: 16, type: "mystery", label: "❓", desc: "Sehrli quti: sehrli quvvat beradi! 💎" },
+  {
+    id: 15,
+    type: "backward",
+    label: "-3",
+    steps: -3,
+    desc: "Maymunlar bosqini! -3 qadam quvib yuborishdi 🐒",
+  },
+  {
+    id: 16,
+    type: "mystery",
+    label: "❓",
+    desc: "Sehrli quti: sehrli quvvat beradi! 💎",
+  },
   { id: 17, type: "normal", label: "17", desc: "Zulmat o'rmoni" },
-  { id: 18, type: "trap", label: "🐍", desc: "Bahaybat Anakonda! 1 navbat harakatsiz qolasiz 🐍" },
-  { id: 19, type: "forward", label: "+2", steps: 2, desc: "Burgut qanotida! +2 qadam oldinga 🦅" },
-  { id: 20, type: "danger", label: "⚠️", steps: -5, desc: "OVCHI VAN PELT! Uning o'qidan qoching! -5 qadam 🎯" },
+  {
+    id: 18,
+    type: "trap",
+    label: "🐍",
+    desc: "Bahaybat Anakonda! 1 navbat harakatsiz qolasiz 🐍",
+  },
+  {
+    id: 19,
+    type: "forward",
+    label: "+2",
+    steps: 2,
+    desc: "Burgut qanotida! +2 qadam oldinga 🦅",
+  },
+  {
+    id: 20,
+    type: "danger",
+    label: "⚠️",
+    steps: -5,
+    desc: "OVCHI VAN PELT! Uning o'qidan qoching! -5 qadam 🎯",
+  },
   { id: 21, type: "normal", label: "21", desc: "Chigal ildizlar" },
-  { id: 22, type: "bomb", label: "💣", steps: -4, desc: "BOMBA! Kuchli portlash: -4 qadam orqaga 💥" },
+  {
+    id: 22,
+    type: "bomb",
+    label: "💣",
+    steps: -4,
+    desc: "BOMBA! Kuchli portlash: -4 qadam orqaga 💥",
+  },
   { id: 23, type: "normal", label: "23", desc: "Qorong'u tunnel" },
-  { id: 24, type: "trap", label: "🌪️", desc: "Tropik quyun! 1 navbat to'xtab turasiz 🌪️" },
-  { id: 25, type: "backward", label: "-2", steps: -2, desc: "Ko'chki sodir bo'ldi! -2 qadam orqaga ⛰️" },
-  { id: 26, type: "forward", label: "+4", steps: 4, desc: "Yashirin portal topildi! +4 qadam oldinga ⚡" },
+  {
+    id: 24,
+    type: "trap",
+    label: "🌪️",
+    desc: "Tropik quyun! 1 navbat to'xtab turasiz 🌪️",
+  },
+  {
+    id: 25,
+    type: "backward",
+    label: "-2",
+    steps: -2,
+    desc: "Ko'chki sodir bo'ldi! -2 qadam orqaga ⛰️",
+  },
+  {
+    id: 26,
+    type: "forward",
+    label: "+4",
+    steps: 4,
+    desc: "Yashirin portal topildi! +4 qadam oldinga ⚡",
+  },
   { id: 27, type: "normal", label: "27", desc: "Qadimgi ibodatxona zinalari" },
-  { id: 28, type: "mystery", label: "❓", desc: "Qadimgi tumor: kutilmagan hodisa! ✨" },
-  { id: 29, type: "trap", label: "🕳️", desc: "Botqoqlik! Cho'kib ketmaslik uchun 1 navbat kuting 🐸" },
-  { id: 30, type: "bomb", label: "💣", steps: -5, desc: "KATTA BOMBA! -5 qadam orqaga uloqtirildi 💥" },
+  {
+    id: 28,
+    type: "mystery",
+    label: "❓",
+    desc: "Qadimgi tumor: kutilmagan hodisa! ✨",
+  },
+  {
+    id: 29,
+    type: "trap",
+    label: "🕳️",
+    desc: "Botqoqlik! Cho'kib ketmaslik uchun 1 navbat kuting 🐸",
+  },
+  {
+    id: 30,
+    type: "bomb",
+    label: "💣",
+    steps: -5,
+    desc: "KATTA BOMBA! -5 qadam orqaga uloqtirildi 💥",
+  },
   { id: 31, type: "normal", label: "31", desc: "Sherlar maskani" },
-  { id: 32, type: "backward", label: "-3", steps: -3, desc: "Qoplon hujumi! -3 qadam orqaga 🐆" },
-  { id: 33, type: "forward", label: "+2", steps: 2, desc: "Ibodatxona sirlari! +2 qadam olg'a 🗝️" },
-  { id: 34, type: "trap", label: "⏳", desc: "Vaqt tuzog'i! 1 navbat dam oling ⏳" },
-  { id: 35, type: "bomb", label: "💣", steps: -4, desc: "Qo'riqchilar qopqoni! -4 qadam orqaga 💥" },
-  { id: 36, type: "mystery", label: "❓", desc: "Jumanji bag'riga bir qadam! 🔮" },
-  { id: 37, type: "backward", label: "-2", steps: -2, desc: "Marra oldidagi to'siq! -2 qadam orqaga 🛡️" },
-  { id: 38, type: "forward", label: "+1", steps: 1, desc: "Oxirgi kuch! +1 qadam olg'a 🏃" },
-  { id: 39, type: "finish", label: "JUMANJI", desc: "🏆 JUMANJI! Zafarga erishildi! Marra!" },
+  {
+    id: 32,
+    type: "backward",
+    label: "-3",
+    steps: -3,
+    desc: "Qoplon hujumi! -3 qadam orqaga 🐆",
+  },
+  {
+    id: 33,
+    type: "forward",
+    label: "+2",
+    steps: 2,
+    desc: "Ibodatxona sirlari! +2 qadam olg'a 🗝️",
+  },
+  {
+    id: 34,
+    type: "trap",
+    label: "⏳",
+    desc: "Vaqt tuzog'i! 1 navbat dam oling ⏳",
+  },
+  {
+    id: 35,
+    type: "bomb",
+    label: "💣",
+    steps: -4,
+    desc: "Qo'riqchilar qopqoni! -4 qadam orqaga 💥",
+  },
+  {
+    id: 36,
+    type: "mystery",
+    label: "❓",
+    desc: "Jumanji bag'riga bir qadam! 🔮",
+  },
+  {
+    id: 37,
+    type: "backward",
+    label: "-2",
+    steps: -2,
+    desc: "Marra oldidagi to'siq! -2 qadam orqaga 🛡️",
+  },
+  {
+    id: 38,
+    type: "forward",
+    label: "+1",
+    steps: 1,
+    desc: "Oxirgi kuch! +1 qadam olg'a 🏃",
+  },
+  {
+    id: 39,
+    type: "finish",
+    label: "JUMANJI",
+    desc: "🏆 JUMANJI! Zafarga erishildi! Marra!",
+  },
 ];
 
 const PLAYER_COLORS = [
@@ -124,11 +271,15 @@ export function initJumanjiSocket(io) {
       const room = rooms.get(upperId);
 
       if (!room) {
-        return socket.emit("error_msg", { message: "Bunday o'yin xonasi topilmadi!" });
+        return socket.emit("error_msg", {
+          message: "Bunday o'yin xonasi topilmadi!",
+        });
       }
 
       if (room.status === "FINISHED") {
-        return socket.emit("error_msg", { message: "Bu o'yin allaqachon tugagan!" });
+        return socket.emit("error_msg", {
+          message: "Bu o'yin allaqachon tugagan!",
+        });
       }
 
       // Agar o'yinchi avval qo'shilgan bo'lsa (qayta ulanish yoki host ulanishi)
@@ -136,7 +287,8 @@ export function initJumanjiSocket(io) {
         (p) =>
           p.id === socket.id ||
           (userId && p.userId === userId) ||
-          (playerName && p.name.trim().toLowerCase() === playerName.trim().toLowerCase())
+          (playerName &&
+            p.name.trim().toLowerCase() === playerName.trim().toLowerCase()),
       );
 
       if (existing) {
@@ -159,14 +311,19 @@ export function initJumanjiSocket(io) {
       }
 
       if (room.status === "PLAYING") {
-        return socket.emit("error_msg", { message: "O'yin allaqachon boshlangan!" });
+        return socket.emit("error_msg", {
+          message: "O'yin allaqachon boshlangan!",
+        });
       }
 
       if (room.players.length >= 8) {
-        return socket.emit("error_msg", { message: "O'yinda maksimal 8 ta o'yinchi bo'lishi mumkin!" });
+        return socket.emit("error_msg", {
+          message: "O'yinda maksimal 8 ta o'yinchi bo'lishi mumkin!",
+        });
       }
 
-      const assignedColor = PLAYER_COLORS[room.players.length % PLAYER_COLORS.length];
+      const assignedColor =
+        PLAYER_COLORS[room.players.length % PLAYER_COLORS.length];
       const newPlayer = {
         id: socket.id,
         userId: userId || null,
@@ -199,16 +356,22 @@ export function initJumanjiSocket(io) {
       if (!room) return;
 
       if (room.hostSocketId !== socket.id) {
-        return socket.emit("error_msg", { message: "Faqat o'yin egasi boshlashi mumkin!" });
+        return socket.emit("error_msg", {
+          message: "Faqat o'yin egasi boshlashi mumkin!",
+        });
       }
 
       if (room.players.length < 1) {
-        return socket.emit("error_msg", { message: "Kamida 1 nafar o'yinchi kerak!" });
+        return socket.emit("error_msg", {
+          message: "Kamida 1 nafar o'yinchi kerak!",
+        });
       }
 
       room.status = "PLAYING";
       room.turnIndex = 0;
-      room.logs.push("🎲 Jumanji boshlandi! Birinchi yurish: " + room.players[0].name);
+      room.logs.push(
+        "🎲 Jumanji boshlandi! Birinchi yurish: " + room.players[0].name,
+      );
 
       jumanjiIo.to(roomId).emit("game_started", { room });
       jumanjiIo.to(roomId).emit("room_updated", { room });
@@ -222,7 +385,9 @@ export function initJumanjiSocket(io) {
 
       const currentPlayer = room.players[room.turnIndex];
       if (!currentPlayer || currentPlayer.id !== socket.id) {
-        return socket.emit("error_msg", { message: "Hozir sizning navbatingiz emas!" });
+        return socket.emit("error_msg", {
+          message: "Hozir sizning navbatingiz emas!",
+        });
       }
 
       // Tasodifiy zar: 1 dan 6 gacha
@@ -304,8 +469,12 @@ export function initJumanjiSocket(io) {
       if (currentPlayer.position >= TILES_CONFIG.length - 1) {
         room.status = "FINISHED";
         room.winner = currentPlayer;
-        room.logs.push(`🎉 JUMANJI! ${currentPlayer.name} o'yinda g'alaba qozondi!`);
-        jumanjiIo.to(roomId).emit("game_finished", { winner: currentPlayer, room });
+        room.logs.push(
+          `🎉 JUMANJI! ${currentPlayer.name} o'yinda g'alaba qozondi!`,
+        );
+        jumanjiIo
+          .to(roomId)
+          .emit("game_finished", { winner: currentPlayer, room });
       } else {
         // Navbatni keyingi o'yinchiga o'tkazish
         advanceTurn(room);
@@ -330,7 +499,9 @@ export function initJumanjiSocket(io) {
       if (!room) return;
 
       if (room.hostSocketId !== socket.id) {
-        return socket.emit("error_msg", { message: "Faqat o'yin egasi qayta boshlashi mumkin!" });
+        return socket.emit("error_msg", {
+          message: "Faqat o'yin egasi qayta boshlashi mumkin!",
+        });
       }
 
       room.status = "PLAYING";
@@ -379,15 +550,18 @@ export function initJumanjiSocket(io) {
 
       // Xonani darhol o'chirmaymiz, sahifa refresh yoki navigate bo'lishi mumkin
       // Faqat 15 daqiqadan so'ng agar hech kim bo'lmasa o'chiriladi
-      setTimeout(() => {
-        const currentRoom = rooms.get(roomId);
-        if (currentRoom) {
-          const activeClients = jumanjiIo.adapter.rooms.get(roomId);
-          if (!activeClients || activeClients.size === 0) {
-            rooms.delete(roomId);
+      setTimeout(
+        () => {
+          const currentRoom = rooms.get(roomId);
+          if (currentRoom) {
+            const activeClients = jumanjiIo.adapter.rooms.get(roomId);
+            if (!activeClients || activeClients.size === 0) {
+              rooms.delete(roomId);
+            }
           }
-        }
-      }, 15 * 60 * 1000);
+        },
+        15 * 60 * 1000,
+      );
 
       jumanjiIo.to(roomId).emit("room_updated", { room });
     });
@@ -407,7 +581,9 @@ function advanceTurn(room) {
     const nextPlayer = room.players[room.turnIndex];
     if (nextPlayer.skipTurn) {
       nextPlayer.skipTurn = false;
-      room.logs.push(`⏳ ${nextPlayer.name} tuzoqda bo'lgani uchun ushbu navbatni avtomatik o'tkazib yubordi!`);
+      room.logs.push(
+        `⏳ ${nextPlayer.name} tuzoqda bo'lgani uchun ushbu navbatni avtomatik o'tkazib yubordi!`,
+      );
       // yana bir marta oldinga o'tadi
       continue;
     } else {

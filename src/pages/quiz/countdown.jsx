@@ -35,30 +35,28 @@ export default function KahootCountdown({
   const getBoxAnimation = () => {
     if (count === 3) {
       return {
-        scale: [0.8, 1.15, 1],
-        rotate: [0, 90, 0],
-        transition: { duration: 0.5 },
+        scale: [0.75, 1.08, 1],
+        rotate: [0, -6, 0],
+        transition: { duration: 0.35, ease: "easeOut" },
       };
     }
     if (count === 2) {
       return {
-        scale: [1, 1.25, 1.1],
-        rotate: [0, -90, -90],
-        transition: { duration: 0.5 },
+        scale: [0.75, 1.08, 1],
+        rotate: [0, 6, 0],
+        transition: { duration: 0.35, ease: "easeOut" },
       };
     }
     if (count === 1) {
       return {
-        scale: [1.1, 1.4, 1.25],
-        rotate: [-90, -180, -180],
-        transition: { duration: 0.5 },
+        scale: [0.75, 1.1, 1],
+        rotate: [0, -5, 0],
+        transition: { duration: 0.35, ease: "easeOut" },
       };
     }
     return {
-      scale: [1.25, 1.8, 2.2],
-      opacity: [1, 0.7, 0],
-      rotate: [-180, -360, -360],
-      transition: { duration: 0.6 },
+      scale: [0.8, 1.08, 1],
+      transition: { duration: 0.35, ease: "easeOut" },
     };
   };
 
@@ -77,9 +75,11 @@ export default function KahootCountdown({
         </motion.div>
 
         {/* Aylanuvchi to'rtburchak va markazdagi raqam konteyneri */}
-        <div className="countdown-box-container">
+        <div
+          className={`countdown-box-container ${count === 0 ? "go-state" : ""}`}
+        >
           <motion.div
-            className="rotating-countdown-box"
+            className={`rotating-countdown-box count-color-${count}`}
             animate={getBoxAnimation()}
             key={`box-${count}`}
           />
@@ -90,10 +90,10 @@ export default function KahootCountdown({
                 <motion.div
                   key={count}
                   className="countdown-digit"
-                  initial={{ scale: 0.2, opacity: 0 }}
-                  animate={{ scale: [0.2, 1.25, 1], opacity: 1 }}
-                  exit={{ scale: 1.8, opacity: 0 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  initial={{ scale: 0.3, opacity: 0 }}
+                  animate={{ scale: [0.3, 1.2, 1], opacity: 1 }}
+                  exit={{ scale: 1.35, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                 >
                   {count}
                 </motion.div>
@@ -101,10 +101,10 @@ export default function KahootCountdown({
                 <motion.div
                   key="go"
                   className="countdown-go-text"
-                  initial={{ scale: 0.3, opacity: 0 }}
-                  animate={{ scale: [0.3, 1.2, 1], opacity: 1 }}
-                  exit={{ scale: 1.5, opacity: 0 }}
-                  transition={{ duration: 0.4 }}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: [0.5, 1.15, 1], opacity: 1 }}
+                  exit={{ scale: 1.2, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
                 >
                   BOSHLADIK! 🎯
                 </motion.div>

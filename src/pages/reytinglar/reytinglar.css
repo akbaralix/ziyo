@@ -604,9 +604,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--color-success-bg);
-  border: 1px solid var(--color-success-border);
-  color: var(--color-success-dark);
+  background: var(--primary-light);
+  border: 1px solid var(--primary-soft);
+  color: var(--primary);
   padding: 6px 12px;
   border-radius: var(--radius-pill);
 }
@@ -738,5 +738,66 @@
 
   .xp-bold {
     font-size: var(--font-xs);
+  }
+}
+
+@media (max-width: 420px) {
+  .reyting-page {
+    padding: 12px 8px 90px 8px;
+  }
+
+  .podium-container {
+    gap: 4px;
+  }
+
+  .podium-avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+  .podium-first .podium-avatar {
+    width: 58px;
+    height: 58px;
+  }
+
+  .podium-user-name {
+    font-size: 11px;
+    max-width: 72px;
+  }
+
+  .podium-first .podium-user-name {
+    font-size: 12px;
+    max-width: 80px;
+  }
+
+  .pedestal-1 {
+    height: 90px;
+  }
+
+  .pedestal-2 {
+    height: 70px;
+  }
+
+  .pedestal-3 {
+    height: 55px;
+  }
+
+  .pedestal-number {
+    font-size: 20px;
+  }
+
+  .leaderboard-header-row,
+  .reyting-row {
+    padding: 10px 8px;
+    grid-template-columns: 28px 1fr 80px;
+    gap: 6px;
+  }
+
+  .user-realname {
+    font-size: var(--font-sm);
+  }
+
+  .xp-display-chip {
+    padding: 3px 6px;
   }
 }

@@ -13,8 +13,8 @@
   width: 100%;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
-  margin-bottom: 10px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
   overflow: hidden;
   box-sizing: border-box;
   box-shadow: var(--shadow-card);
@@ -1032,12 +1032,19 @@
    ========================================================================== */
 @media (max-width: 780px) {
   .comments-modal-box {
-    position: absolute;
+    position: fixed;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    height: 70vh;
+    border-top-left-radius: var(--radius-2xl);
+    border-top-right-radius: var(--radius-2xl);
+    height: 75vh;
+    max-height: 80dvh;
     bottom: 0;
+    left: 0;
+    right: 0;
     width: 100%;
+    margin: 0;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.15);
   }
   .quiz-options {
     grid-template-columns: repeat(1, 1fr);
@@ -1047,7 +1054,7 @@
 @media (max-width: 768px) {
   .post-container {
     max-width: 100%;
-    padding: 10px;
+    padding: 12px 10px;
   }
 
   .post-card {
@@ -1056,15 +1063,17 @@
   }
 
   .post-header {
-    padding: 12px;
+    padding: 12px 14px;
   }
 
   .post-content {
-    padding: 0 12px 14px;
+    padding: 0 14px 14px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .post-footer {
-    padding: 9px 12px;
+    padding: 10px 14px;
   }
 
   .post-title {
@@ -1090,6 +1099,8 @@
 
   .quiz-option {
     min-height: 48px;
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
 
   .quiz-option-text {
@@ -1099,20 +1110,41 @@
 
 @media (max-width: 480px) {
   .post-container {
-    padding: 8px;
+    padding: 8px 6px;
   }
 
   .post-card {
     border-radius: var(--radius-md);
+    margin-bottom: 10px;
+  }
+
+  .post-header {
+    padding: 10px 12px;
+  }
+
+  .post-content {
+    padding: 0 12px 12px;
+  }
+
+  .post-footer {
+    padding: 8px 12px;
   }
 
   .post-category {
     font-size: 11px;
-    padding: 4px 8px;
+    padding: 3px 8px;
   }
 
   .post-actions {
     gap: 14px;
+  }
+
+  .post-action span {
+    font-size: 12px;
+  }
+
+  .post-action svg {
+    font-size: 17px;
   }
 }
 

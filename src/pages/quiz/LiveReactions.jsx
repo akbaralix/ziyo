@@ -12,21 +12,29 @@ export default function LiveReactions({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [floatingList, setFloatingList] = useState([]);
+
+  // Cooldown va takrorlanmas ID uchun ref'lar
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const clickTimestampsRef = useRef([]);
+  const counterRef = useRef(0); // Unikal ID uchun hisoblagich
+
   const pickerRef = useRef(null);
 
-  // Socketdan yangi reaktsiya qabul qilish
   useEffect(() => {
     if (!socket) return;
 
     const handleReaction = (data) => {
       if (!data || !data.emoji) return;
 
+      // Unikal ID hosil qilish (vaqt + random + increment counter)
+      counterRef.current += 1;
       const id =
         data.id ||
-        `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-      const left = Math.floor(Math.random() * 66) + 17; // 17% dan 83% gacha
-      const rotate = Math.floor(Math.random() * 26) - 13; // -13deg dan +13deg
-      const size = Math.floor(Math.random() * 10) + 40; // 40px - 50px
+        `${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${counterRef.current}`;
+
+      const left = Math.floor(Math.random() * 66) + 17;
+      const rotate = Math.floor(Math.random() * 26) - 13;
+      const size = Math.floor(Math.random() * 10) + 40;
       const duration = 2.4;
 
       const newReaction = {
@@ -41,7 +49,6 @@ export default function LiveReactions({
 
       setFloatingList((prev) => [...prev.slice(-30), newReaction]);
 
-      // Animatsiya tugagach tozalash
       setTimeout(() => {
         setFloatingList((prev) => prev.filter((item) => item.id !== id));
       }, duration * 1000);
@@ -56,7 +63,17 @@ export default function LiveReactions({
     };
   }, [socket]);
 
-  // Click outside listener for picker
+  // Cooldown taymerini boshqarish
+  useEffect(() => {
+    let timer;
+    if (cooldownTime > 0) {
+      timer = setInterval(() => {
+        setCooldownTime((prev) => (prev > 1 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [cooldownTime]);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (pickerRef.current && !pickerRef.current.contains(e.target)) {
@@ -71,9 +88,23 @@ export default function LiveReactions({
     };
   }, [isOpen]);
 
-  // Reaksiya yuborish
   const handleSend = (emoji) => {
-    if (!socket || !sessionId) return;
+    if (!socket || !sessionId || cooldownTime > 0) return;
+
+    const now = Date.now();
+    const recentClicks = clickTimestampsRef.current.filter(
+      (timestamp) => now - timestamp < 5000,
+    );
+
+    recentClicks.push(now);
+    clickTimestampsRef.current = recentClicks;
+
+    if (recentClicks.length >= 3) {
+      setCooldownTime(10);
+      setIsOpen(false);
+      clickTimestampsRef.current = [];
+      return;
+    }
 
     socket.emit("send_reaction", {
       emoji,
@@ -85,7 +116,6 @@ export default function LiveReactions({
 
   return (
     <>
-      {/* Floating emojis overlay - barcha ishtirokchilar va hostda uchib chiqadi */}
       <div className="floating-reactions-overlay">
         {floatingList.map((item) => (
           <div
@@ -112,7 +142,6 @@ export default function LiveReactions({
         ))}
       </div>
 
-      {/* Reaksiya yuborish tugmasi va menyusi */}
       {showTrigger && (
         <div className="live-reaction-controls" ref={pickerRef}>
           {isOpen && (
@@ -141,11 +170,29 @@ export default function LiveReactions({
 
           <button
             type="button"
-            className={`live-reaction-trigger-btn ${isOpen ? "active" : ""}`}
-            onClick={() => setIsOpen((prev) => !prev)}
-            title="Reaksiya bildirish"
+            className={`live-reaction-trigger-btn ${isOpen ? "active" : ""} ${
+              cooldownTime > 0 ? "cooldown" : ""
+            }`}
+            onClick={() => {
+              if (cooldownTime > 0) return;
+              setIsOpen((prev) => !prev);
+            }}
+            title={
+              cooldownTime > 0
+                ? `Juda tez bosmang! Qolgan vaqt: ${cooldownTime}s`
+                : "Reaksiya bildirish"
+            }
+            disabled={cooldownTime > 0}
           >
-            {isOpen ? <FaTimes /> : <FaSmile />}
+            {cooldownTime > 0 ? (
+              <span style={{ fontSize: "14px", fontWeight: "bold" }}>
+                {cooldownTime}s
+              </span>
+            ) : isOpen ? (
+              <FaTimes />
+            ) : (
+              <FaSmile />
+            )}
           </button>
         </div>
       )}

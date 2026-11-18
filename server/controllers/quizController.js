@@ -13,9 +13,9 @@ export async function createQuizGame(req, res) {
   try {
     const { title, description, questions } = req.body;
 
-    if (!title || !questions || questions.length < 8 || questions.length > 25) {
+    if (!title || !questions || questions.length < 5 || questions.length > 25) {
       return res.status(400).json({
-        error: "Sarlavha kiritilishi va 8-25 ta savol bo'lishi shart",
+        error: "Sarlavha kiritilishi va 5-25 ta savol bo'lishi shart",
       });
     }
 

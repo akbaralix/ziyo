@@ -560,7 +560,21 @@ export default function LiveHost() {
               </p>
               <div className="lobby-pin-box">
                 <span className="pin-label">O'YIN KODI (PIN):</span>
-                <div className="pin-digits">{pin}</div>
+                <div
+                  onClick={() => {
+                    navigator.clipboard
+                      .writeText(pin)
+                      .then(() => {
+                        toast.success("PIN nusxalandi: " + pin);
+                      })
+                      .catch((err) => {
+                        console.error("Nusxalashda xatolik:", err);
+                      });
+                  }}
+                  className="pin-digits"
+                >
+                  {pin}
+                </div>
               </div>
             </div>
 

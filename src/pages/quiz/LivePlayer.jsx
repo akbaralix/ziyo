@@ -45,6 +45,7 @@ export const QUIZ_AVATARS = [
 import { joinByPin } from "../../api/quizApi.js";
 import { sfx } from "../../utils/soundEffects.js";
 import { toast } from "react-toastify";
+import KahootCountdown from "./countdown.jsx";
 import LiveReactions from "./LiveReactions.jsx";
 import "./LivePlayer.css";
 
@@ -88,6 +89,7 @@ export default function LivePlayer() {
   const [socket, setSocket] = useState(null);
   const [sessionId, setSessionId] = useState(null);
   const [playerId, setPlayerId] = useState(null);
+  const [quizTitle, setQuizTitle] = useState("");
 
   // States: 'join' | 'lobby' | 'question' | 'answered' | 'answer_result' | 'ended'
   const [playerState, setPlayerState] = useState("join");
@@ -107,9 +109,10 @@ export default function LivePlayer() {
   const [totalPlayersCount, setTotalPlayersCount] = useState(0);
 
   // Kahoot Countdown state
-  const [, setIsCountingDown] = useState(false);
+  const [isCountingDown, setIsCountingDown] = useState(false);
   const isCountingDownRef = useRef(false);
   const pendingQuestionRef = useRef(null);
+  const pendingAnswerFeedbackRef = useRef(null);
   const [showReactionIcons, setshowReactionIcons] = useState(false);
 
   // Final Ended state & Review
@@ -190,6 +193,28 @@ export default function LivePlayer() {
     }, 1000);
   };
 
+  const handleCountdownComplete = () => {
+    setIsCountingDown(false);
+    isCountingDownRef.current = false;
+
+    if (pendingQuestionRef.current) {
+      const qData = pendingQuestionRef.current;
+      pendingQuestionRef.current = null;
+      sfx.playStart();
+      setPlayerState("question");
+      setCurrentQuestion(qData);
+      setSelectedOption(null);
+      setAnswerFeedback(null);
+      pendingAnswerFeedbackRef.current = null;
+      setCorrectIndex(null);
+      startTimer(qData.timeLimit);
+    } else if (currentQuestion) {
+      sfx.playStart();
+      setPlayerState("question");
+      startTimer(currentQuestion.timeLimit);
+    }
+  };
+
   const connectToGame = ({
     pinToUse,
     sessionIdToUse,
@@ -229,8 +254,7 @@ export default function LivePlayer() {
     newSocket.on("connect", () => {
       let savedLocal = {};
       try {
-        savedLocal =
-          JSON.parse(localStorage.getItem("ziyo_live_player")) || {};
+        savedLocal = JSON.parse(localStorage.getItem("ziyo_live_player")) || {};
       } catch {}
 
       const s = sessionInfoRef.current;
@@ -258,7 +282,9 @@ export default function LivePlayer() {
         setProfilePic(data.profilePic);
         sessionInfoRef.current.profilePic = data.profilePic;
       }
-      if (data.score !== undefined) setTotalScore(data.score);
+      if (data.quizTitle) {
+        setQuizTitle(data.quizTitle);
+      }
       if (data.myAnswerHistory) setMyAnswerHistory(data.myAnswerHistory);
 
       localStorage.setItem(
@@ -283,9 +309,21 @@ export default function LivePlayer() {
         if (data.hasAnswered) {
           setSelectedOption(data.chosenIndex);
           setPlayerState("answered");
+          if (data.myAnswer) {
+            pendingAnswerFeedbackRef.current = data.myAnswer;
+            setTotalScore(
+              Math.max(
+                0,
+                (data.score || 0) - (data.myAnswer.pointsEarned || 0),
+              ),
+            );
+          } else if (data.score !== undefined) {
+            setTotalScore(data.score);
+          }
         } else {
           setSelectedOption(null);
           setPlayerState("question");
+          if (data.score !== undefined) setTotalScore(data.score);
         }
       } else if (data.status === "answer" && data.currentQuestion) {
         if (timerRef.current) clearInterval(timerRef.current);
@@ -293,15 +331,18 @@ export default function LivePlayer() {
         setCorrectIndex(data.correctIndex);
         setAnswerFeedback(data.myAnswer);
         setPlayerState("answer_result");
+        if (data.score !== undefined) setTotalScore(data.score);
         if (data.myRank) setCurrentRank(data.myRank);
         if (data.totalPlayers) setTotalPlayersCount(data.totalPlayers);
       } else if (data.status === "ended") {
         if (timerRef.current) clearInterval(timerRef.current);
         setPlayerState("ended");
+        if (data.score !== undefined) setTotalScore(data.score);
         if (data.leaderboard) setFinalLeaderboard(data.leaderboard);
         if (data.questionsReview) setQuestionsReview(data.questionsReview);
         if (data.myRank) setMyRank(data.myRank);
       } else {
+        if (data.score !== undefined) setTotalScore(data.score);
         setPlayerState("lobby");
       }
     });
@@ -339,45 +380,70 @@ export default function LivePlayer() {
         setCurrentQuestion(data);
         setSelectedOption(null);
         setAnswerFeedback(null);
+        pendingAnswerFeedbackRef.current = null;
         setCorrectIndex(null);
         startTimer(data.timeLimit);
       }
     });
 
     newSocket.on("player:answer:ok", (data) => {
-      setAnswerFeedback(data);
-      if (data.rank) {
-        setCurrentRank(data.rank);
-      }
-      if (data.totalPlayers) {
-        setTotalPlayersCount(data.totalPlayers);
-      }
-      if (data.isCorrect) {
-        sfx.playCorrect();
-        setTotalScore((prev) => prev + data.pointsEarned);
-      } else {
-        sfx.playWrong();
-      }
+      // Kahoot kabi: javob qabul qilinganini saqlab turamiz,
+      // lekin barcha o'yinchilar javob berib (yoki vaqt tugab) raund yakunlanmaguncha
+      // bal qo'shilmaydi va ovoz chalinmaydi
+      pendingAnswerFeedbackRef.current = data;
     });
 
     newSocket.on("question:ended", (data) => {
       if (timerRef.current) clearInterval(timerRef.current);
       setCorrectIndex(data.correctIndex);
-      setPlayerState("answer_result");
+
+      // Savol raundi tugadi: endi natijani ko'rsatamiz va bal qo'shamiz
+      const feedback = pendingAnswerFeedbackRef.current;
+      pendingAnswerFeedbackRef.current = null;
+
+      if (feedback) {
+        setAnswerFeedback(feedback);
+        if (feedback.isCorrect) {
+          sfx.playCorrect();
+          setTotalScore((prev) => prev + (feedback.pointsEarned || 0));
+        } else {
+          sfx.playWrong();
+        }
+        if (feedback.totalPlayers) {
+          setTotalPlayersCount(feedback.totalPlayers);
+        }
+      } else {
+        // O'yinchi savol vaqtida javob bermadi
+        sfx.playWrong();
+        setAnswerFeedback({
+          isCorrect: false,
+          pointsEarned: 0,
+          noAnswer: true,
+        });
+      }
 
       const lb = data.allLeaderboard || data.leaderboard || [];
       if (lb.length > 0) {
-        const myName = (nameToUse || name || "").trim().toLowerCase();
+        const myPid = sessionInfoRef.current.playerId || playerId;
+        const myName = (sessionInfoRef.current.name || name || "")
+          .trim()
+          .toLowerCase();
         const foundIdx = lb.findIndex(
           (p) =>
-            (playerIdToUse && p.id && String(p.id) === String(playerIdToUse)) ||
+            (myPid && p.id && String(p.id) === String(myPid)) ||
             (p.name && p.name.trim().toLowerCase() === myName),
         );
         if (foundIdx !== -1) {
           setCurrentRank(foundIdx + 1);
           setTotalPlayersCount(data.totalPlayers || lb.length);
+        } else if (feedback?.rank) {
+          setCurrentRank(feedback.rank);
         }
+      } else if (feedback?.rank) {
+        setCurrentRank(feedback.rank);
       }
+
+      setPlayerState("answer_result");
     });
 
     newSocket.on("game:ended", (data) => {
@@ -574,6 +640,14 @@ export default function LivePlayer() {
 
   return (
     <div className="live-player-layout">
+      {/* ==================== KAHOOT COUNTDOWN OVERLAY ==================== */}
+      {isCountingDown && (
+        <KahootCountdown
+          quizTitle={quizTitle || "Ziyo Quiz"}
+          onComplete={handleCountdownComplete}
+        />
+      )}
+
       {/* Top mini header */}
       <header className="player-top-header">
         {name && playerState !== "join" && (
@@ -590,18 +664,20 @@ export default function LivePlayer() {
               )}
             </span>
             <span className="player-badge-name">{name}</span>
-            {currentRank && (
-              <span className="player-badge-rank">
-                {currentRank === 1
-                  ? "🥇"
-                  : currentRank === 2
-                    ? "🥈"
-                    : currentRank === 3
-                      ? "🥉"
-                      : "🏅"}{" "}
-                #{currentRank}-o'rin
-              </span>
-            )}
+            {currentRank &&
+              playerState !== "question" &&
+              playerState !== "answered" && (
+                <span className="player-badge-rank">
+                  {currentRank === 1
+                    ? "🥇"
+                    : currentRank === 2
+                      ? "🥈"
+                      : currentRank === 3
+                        ? "🥉"
+                        : "🏅"}{" "}
+                  #{currentRank}-o'rin
+                </span>
+              )}
             <span className="player-badge-score">⭐ {totalScore} ball</span>
           </div>
         )}
@@ -611,9 +687,6 @@ export default function LivePlayer() {
       {playerState === "join" && (
         <div className="player-join-container">
           <div className="player-join-card">
-            <div className="join-logo-box">
-              <img src={quizLogoImg} alt="Ziyo QUIZ" className="join-logo" />
-            </div>
             <h2>Ziyo QUIZ</h2>
 
             {errorMsg && <div className="join-error-text">{errorMsg}</div>}
@@ -743,18 +816,13 @@ export default function LivePlayer() {
 
             {playerState === "answered" && (
               <div className="player-answered-notice">
-                <span>Javobingiz qabul qilindi! Natija kutilmoqda... ⏳</span>
-                {currentRank && (
-                  <div className="player-answered-rank-pill">
-                    {currentRank === 1
-                      ? "🥇 Siz 1-o'rindasiz!"
-                      : currentRank === 2
-                        ? "🥈 Siz 2-o'rindasiz!"
-                        : currentRank === 3
-                          ? "🥉 Siz 3-o'rindasiz!"
-                          : `🏅 Siz #${currentRank}-o'rindasiz`}
-                  </div>
-                )}
+                <div className="answered-pulse-loader" />
+                <span className="player-answered-title">
+                  Javobingiz qabul qilindi!
+                </span>
+                <span className="player-answered-sub">
+                  Boshqa ishtirokchilar javobi kutilmoqda... ⏳
+                </span>
               </div>
             )}
 
@@ -832,7 +900,11 @@ export default function LivePlayer() {
               animate={{ scale: 1, opacity: 1 }}
             >
               <FaTimesCircle className="feedback-icon wrong" />
-              <h2>Afsus, noto'g'ri! ❌</h2>
+              <h2>
+                {answerFeedback?.noAnswer
+                  ? "Vaqt tugadi! Javob belgilanmadi ⏰"
+                  : "Afsus, noto'g'ri! ❌"}
+              </h2>
 
               <span className="total-score-text">
                 Umumiy ball: <strong>{totalScore}</strong>

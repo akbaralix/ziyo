@@ -6,6 +6,7 @@ const questionSchema = new mongoose.Schema({
   correctIndex: { type: Number, required: true }, // 0-3
   timeLimit: { type: Number, default: 20 }, // soniyalar
   points: { type: Number, default: 100 },
+  explanation: { type: String, default: "" },
 });
 
 const quizGameSchema = new mongoose.Schema(
@@ -20,14 +21,14 @@ const quizGameSchema = new mongoose.Schema(
     questions: {
       type: [questionSchema],
       validate: {
-        validator: (arr) => arr.length >= 8 && arr.length <= 25,
-        message: "Savollar soni 8 dan 25 tagacha bo'lishi kerak",
+        validator: (arr) => arr.length >= 5 && arr.length <= 25,
+        message: "Savollar soni 5 dan 25 tagacha bo'lishi kerak",
       },
     },
     isPublic: { type: Boolean, default: true },
     playCount: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("QuizGame", quizGameSchema);

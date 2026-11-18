@@ -168,24 +168,26 @@
 /* --- Mobile Bottom Navigation --- */
 .mobil-nav {
   position: fixed;
-  bottom: 8px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: none;
   max-width: 400px;
-  width: 92%;
+  width: min(92%, 400px);
   border-radius: var(--radius-pill);
   border: 1px solid var(--border-color);
-  background-color: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(14px);
-  box-shadow: var(--shadow-lg);
-  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
 .mobil-nav-menyu {
   display: flex;
   justify-content: space-around;
-  padding: 12px 0;
+  align-items: center;
+  padding: 8px 12px;
 }
 
 .mobil-nav-link {
@@ -194,7 +196,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   font-size: 24px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-full);
   transition: color var(--transition-fast);
 }
 
@@ -211,6 +217,7 @@
 .mobil-nav-link.active {
   color: var(--primary);
   font-weight: 700;
+  background-color: var(--primary-light);
 }
 
 /* --- Responsive Media Query --- */

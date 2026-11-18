@@ -123,8 +123,11 @@
   font-weight: 600;
   font-size: var(--font-base);
   color: var(--text-primary);
-
+  background-color: var(--bg-subtle);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-pill);
   padding: 5px 12px;
+  white-space: nowrap;
 }
 
 .user-pointes svg {
@@ -205,7 +208,7 @@
   }
 
   .searchbar {
-    padding: 5px 10px;
+    padding: 6px 12px;
   }
 
   .searchbar input,
@@ -214,31 +217,47 @@
   }
 
   .header-action {
+    gap: 8px;
+  }
+
+  .user-pointes {
+    padding: 5px 10px;
+    font-size: var(--font-sm);
+    gap: 4px;
+  }
+
+  .post-sorts {
+    padding: 10px 12px 6px;
+    gap: 8px;
+  }
+
+  .post-sort-btn {
+    padding: 6px 12px;
+    font-size: var(--font-xs);
+  }
+}
+
+@media (max-width: 440px) {
+  .home-header {
+    padding: 8px 10px;
     gap: 6px;
   }
 
   .user-pointes {
     padding: 4px 8px;
-    font-size: var(--font-sm);
-  }
-
-  .post-sorts {
-    padding: 10px 12px 4px;
-    gap: 8px;
-  }
-
-  .post-sort-btn {
-    padding: 6px 11px;
     font-size: var(--font-xs);
   }
-}
 
-@media (max-width: 400px) {
   .user-pointes span {
     font-size: var(--font-xs);
   }
 
   .searchbar {
-    padding: 4px 8px;
+    padding: 5px 10px;
+  }
+
+  .notification button {
+    padding: 4px;
+    font-size: 20px;
   }
 }

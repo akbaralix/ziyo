@@ -18,7 +18,6 @@ import { toast } from "react-toastify";
 import pptxgen from "pptxgenjs";
 import "./slayd.css";
 
-// Loyihaning umumiy uslubiga 100% mos Gamma mavzulari
 const THEMES = [
   {
     id: "ziyo-purple",
@@ -123,7 +122,6 @@ function SlaydYaratish() {
     { id: 6, num: 20, premium: true },
   ];
 
-  // Gemini orqali turli layout va boy matnli Gamma slaydlar olish
   const handleCreateSlayd = async () => {
     if (!slaydText.trim()) {
       toast.info("Iltimos, taqdimot mavzusini kiriting!");
@@ -250,7 +248,7 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
     };
 
     try {
-      setLoadingStep("Gamma slaydlari generatsiya qilinmoqda...");
+      setLoadingStep("ZIYO slaydlari generatsiya qilinmoqda...");
       let response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
@@ -589,7 +587,7 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
     try {
       const pptx = new pptxgen();
       pptx.layout = "LAYOUT_16x9";
-      pptx.author = "Ziyo Gamma AI";
+      pptx.author = "ziyo AI";
       pptx.title = slaydText || "Taqdimot";
 
       const bgColor = currentTheme.bg.replace("#", "");
@@ -965,7 +963,6 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
             </span>
           </div>
 
-          {/* Gamma Dizayn Mavzulari */}
           <div className="gamma-themes">
             <IoColorPaletteOutline className="theme-icon" />
             {THEMES.map((theme) => (
@@ -1609,7 +1606,7 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
 
                   {/* Slayd pastki ma'lumot qatori */}
                   <div className="slide-footer-row">
-                    <span>Ziyo Gamma Taqdimot</span>
+                    <span>Ziyo Taqdimot</span>
                     <span>
                       {sIdx + 1} / {slides.length}
                     </span>

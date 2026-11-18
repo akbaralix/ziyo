@@ -13,12 +13,15 @@ import {
   FaCaretUp,
   FaCircle,
   FaSquare,
+  FaSpinner,
+  FaEdit,
 } from "react-icons/fa";
 import {
   IoSparkles,
   IoClose,
   IoCopyOutline,
   IoCheckmark,
+  IoFlash,
 } from "react-icons/io5";
 
 import { FaDiamond } from "react-icons/fa6";
@@ -59,14 +62,18 @@ export default function QuizBuilder() {
     DEFAULT_QUESTION(),
   ]);
   const [aiQuizOpen, setAiQuizOpen] = useState(false);
+  const [aiMode, setAiMode] = useState("quick"); // 'quick' | 'manual'
   const [aiTopic, setAiTopic] = useState("");
   const [aiCount, setAiCount] = useState(8);
+  const [aiDifficulty, setAiDifficulty] = useState("o'rtacha");
+  const [aiTimeLimit, setAiTimeLimit] = useState(20);
   const [aiJsonInput, setAiJsonInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const getAiPrompt = () => {
     const topic = aiTopic.trim() || "Umumiy bilimlar";
     const count = Math.min(Math.max(Number(aiCount) || 8, 8), 25);
-    return `Siz ta'lim bo'yicha ekspert AI siz. Menga '${topic}' mavzusida ${count} ta test savolini aniq, qisqa variantli qilib ushbu JSON formatda tuzib bering:
+    return `Siz ta'lim bo'yicha ekspert AI siz. Menga '${topic}' mavzusida ${count} ta test savolini aniq, variantlarni aralashtrib, qisqa variantli qilib ushbu JSON formatda tuzib bering:
 [
   {
     "text": "Savol matni",
@@ -88,6 +95,86 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
     }
   };
 
+  // JSON matnini yoki obyektini tekshirib, toza savollar massiviga aylantirish
+  const parseAndValidateQuestions = (rawInput) => {
+    let parsed = rawInput;
+
+    if (typeof rawInput === "string") {
+      let raw = rawInput.trim();
+      raw = raw
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/, "")
+        .replace(/```$/, "")
+        .trim();
+      parsed = JSON.parse(raw);
+    }
+
+    // Ba'zan AI obyekt ichida { questions: [...] } shaklida qaytarishi mumkin
+    if (!Array.isArray(parsed) && parsed && typeof parsed === "object") {
+      if (Array.isArray(parsed.questions)) parsed = parsed.questions;
+      else if (Array.isArray(parsed.tests)) parsed = parsed.tests;
+      else if (Array.isArray(parsed.savollar)) parsed = parsed.savollar;
+      else if (Array.isArray(parsed.data)) parsed = parsed.data;
+    }
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      throw new Error("JSON ma'lumot testlar massivi bo'lishi kerak!");
+    }
+
+    const validated = parsed.slice(0, 25).map((item, idx) => {
+      const questionText = item.text || item.question || item.savol;
+      if (!questionText || !String(questionText).trim()) {
+        throw new Error(`${idx + 1}-savol matni topilmadi.`);
+      }
+
+      const rawOpts =
+        item.options || item.choices || item.variants || item.variantlar;
+      if (!Array.isArray(rawOpts) || rawOpts.length < 2) {
+        throw new Error(
+          `${idx + 1}-savolda kamida 2 ta javob varianti bo'lishi kerak.`,
+        );
+      }
+
+      const opts = rawOpts.map((o) => String(o).trim());
+      while (opts.length < 4) {
+        opts.push("");
+      }
+      const finalOptions = opts.slice(0, 4);
+
+      let correct = 0;
+      if (item.correctIndex !== undefined) correct = item.correctIndex;
+      else if (item.correct_index !== undefined) correct = item.correct_index;
+      else if (item.correctAnswer !== undefined) correct = item.correctAnswer;
+      else if (item.correct !== undefined) correct = item.correct;
+
+      if (typeof correct === "string") {
+        const letterMap = { a: 0, b: 1, c: 2, d: 3, A: 0, B: 1, C: 2, D: 3 };
+        if (letterMap[correct.trim()] !== undefined) {
+          correct = letterMap[correct.trim()];
+        } else {
+          correct = Number(correct);
+        }
+      } else {
+        correct = Number(correct);
+      }
+
+      if (isNaN(correct) || correct < 0 || correct >= 4) {
+        correct = 0;
+      }
+
+      return {
+        text: String(questionText).trim(),
+        options: finalOptions,
+        correctIndex: correct,
+        timeLimit: Number(item.timeLimit) || 20,
+        points: Number(item.points) || 100,
+        explanation: item.explanation ? String(item.explanation).trim() : "",
+      };
+    });
+
+    return validated;
+  };
+
   const handleImportAiJson = () => {
     if (!aiJsonInput.trim()) {
       toast.warning("Iltimos, AI qaytargan JSON matnini kiriting!");
@@ -95,55 +182,7 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
     }
 
     try {
-      let raw = aiJsonInput.trim();
-      raw = raw
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/, "")
-        .replace(/```$/, "")
-        .trim();
-
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed) || parsed.length === 0) {
-        throw new Error("JSON ma'lumot testlar massivi bo'lishi kerak!");
-      }
-
-      const validated = parsed.slice(0, 25).map((item, idx) => {
-        const questionText = item.text || item.question;
-        if (!questionText || !String(questionText).trim()) {
-          throw new Error(`${idx + 1}-savol matni topilmadi.`);
-        }
-        if (!Array.isArray(item.options) || item.options.length < 2) {
-          throw new Error(
-            `${idx + 1}-savolda kamida 2 ta javob varianti bo'lishi kerak.`,
-          );
-        }
-
-        const opts = item.options.map((o) => String(o).trim());
-        while (opts.length < 4) {
-          opts.push("");
-        }
-        const finalOptions = opts.slice(0, 4);
-
-        let correct =
-          item.correctIndex !== undefined
-            ? Number(item.correctIndex)
-            : item.correctAnswer !== undefined
-              ? Number(item.correctAnswer)
-              : 0;
-
-        if (isNaN(correct) || correct < 0 || correct >= 4) {
-          correct = 0;
-        }
-
-        return {
-          text: String(questionText).trim(),
-          options: finalOptions,
-          correctIndex: correct,
-          timeLimit: Number(item.timeLimit) || 20,
-          points: Number(item.points) || 100,
-          explanation: item.explanation ? String(item.explanation).trim() : "",
-        };
-      });
+      const validated = parseAndValidateQuestions(aiJsonInput);
 
       if (!title.trim() && aiTopic.trim()) {
         setTitle(`${aiTopic.trim()} viktorinasi`);
@@ -157,6 +196,129 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
     } catch (err) {
       console.error(err);
       toast.error(`JSON xatoligi: ${err.message || "Format noto'g'ri"}`);
+    }
+  };
+
+  // Real Gemini API orqali testlarni tezkor yaratish
+  const handleGenerateWithGemini = async () => {
+    const topic = aiTopic.trim();
+    if (!topic) {
+      toast.warning("Iltimos, test mavzusini kiriting!");
+      return;
+    }
+
+    const count = Math.min(Math.max(Number(aiCount) || 8, 8), 25);
+    const apiKey =
+      import.meta.env.VITE_GEMINI_API_KEY ||
+      (typeof process !== "undefined" ? process.env?.VITE_GEMINI_API_KEY : "");
+
+    if (!apiKey) {
+      toast.error(
+        "Gemini API kaliti topilmadi (.env faylida VITE_GEMINI_API_KEY ni sozlang)!",
+      );
+      return;
+    }
+
+    setIsGenerating(true);
+
+    const difficultyText =
+      aiDifficulty === "oson"
+        ? "oson darajadagi"
+        : aiDifficulty === "qiyin"
+          ? "murakkab, qiyin darajadagi"
+          : aiDifficulty === "aralash"
+            ? "har xil qiyinlikdagi"
+            : "o'rtacha darajadagi";
+
+    const prompt = `Siz professional ta'lim va test tuzish ekspertisiz. Menga '${topic}' mavzusida (${difficultyText}) aniq ${count} ta test savolini tuzib bering.
+Qoidalar:
+1. Har bir savol uchun aniq 4 ta javob varianti bo'lsin (1 ta to'g'ri va 3 ta chalg'ituvchi aralash).
+2. To'g'ri javob indeksi "correctIndex" (0, 1, 2 yoki 3) da bo'lsin. To'g'ri javob har safar bir xil o'rinda bo'lmasin, variantlar aralashtirilsin.
+3. "timeLimit" maydoni ${aiTimeLimit || 20} bo'lsin.
+4. "points" maydoni 100 bo'lsin.
+5. "explanation" maydonida to'g'ri javob sababi o'zbek tilida qisqa tushuntirilsin.
+6. Variantlar qisqa va aniq bolsin.
+Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z yoki markdown belgilarisiz:
+[
+  {
+    "text": "Savol matni",
+    "options": ["A variant", "B variant", "C variant", "D variant"],
+    "correctIndex": 0,
+    "timeLimit": ${aiTimeLimit || 20},
+    "points": 100,
+    "explanation": "To'g'ri javob izohi"
+  }
+]`;
+
+    const requestBody = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.7,
+      },
+    };
+
+    const models = [
+      "gemini-2.5-flash",
+      "gemini-1.5-flash",
+      "gemini-flash-latest",
+    ];
+
+    try {
+      let rawText = "";
+      let lastError = null;
+
+      for (const model of models) {
+        try {
+          const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(requestBody),
+            },
+          );
+
+          if (res.ok) {
+            const data = await res.json();
+            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              rawText = text;
+              break;
+            }
+          } else {
+            const errData = await res.json().catch(() => ({}));
+            lastError = new Error(
+              errData.error?.message ||
+                `Model ${model} xatolik qaytardi (${res.status})`,
+            );
+          }
+        } catch (netErr) {
+          lastError = netErr;
+        }
+      }
+
+      if (!rawText) {
+        throw lastError || new Error("ZIYO AI'dan javob olib bo'lmadi");
+      }
+
+      const validated = parseAndValidateQuestions(rawText);
+
+      if (!title.trim() && topic) {
+        setTitle(`${topic} viktorinasi`);
+      }
+
+      setQuestions(validated);
+      setCurrentIndex(0);
+      setAiQuizOpen(false);
+      toast.success(
+        `${validated.length} ta savol ZIYO AI orqali muvaffaqiyatli yaratildi! 🎉`,
+      );
+    } catch (err) {
+      console.error("ZIYO quiz generation error:", err);
+      toast.error(`Xatolik: ${err.message || "Testlarni yaratib bo'lmadi"}`);
+    } finally {
+      setIsGenerating(false);
     }
   };
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -328,17 +490,29 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
       const payload = {
         title: title.trim(),
         description: description.trim(),
-        questions: questions.map((q) => ({
-          text: q.text.trim(),
-          options: q.options.filter((o) => o.trim() !== ""),
-          correctIndex:
-            q.correctIndex >= q.options.filter((o) => o.trim() !== "").length
-              ? 0
-              : q.correctIndex,
-          timeLimit: q.timeLimit || 20,
-          points: q.points || 100,
-          explanation: q.explanation?.trim() || "",
-        })),
+        questions: questions.map((q) => {
+          const filledOptions = q.options
+            .map((o) => (typeof o === "string" ? o.trim() : String(o ?? "")))
+            .filter((o) => o !== "");
+
+          let safeCorrect = Number(q.correctIndex);
+          if (
+            isNaN(safeCorrect) ||
+            safeCorrect < 0 ||
+            safeCorrect >= filledOptions.length
+          ) {
+            safeCorrect = 0;
+          }
+
+          return {
+            text: q.text.trim(),
+            options: filledOptions,
+            correctIndex: safeCorrect,
+            timeLimit: Number(q.timeLimit) || 20,
+            points: Number(q.points) || 100,
+            explanation: q.explanation ? String(q.explanation).trim() : "",
+          };
+        }),
       };
 
       if (isEditing) {
@@ -479,7 +653,7 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
                   >
                     <FaCopy />
                   </button>
-                  {questions.length > 8 && (
+                  {questions.length > 5 && (
                     <button
                       type="button"
                       className="q-action-btn delete"
@@ -534,15 +708,10 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
                   key={optIdx}
                   className={`option-edit-card ${isCorrect ? "is-correct" : ""}`}
                   style={{
-                    borderLeftColor: color.bg,
+                    background: color.bg,
                   }}
                 >
-                  <div
-                    className="option-shape-badge"
-                    style={{ backgroundColor: color.bg }}
-                  >
-                    {color.shape}
-                  </div>
+                  <div className="option-shape-badge">{color.shape}</div>
 
                   <input
                     type="text"
@@ -651,7 +820,12 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
         </button>
       </div>
 
-      <ModalOverlay isOpen={aiQuizOpen} onClose={() => setAiQuizOpen(false)}>
+      <ModalOverlay
+        isOpen={aiQuizOpen}
+        onClose={() => {
+          if (!isGenerating) setAiQuizOpen(false);
+        }}
+      >
         <div className="aiQuiz-container" onClick={(e) => e.stopPropagation()}>
           <div className="aiQuiz-header">
             <div className="aiQuiz-title-group">
@@ -665,94 +839,214 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
             <button
               type="button"
               className="aiQuiz-close-btn"
-              onClick={() => setAiQuizOpen(false)}
+              onClick={() => {
+                if (!isGenerating) setAiQuizOpen(false);
+              }}
+              title="Yopish"
             >
               <IoClose />
             </button>
           </div>
 
+          {/* 2 ta tanlov: Tez va Qo'lda yaratish */}
+          <div className="aiQuiz-tab-nav">
+            <div className="aiQuiz-tab-pill-box">
+              <button
+                type="button"
+                className={`aiQuiz-tab-btn ${aiMode === "quick" ? "active" : ""}`}
+                onClick={() => setAiMode("quick")}
+              >
+                <IoFlash /> Tez
+              </button>
+              <button
+                type="button"
+                className={`aiQuiz-tab-btn ${aiMode === "manual" ? "active" : ""}`}
+                onClick={() => setAiMode("manual")}
+              >
+                <FaEdit /> Qo'lda yaratish
+              </button>
+            </div>
+          </div>
+
           <div className="aiQuiz-body">
-            {/* 1-Qadam: Prompt */}
-            <div className="ai-step-card">
-              <div className="ai-step-title">
-                1-Qadam: AI uchun prompt tayyorlash
-              </div>
-              <div className="ai-inputs-row">
-                <div className="ai-input-field flex-2">
-                  <label>Mavzu nomi</label>
+            {aiMode === "quick" ? (
+              <div className="ai-step-card">
+                <div className="ai-step-title">
+                  <IoSparkles />
+                  ZIYO AI orqali avtomatik yaratish
+                </div>
+
+                <div className="ai-input-field">
+                  <label>Mavzu yoki yo'nalish nomi</label>
                   <input
                     type="text"
-                    placeholder="Masalan: Fizika qonunlari, Tarix, Ingliz tili..."
+                    placeholder="Mavzuni kiriting"
                     value={aiTopic}
                     onChange={(e) => setAiTopic(e.target.value)}
+                    disabled={isGenerating}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !isGenerating) {
+                        e.preventDefault();
+                        handleGenerateWithGemini();
+                      }
+                    }}
                   />
                 </div>
-                <div className="ai-input-field flex-1">
-                  <label>Savollar soni</label>
-                  <input
-                    type="number"
-                    min={8}
-                    max={25}
-                    value={aiCount}
-                    onChange={(e) => setAiCount(Number(e.target.value))}
+
+                <div className="ai-inputs-row">
+                  <div className="ai-input-field flex-1">
+                    <label>Savollar soni</label>
+                    <input
+                      type="number"
+                      min={8}
+                      max={25}
+                      value={aiCount}
+                      onChange={(e) => setAiCount(Number(e.target.value))}
+                      disabled={isGenerating}
+                    />
+                  </div>
+
+                  <div className="ai-input-field flex-1">
+                    <label>Qiyinlik darajasi</label>
+                    <select
+                      className="ai-select-field"
+                      value={aiDifficulty}
+                      onChange={(e) => setAiDifficulty(e.target.value)}
+                      disabled={isGenerating}
+                    >
+                      <option value="o'rtacha">O&apos;rtacha</option>
+                      <option value="oson">Oson</option>
+                      <option value="qiyin">Qiyin</option>
+                      <option value="aralash">Aralash</option>
+                    </select>
+                  </div>
+
+                  <div className="ai-input-field flex-1">
+                    <label>Vaqt (har bir savolga)</label>
+                    <select
+                      className="ai-select-field"
+                      value={aiTimeLimit}
+                      onChange={(e) => setAiTimeLimit(Number(e.target.value))}
+                      disabled={isGenerating}
+                    >
+                      <option value={10}>10 soniya</option>
+                      <option value={20}>20 soniya</option>
+                      <option value={30}>30 soniya</option>
+                      <option value={60}>60 soniya</option>
+                    </select>
+                  </div>
+                </div>
+
+                {isGenerating && (
+                  <div className="ai-generating-indicator">
+                    <div className="ai-spinner" />
+                    <span>
+                      ZIYO AI test savollarini tuzmoqda, iltimos kuting...
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* 1-Qadam: Prompt */}
+                <div className="ai-step-card">
+                  <div className="ai-step-title">
+                    1-Qadam: AI uchun prompt tayyorlash
+                  </div>
+                  <div className="ai-inputs-row">
+                    <div className="ai-input-field flex-2">
+                      <label>Mavzu nomi</label>
+                      <input
+                        type="text"
+                        placeholder="Masalan: Fizika qonunlari, Tarix, Ingliz tili..."
+                        value={aiTopic}
+                        onChange={(e) => setAiTopic(e.target.value)}
+                      />
+                    </div>
+                    <div className="ai-input-field flex-1">
+                      <label>Savollar soni</label>
+                      <input
+                        type="number"
+                        min={8}
+                        max={25}
+                        value={aiCount}
+                        onChange={(e) => setAiCount(Number(e.target.value))}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="prompt-display-box">
+                    <label>Tayyor prompt (Nusxa oling):</label>
+                    <pre className="prompt-pre">{getAiPrompt()}</pre>
+                    <button
+                      type="button"
+                      className="copy-prompt-btn"
+                      onClick={handleCopyAiPrompt}
+                    >
+                      <IoCopyOutline /> Promptni nusxalash
+                    </button>
+                  </div>
+                </div>
+
+                {/* 2-Qadam: JSON */}
+                <div className="ai-step-card">
+                  <div className="ai-step-title">
+                    2-Qadam: Olingan JSON natijasini joylash
+                  </div>
+                  <p className="ai-step-desc">
+                    ChatGPT yoki Gemini qaytargan JSON kodini quyidagi maydonga
+                    tashlang:
+                  </p>
+                  <textarea
+                    className="ai-json-textarea"
+                    rows={6}
+                    placeholder="AI javobini shu yerga tashlang"
+                    value={aiJsonInput}
+                    onChange={(e) => setAiJsonInput(e.target.value)}
                   />
                 </div>
-              </div>
-
-              <div className="prompt-display-box">
-                <label>Tayyor prompt (Nusxa oling):</label>
-                <pre className="prompt-pre">{getAiPrompt()}</pre>
-                <button
-                  type="button"
-                  className="copy-prompt-btn"
-                  onClick={handleCopyAiPrompt}
-                >
-                  <IoCopyOutline /> Promptni nusxalash
-                </button>
-              </div>
-            </div>
-
-            {/* 2-Qadam: JSON */}
-            <div className="ai-step-card">
-              <div className="ai-step-title">
-                2-Qadam: Olingan JSON natijasini joylash
-              </div>
-              <p className="ai-step-desc">
-                ChatGPT yoki Gemini qaytargan JSON kodini quyidagi maydonga
-                tashlang:
-              </p>
-              <textarea
-                className="ai-json-textarea"
-                rows={6}
-                placeholder={`[
-  {
-    "text": "Savol matni",
-    "options": ["A", "B", "C", "D"],
-    "correctIndex": 0,
-    "explanation": "To'g'ri javob izohi"
-  }
-]`}
-                value={aiJsonInput}
-                onChange={(e) => setAiJsonInput(e.target.value)}
-              />
-            </div>
+              </>
+            )}
           </div>
 
           <div className="aiQuiz-footer">
             <button
               type="button"
               className="aiQuiz-cancel-btn"
-              onClick={() => setAiQuizOpen(false)}
+              onClick={() => {
+                if (!isGenerating) setAiQuizOpen(false);
+              }}
+              disabled={isGenerating}
             >
               Bekor qilish
             </button>
-            <button
-              type="button"
-              className="aiQuiz-submit-btn"
-              onClick={handleImportAiJson}
-            >
-              <IoCheckmark /> JSON’dan testlarni yuklash
-            </button>
+
+            {aiMode === "quick" ? (
+              <button
+                type="button"
+                className="aiQuiz-submit-btn"
+                onClick={handleGenerateWithGemini}
+                disabled={isGenerating}
+              >
+                {isGenerating ? (
+                  <>
+                    <FaSpinner className="spin-icon" /> Yaratilmoqda...
+                  </>
+                ) : (
+                  <>
+                    <IoSparkles /> AI bilan yaratish
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="aiQuiz-submit-btn"
+                onClick={handleImportAiJson}
+              >
+                <IoCheckmark /> JSON’dan testlarni yuklash
+              </button>
+            )}
           </div>
         </div>
       </ModalOverlay>

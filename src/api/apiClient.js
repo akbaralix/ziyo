@@ -39,7 +39,9 @@ export async function apiClient(endpoint, options = {}) {
 
     if (!response.ok) {
       throw new Error(
-        data.message || `Server xatoligi yuz berdi (${response.status})`,
+        data.error ||
+          data.message ||
+          `Server xatoligi yuz berdi (${response.status})`,
       );
     }
 
