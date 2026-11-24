@@ -331,7 +331,7 @@ function Create() {
             className={`type-btn ${postType === "fact" ? "active" : ""}`}
             onClick={() => navigate("/slayd")}
           >
-            <img src="/fact-create.webp" alt="" />
+            <img src="/post-create.webp" alt="" />
             <span>Slayd yaratish</span>
           </button>
         </div>

@@ -29,6 +29,9 @@ import quizAvatar6 from "../../assets/quiz-avatar/quiz-avatar6.jpg";
 import quizAvatar7 from "../../assets/quiz-avatar/quiz-avatar7.jpg";
 import quizAvatar8 from "../../assets/quiz-avatar/quiz-avatar8.jpg";
 import quizAvatar9 from "../../assets/quiz-avatar/quiz-avatar9.jpg";
+import quizAvatar10 from "../../assets/quiz-avatar/quiz-avatar10.png";
+import quizAvatar11 from "../../assets/quiz-avatar/quiz-avatar11.png";
+import quizAvatar12 from "../../assets/quiz-avatar/quiz-avatar12.jpg";
 
 export const QUIZ_AVATARS = [
   { id: 1, src: quizAvatar1, name: "Qahramon 1" },
@@ -40,6 +43,9 @@ export const QUIZ_AVATARS = [
   { id: 7, src: quizAvatar7, name: "Qahramon 7" },
   { id: 8, src: quizAvatar8, name: "Qahramon 8" },
   { id: 9, src: quizAvatar9, name: "Qahramon 9" },
+  { id: 10, src: quizAvatar10, name: "Qahramon 10" },
+  { id: 12, src: quizAvatar11, name: "Qahramon 10" },
+  { id: 12, src: quizAvatar12, name: "Qahramon 10" },
 ];
 
 import { joinByPin } from "../../api/quizApi.js";
@@ -902,7 +908,7 @@ export default function LivePlayer() {
               <FaTimesCircle className="feedback-icon wrong" />
               <h2>
                 {answerFeedback?.noAnswer
-                  ? "Vaqt tugadi! Javob belgilanmadi ⏰"
+                  ? "Vaqt tugadi! Javob belgilanmadi"
                   : "Afsus, noto'g'ri! ❌"}
               </h2>
 
