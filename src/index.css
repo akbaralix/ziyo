@@ -1,10 +1,6 @@
 @import url(https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap);
 
-/* ==========================================================================
-   Design Tokens & CSS Custom Properties (:root)
-   ========================================================================== */
 :root {
-  /* --- Primary Brand Palette (Ziyo Purple) --- */
   --primary: #461fe2;
   --primary-hover: #3716b5;
   --primary-active: #2e10a8;

@@ -20,4 +20,14 @@
   .app-content {
     padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
   }
+
+  .app-content:has(
+      .live-host-screen,
+      .live-player-layout,
+      .octagon-battle-page,
+      .jumanji-play-page,
+      .gamma-workspace
+    ) {
+    padding-bottom: 0;
+  }
 }

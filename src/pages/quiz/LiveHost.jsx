@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import QRCode from "qrcode";
@@ -135,7 +135,7 @@ export default function LiveHost() {
     };
   }, []);
 
-  const toggleAudio = () => {
+  const toggleAudio = useCallback(() => {
     const muted = sfx.toggleMute();
     setIsMuted(muted);
     if (!muted) {
@@ -147,7 +147,7 @@ export default function LiveHost() {
         safePlay(audioStatsRef.current);
       }
     }
-  };
+  }, [gameState, isCountingDown, safePlay]);
 
   useEffect(() => {
     const handleFirstUserInteraction = () => {
@@ -185,7 +185,6 @@ export default function LiveHost() {
         safePlay(waitAudio.current);
       } else if (gameState === "answer" || gameState === "ended") {
         if (audioStatsRef.current) audioStatsRef.current.currentTime = 0;
-        safePlay(audioStatsRef.current);
       }
     }
 
@@ -196,7 +195,7 @@ export default function LiveHost() {
     };
   }, [gameState, isCountingDown, isMuted, safePlay]);
 
-  const startCountdown = (initialTime) => {
+  const startCountdown = useCallback((initialTime) => {
     if (timerRef.current) clearInterval(timerRef.current);
     setTimeLeft(initialTime);
     if (initialTime <= 0) return;
@@ -215,9 +214,9 @@ export default function LiveHost() {
         return prev - 1;
       });
     }, 1000);
-  };
+  }, []);
 
-  const triggerConfetti = () => {
+  const triggerConfetti = useCallback(() => {
     const end = Date.now() + 3.5 * 1000;
     const colors = ["#bb0000", "#ffffff", "#2563eb", "#eab308", "#10b981"];
 
@@ -241,9 +240,9 @@ export default function LiveHost() {
         requestAnimationFrame(frame);
       }
     })();
-  };
+  }, []);
 
-  const getCurrentUserId = () => {
+  const getCurrentUserId = useCallback(() => {
     try {
       const u = JSON.parse(localStorage.getItem("ziyo_user"));
       if (u && (u._id || u.id)) return String(u._id || u.id);
@@ -258,7 +257,7 @@ export default function LiveHost() {
       }
     } catch {}
     return null;
-  };
+  }, []);
 
   // Connect socket
   useEffect(() => {
@@ -382,6 +381,13 @@ export default function LiveHost() {
       );
     });
 
+    // O'yinchi ismini o'zgartirganda
+    newSocket.on("player:name:updated", ({ playerId, name }) => {
+      setPlayers((prev) =>
+        prev.map((p) => ((p.id || p._id) === playerId ? { ...p, name } : p)),
+      );
+    });
+
     newSocket.on("game:started", () => {
       setIsCountingDown(true);
       isCountingDownRef.current = true;
@@ -425,9 +431,9 @@ export default function LiveHost() {
       if (timerRef.current) clearInterval(timerRef.current);
       newSocket.disconnect();
     };
-  }, [sessionId]);
+  }, [sessionId, startCountdown, triggerConfetti]);
 
-  const handleStartGame = () => {
+  const handleStartGame = useCallback(() => {
     if (players.length === 0) {
       toast.warning(
         "O'yinni boshlash uchun kamida 1 ta o'yinchi qo'shilishi kerak!",
@@ -436,10 +442,10 @@ export default function LiveHost() {
     }
     setIsCountingDown(true);
     isCountingDownRef.current = true;
-    socket.emit("host:start", { sessionId });
-  };
+    socket?.emit("host:start", { sessionId });
+  }, [players.length, socket, sessionId]);
 
-  const handleCountdownComplete = () => {
+  const handleCountdownComplete = useCallback(() => {
     setIsCountingDown(false);
     isCountingDownRef.current = false;
     setGameState("question");
@@ -452,14 +458,14 @@ export default function LiveHost() {
       setCorrectIndex(null);
       startCountdown(qData.timeLimit);
     }
-  };
+  }, [startCountdown]);
 
-  const handleNextQuestion = () => {
-    audioStatsRef.current.pause();
-    socket.emit("host:next", { sessionId });
-  };
+  const handleNextQuestion = useCallback(() => {
+    audioStatsRef.current?.pause();
+    socket?.emit("host:next", { sessionId });
+  }, [socket, sessionId]);
 
-  const handleEndGameEarly = () => {
+  const handleEndGameEarly = useCallback(() => {
     const currentUserId = getCurrentUserId();
 
     if (
@@ -473,12 +479,52 @@ export default function LiveHost() {
       return;
     }
 
-    if (window.confirm("Rostdan ham o'yinni tugatmoqchimisiz?")) {
-      socket.emit("host:end", { sessionId, userId: currentUserId });
-    }
-  };
+    toast.warn(
+      <div>
+        <p style={{ marginBottom: 8 }}>Rostdan ham o'yinni tugatmoqchimisiz?</p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => {
+              socket?.emit("host:end", { sessionId, userId: currentUserId });
+              toast.dismiss("end-confirm");
+            }}
+            style={{
+              background: "#e90606",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              padding: "6px 14px",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Ha, yakunlash
+          </button>
+          <button
+            onClick={() => toast.dismiss("end-confirm")}
+            style={{
+              background: "#e2e8f0",
+              color: "#0f172a",
+              border: "none",
+              borderRadius: 8,
+              padding: "6px 14px",
+              cursor: "pointer",
+            }}
+          >
+            Bekor qilish
+          </button>
+        </div>
+      </div>,
+      {
+        toastId: "end-confirm",
+        autoClose: false,
+        closeButton: false,
+        closeOnClick: false,
+      },
+    );
+  }, [creatorId, sessionId, socket, getCurrentUserId]);
 
-  const currentUserId = getCurrentUserId();
+  const currentUserId = useMemo(() => getCurrentUserId(), [getCurrentUserId]);
   const isCreator =
     !creatorId || !currentUserId || String(creatorId) === String(currentUserId);
 
@@ -708,7 +754,7 @@ export default function LiveHost() {
             <div className="leaderboard-list">
               {leaderboard.map((item, idx) => (
                 <motion.div
-                  key={idx}
+                  key={item.id || item._id || item.name || idx}
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: idx * 0.1 }}
@@ -857,7 +903,7 @@ export default function LiveHost() {
               <h3>Ishtirokchilar natijalari</h3>
               <div className="full-rankings-table">
                 {finalLeaderboard.slice(3).map((player, idx) => (
-                  <div key={idx} className="ranking-table-row">
+                  <div key={player.id || player._id || player.name || idx} className="ranking-table-row">
                     <span className="rank-col">#{idx + 4}</span>
                     <div className="ranking-player-cell">
                       {player.profilePic ? (

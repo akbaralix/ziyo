@@ -11,7 +11,7 @@ import "./oyinlar.css";
 const gamesList = [
   {
     id: "quiz",
-    title: "Ziyo Quiz",
+    title: "Hatif Quiz",
     href: "/quiz/builder",
     bgimg: quiz,
     description:
@@ -47,7 +47,8 @@ const gamesList = [
     title: "Jumanji",
     href: "/oyinlar/jumanji/create",
     bgimg: puzzle,
-    description: "Jamoa bilan real-time, canvas va xavfli to'siqlar to'la sarguzasht!",
+    description:
+      "Jamoa bilan real-time, canvas va xavfli to'siqlar to'la sarguzasht!",
     icon: "🎲",
     category: "Jumanji Sarguzashti",
     isReady: true,
@@ -83,7 +84,7 @@ function Oyinlar() {
           <button
             type="button"
             className="ziyo-hub-back-btn"
-            onClick={() => navigate("/yaratish")}
+            onClick={() => navigate(-1)}
             title="Yaratish sahifasiga qaytish"
           >
             <IoArrowBack />

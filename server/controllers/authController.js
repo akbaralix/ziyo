@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import OTP from "../db/OTP/otp.js";
 import User from "../db/User/User.js";
-import Post from "../db/Post/Post.js";
 
 const JWT_SECRET =
   process.env.JWT_SECRET || "ziyo_secret_jwt_key_super_secure_2026_ziyo_app";
@@ -472,16 +471,6 @@ export const getUserProfileById = async (req, res) => {
     const rank = await calculateUserRank(user);
     const userObj = user.toObject ? user.toObject() : { ...user };
     userObj.rank = rank;
-
-    // Ushbu foydalanuvchining postlar sonini hisoblash
-    const postCount = await Post.countDocuments({
-      $or: [
-        { author: user._id },
-        { "user.id": user._id.toString() },
-        { "user.username": user.telegramUsername },
-      ],
-    });
-    userObj.postCount = postCount;
 
     return res.json({
       success: true,

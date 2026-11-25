@@ -5,7 +5,7 @@ import "./countdown.css";
 
 export default function KahootCountdown({
   onComplete,
-  quizTitle = "Ziyo Quiz",
+  quizTitle = "Hatif Quiz",
 }) {
   const [count, setCount] = useState(3);
 

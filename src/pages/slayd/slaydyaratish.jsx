@@ -18,10 +18,12 @@ import { toast } from "react-toastify";
 import pptxgen from "pptxgenjs";
 import "./slayd.css";
 
+const DRAFT_KEY = "ziyo_slayd_draft";
+
 const THEMES = [
   {
     id: "ziyo-purple",
-    name: "Ziyo Purple",
+    name: "Hatif Purple",
     bg: "#ffffff",
     cardBg: "#f8fafc",
     cardBorder: "#e2e8f0",
@@ -100,6 +102,35 @@ function SlaydYaratish() {
   const [slides, setSlides] = useState(null);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [currentTheme, setCurrentTheme] = useState(THEMES[0]);
+
+  // ── LocalStorage dan draft yuklash (bir marta)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft.slides && draft.slides.length > 0) {
+          setSlaydText(draft.slaydText || "");
+          setSlides(draft.slides);
+          setActiveSlideIndex(0);
+          const savedTheme = THEMES.find((t) => t.id === draft.themeId);
+          if (savedTheme) setCurrentTheme(savedTheme);
+          toast.info("Oldingi ishingiz tiklandi! 💾", { autoClose: 3000 });
+        }
+      }
+    } catch {}
+  }, []);
+
+  // ── slides yoki theme o'zgarganda avtomatik saqlash
+  useEffect(() => {
+    if (!slides) return;
+    try {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ slides, slaydText, themeId: currentTheme.id }),
+      );
+    } catch {}
+  }, [slides, slaydText, currentTheme]);
 
   const dropdownRef = useRef(null);
 
@@ -937,11 +968,23 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
       });
 
       pptx.writeFile({ fileName: `${slaydText || "Taqdimot"}.pptx` });
+      localStorage.removeItem(DRAFT_KEY);
       toast.success("PowerPoint fayli yuklab olindi!");
     } catch (e) {
       console.error("PPTX eksport xatosi:", e);
       toast.error("PPTX eksport qilishda xatolik.");
     }
+  };
+
+  // ── Draft ni tozalash va yangi yaratishga qaytish
+  const handleBackToNew = () => {
+    try {
+      localStorage.removeItem(DRAFT_KEY);
+    } catch {}
+    setSlides(null);
+    setSlaydText("");
+    setActiveSlideIndex(0);
+    setCurrentTheme(THEMES[0]);
   };
 
   // ================= GAMMA INTERAKTIV ISH MAYDONI =================
@@ -953,7 +996,7 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
           <div className="gamma-topbar-left">
             <button
               className="gamma-icon-btn"
-              onClick={() => setSlides(null)}
+              onClick={handleBackToNew}
               title="Yangi yaratishga qaytish"
             >
               <IoArrowBack />
@@ -1606,7 +1649,7 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
 
                   {/* Slayd pastki ma'lumot qatori */}
                   <div className="slide-footer-row">
-                    <span>Ziyo Taqdimot</span>
+                    <span>Hatif Taqdimot</span>
                     <span>
                       {sIdx + 1} / {slides.length}
                     </span>
@@ -1707,7 +1750,7 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
         </div>
 
         {/* Tezkor tavsiya qilingan mavzular (Suggestion Chips) */}
-        {!loading && (
+        {!loading && slaydText.trim().length === 0 && (
           <div className="quick-topics-wrapper">
             <span className="quick-topics-label">Mavzu g'oyalari:</span>
             <div className="quick-topics-list">

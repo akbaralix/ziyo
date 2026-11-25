@@ -14,8 +14,8 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { connectDB } from "./db/db.js";
 import startBot from "./bot/bot.js";
+import visitorTracker from "./middleware/visitorTracker.js";
 import authRoutes from "./routes/authRoutes.js";
-import postRoutes from "./routes/postRoutes.js";
 import quizRoutes from "./routes/quizRoutes.js";
 import ratingRoutes from "./routes/ratingRoutes.js";
 import { initSocketIO } from "./socket/gameSocket.js";
@@ -42,18 +42,18 @@ app.use(
 );
 
 app.use(express.json());
+app.use(visitorTracker);
 
 // Marshrutlar
 app.use("/api/auth", authRoutes);
 app.use("/api/users", authRoutes);
-app.use("/api/posts", postRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/ratings", ratingRoutes);
 app.use("/api/rating", ratingRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", message: "Ziyo server is running 🚀" });
+  res.json({ status: "ok", message: "Hatif server is running 🚀" });
 });
 
 // Socket.IO ishga tushirish
@@ -67,5 +67,5 @@ const PORT = process.env.PORT || process.env.VITE_PORT || 5000;
 
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server http://localhost:${PORT} da ishlayapti`);
-  startBot();
+  startBot(io);
 });

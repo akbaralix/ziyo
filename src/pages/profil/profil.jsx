@@ -22,7 +22,6 @@ import { MdAddAPhoto, MdOutlineAutoStories, MdSchool } from "react-icons/md";
 import { GoTrophy } from "react-icons/go";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import Post from "../../post/post";
 import ModalOverlay from "../../components/ModalOverlay";
 import "./profil.css";
 
@@ -33,7 +32,6 @@ import {
   checkUsernameAvailability,
 } from "../../api/userApi.js";
 import { logout } from "../../api/authApi.js";
-import { fetchPosts } from "../../api/postApi.js";
 import { getRatings } from "../../api/ratingApi.js";
 import {
   getMyQuizGames,
@@ -102,7 +100,7 @@ function Profil() {
     return false;
   }, [cleanUsername, currentLoggedUser]);
 
-  const [activeTab, setActiveTab] = useState("posts"); // 'posts' | 'books' | 'quizzes' | 'saved'
+  const [activeTab, setActiveTab] = useState("books"); // 'books' | 'quizzes' | 'saved'
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState("");
   const [editLastName, setEditLastName] = useState("");
@@ -148,27 +146,6 @@ function Profil() {
     queryFn: () => getRatings({ timeframe: "all", category: "Barchasi" }),
     staleTime: 1000 * 60 * 2,
   });
-
-  // TanStack Query orqali faqat shu foydalanuvchining postlar sonini hisoblash
-  const targetUserIdentifier = isMe
-    ? null
-    : u?._id
-      ? String(u._id)
-      : cleanUsername;
-
-  const { data: postsCountResponse } = useQuery({
-    queryKey: ["postsCount", isMe ? "my" : targetUserIdentifier],
-    queryFn: () =>
-      fetchPosts(
-        isMe
-          ? { onlyMyPosts: true }
-          : { userId: targetUserIdentifier, authorId: targetUserIdentifier },
-      ),
-    enabled: Boolean(isMe || targetUserIdentifier),
-    staleTime: 1000 * 60 * 3,
-  });
-
-  const postCount = postsCountResponse?.posts?.length ?? u?.postCount ?? 0;
 
   // TanStack Query orqali foydalanuvchining viktorinalari (faqat o'ziniki bo'lsa)
   const { data: myQuizzesResponse, refetch: refetchQuizzes } = useQuery({
@@ -388,7 +365,7 @@ function Profil() {
       u?.bio ||
       (isMe
         ? "Kitob mutolaasi va bilimlarni oshirish yo'lidaman."
-        : "Ziyo platformasi foydalanuvchisi."),
+        : "Hatif platformasi foydalanuvchisi."),
     studyPlace: studyPlaceType,
     studyLabel: `${studyLabel} ${studyCourseText}`.trim(),
     course: isTeacher ? "" : u?.course || (isSchool ? "Maktab" : "1-kurs"),
@@ -739,10 +716,10 @@ function Profil() {
                     <button
                       type="button"
                       className="profile-btn btn-primary"
-                      onClick={() => navigate("/yaratish")}
+                      onClick={() => navigate("/oyinlar")}
                     >
-                      <FaPlus />
-                      <span>Post yaratish</span>
+                      <IoExtensionPuzzleOutline />
+                      <span>O'yinlar</span>
                     </button>
                     <button
                       type="button"
@@ -800,16 +777,6 @@ function Profil() {
         <div className="profile-nav-tabs">
           <button
             type="button"
-            className={`profile-tab-btn ${activeTab === "posts" ? "active" : ""}`}
-            onClick={() => setActiveTab("posts")}
-          >
-            <IoGridOutline />
-            <span>{isMe ? "Mening postlarim" : "Postlar"}</span>
-            <span className="tab-count-badge">{postCount}</span>
-          </button>
-
-          <button
-            type="button"
             className={`profile-tab-btn ${activeTab === "books" ? "active" : ""}`}
             onClick={() => setActiveTab("books")}
           >
@@ -844,46 +811,6 @@ function Profil() {
           )}
         </div>
       </div>
-
-      {/* TAB CONTENTS: POSTLAR (Faqat shu foydalanuvchiniki!) */}
-      {activeTab === "posts" && (
-        <div className="profile-posts-section">
-          <div className="profile-posts-header">
-            <h3 className="profile-section-title">{isMe ? "Postlar" : null}</h3>
-            {isMe && (
-              <button
-                type="button"
-                className="create-new-inline-btn"
-                onClick={() => navigate("/yaratish")}
-              >
-                <FaPlus /> Yangi post
-              </button>
-            )}
-          </div>
-
-          {!isMe && isLoadingProfile ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "40px 0",
-                color: "#64748b",
-              }}
-            >
-              Postlar yuklanmoqda...
-            </div>
-          ) : (
-            <Post
-              key={
-                isMe
-                  ? "my-posts"
-                  : `user-posts-${u?._id || cleanUsername || "none"}`
-              }
-              onlyMyPosts={isMe}
-              userId={isMe ? null : String(u?._id || cleanUsername)}
-            />
-          )}
-        </div>
-      )}
       {activeTab === "books" && (
         <div>
           {readingBooks && readingBooks.length > 0 && (
@@ -1033,7 +960,7 @@ function Profil() {
         <div className="profile-quizzes-section">
           {/* 1. ZIYO LIVE VIKTORINALAR */}
           <div className="profile-posts-header">
-            <h3 className="profile-section-title">Viktorinalar (Ziyo Live)</h3>
+            <h3 className="profile-section-title">Viktorinalar</h3>
             <button
               type="button"
               className="create-new-inline-btn"
@@ -1048,7 +975,7 @@ function Profil() {
               {myQuizzes.map((quiz) => (
                 <div key={quiz._id} className="profile-quiz-card">
                   <div className="quiz-card-top">
-                    <span className="quiz-game-badge">🎮 Ziyo Live</span>
+                    <span className="quiz-game-badge">🎮 Hatif Live</span>
                     <span className="quiz-play-count">
                       👁 {quiz.playCount || 0} marta o'ynalgan
                     </span>
@@ -1209,10 +1136,10 @@ function Profil() {
           <div className="empty-tab-icon">
             <IoBookmarkOutline />
           </div>
-          <h4>Saqlangan postlar yo'q</h4>
+          <h4>Saqlangan materiallar yo'q</h4>
           <p>
-            Sizga yoqqan maqola yoki viktorinalarni saqlab qo'ying, ular shu
-            yerda ko'rinadi.
+            Sizga yoqqan kitob yoki testlarni saqlab qo'ying, ular shu yerda
+            ko'rinadi.
           </p>
         </div>
       )}

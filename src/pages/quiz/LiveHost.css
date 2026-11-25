@@ -128,8 +128,8 @@
 }
 
 .lobby-hero-card {
-  background: #f8f8f8d3;
-  border-radius: var(--radius-pill);
+  background: #ffffffd0;
+  border-radius: var(--radius-2xl);
   padding: clamp(20px, 4vw, 36px);
   display: flex;
   justify-content: space-between;
@@ -186,6 +186,7 @@
   cursor: pointer;
   font-size: clamp(38px, 9vw, 64px);
   font-weight: 700;
+  width: fit-content;
   color: var(--primary);
   letter-spacing: clamp(3px, 1vw, 6px);
   line-height: 1.1;
@@ -268,15 +269,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #c8ccd2;
+  background: #d6d6d6e6;
   border: 1.5px solid var(--border-color);
   color: var(--text-primary);
   padding: 8px 10px;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: var(--font-base);
-  font-weight: 500;
 }
-
+.player-chip-name {
+  font-size: 16px;
+  font-weight: 600;
+}
 .player-avatar-circle {
   width: 46px;
   height: 46px;
@@ -444,20 +447,14 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--primary);
-  color: var(--text-white);
-  border: 1.5px solid var(--primary);
+  background: var(--bg-muted);
   padding: 10px 24px;
-  border-radius: var(--radius-pill);
+  border-radius: 8px;
   font-size: var(--font-base);
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
   transition: all var(--transition-fast);
-}
-
-.host-next-btn:hover {
-  background: var(--primary-hover);
 }
 
 .host-options-grid.small {

@@ -13,7 +13,7 @@
   border: 1px solid var(--border-color, #e2e8f0);
   width: 40px;
   height: 40px;
-  border-radius: var(--radius-sm, 10px);
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1242,6 +1242,7 @@
     font-size: 2rem;
   }
   .create-header-text p {
+    text-align: center;
     font-size: 0.95rem;
   }
   .create-action {

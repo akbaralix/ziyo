@@ -808,11 +808,11 @@
 
 .quiz-host-btn {
   flex: 1;
-  background: linear-gradient(135deg, #2525eb, #3b3bf6);
+  background: linear-gradient(135deg, #6035ed, #865aff);
   color: #ffffff;
   border: none;
-  padding: 10px 14px;
-  border-radius: 33px;
+  padding: 10px 15px;
+  border-radius: 13px;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;

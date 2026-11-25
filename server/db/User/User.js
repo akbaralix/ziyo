@@ -60,6 +60,11 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    lastActiveAt: {
+      type: Date,
+      default: Date.now,
+      index: true,
+    },
     readingBook: {
       bookId: { type: String, default: "" },
       title: { type: String, default: "" },

@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/login/login.jsx";
 import Home from "../pages/home/home.jsx";
-import Create from "../pages/create/create.jsx";
 import Profil from "../pages/profil/profil.jsx";
 import Reytinglar from "../pages/reytinglar/reytinglar.jsx";
 import Kutubxona from "../pages/kutubxona/kutubxona.jsx";
@@ -19,22 +18,14 @@ import JumanjiPlay from "../pages/oyinlar/jumanji/JumanjiPlay.jsx";
 import SlaydYaratish from "../pages/slayd/slaydyaratish.jsx";
 
 function Router() {
-  // FIX: token ni useState bilan kuzatamiz.
-  // Oldingi kod: const token = localStorage.getItem("token")
-  // Bu faqat render paytida bir marta o'qilardi.
-  // Login bo'lganda localStorage yangilansa ham Router qayta render bo'lmasdi
-  // → sahifa oq ko'rinardi. Endi setToken orqali reaktiv bo'ldi.
   const [token, setToken] = useState(() => localStorage.getItem("token"));
 
   useEffect(() => {
-    // Har 200ms da localStorage ni tekshirish
-    // navigate() chaqirilgandan keyin token'ni darhol ushlash uchun
     const interval = setInterval(() => {
       const current = localStorage.getItem("token");
       setToken((prev) => (prev !== current ? current : prev));
     }, 200);
 
-    // Boshqa tabda login/logout bo'lsa ham ushlash
     const handleStorage = () => {
       setToken(localStorage.getItem("token"));
     };
@@ -55,21 +46,12 @@ function Router() {
       />
 
       {/* Bosh sahifa */}
-      <Route
-        path="/"
-        element={token ? <Home /> : <Navigate to="/login" replace />}
-      />
+      <Route path="/" element={<Home />} />
 
       {/* Kutubxona sahifasi */}
       <Route
         path="/kutubxona"
         element={token ? <Kutubxona /> : <Navigate to="/login" replace />}
-      />
-
-      {/* Yaratish sahifasi */}
-      <Route
-        path="/yaratish"
-        element={token ? <Create /> : <Navigate to="/login" replace />}
       />
 
       {/* Reytinglar sahifasi */}
@@ -88,7 +70,9 @@ function Router() {
         element={token ? <Profil /> : <Navigate to="/login" replace />}
       />
 
-      <Route path="/create" element={<Navigate to="/yaratish" replace />} />
+      {/* Yaratish yo'nalishi endi o'yinlar sahifasiga yo'naltiriladi */}
+      <Route path="/yaratish" element={<Navigate to="/oyinlar" replace />} />
+      <Route path="/create" element={<Navigate to="/oyinlar" replace />} />
 
       <Route
         path="/oyinlar"
@@ -119,7 +103,6 @@ function Router() {
         element={token ? <BarabanPlay /> : <Navigate to="/login" replace />}
       />
 
-      {/* Jumanji routes */}
       <Route
         path="/oyinlar/jumanji/create"
         element={token ? <JumanjiCreate /> : <Navigate to="/login" replace />}
@@ -136,7 +119,6 @@ function Router() {
         element={token ? <OctagonBattle /> : <Navigate to="/login" replace />}
       />
 
-      {/* Ziyo Live / Kahoot routes */}
       <Route
         path="/quiz/builder"
         element={token ? <QuizBuilder /> : <Navigate to="/login" replace />}

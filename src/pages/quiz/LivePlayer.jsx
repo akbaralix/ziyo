@@ -15,10 +15,10 @@ import {
   FaSquare,
   FaDice,
   FaCheck,
+  FaPen,
 } from "react-icons/fa";
 
 import { FaDiamond } from "react-icons/fa6";
-import quizLogoImg from "../../assets/game/quiz-log-img.jpg";
 
 import quizAvatar1 from "../../assets/quiz-avatar/quiz-avatar1.jpg";
 import quizAvatar2 from "../../assets/quiz-avatar/quiz-avatar2.jpg";
@@ -32,6 +32,8 @@ import quizAvatar9 from "../../assets/quiz-avatar/quiz-avatar9.jpg";
 import quizAvatar10 from "../../assets/quiz-avatar/quiz-avatar10.png";
 import quizAvatar11 from "../../assets/quiz-avatar/quiz-avatar11.png";
 import quizAvatar12 from "../../assets/quiz-avatar/quiz-avatar12.jpg";
+
+import hatif from "../../assets/hatif.png";
 
 export const QUIZ_AVATARS = [
   { id: 1, src: quizAvatar1, name: "Qahramon 1" },
@@ -96,6 +98,27 @@ export default function LivePlayer() {
   const [sessionId, setSessionId] = useState(null);
   const [playerId, setPlayerId] = useState(null);
   const [quizTitle, setQuizTitle] = useState("");
+
+  const getLoggedInUser = () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return null;
+      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      if (u && (u.firstName || u.name)) return u;
+      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+      if (p && (p.firstName || p.name)) return p;
+    } catch {}
+    return null;
+  };
+
+  // 'pin' | 'name'
+  const [joinStep, setJoinStep] = useState(() => (urlPin ? "name" : "pin"));
+  const [isVerifyingPin, setIsVerifyingPin] = useState(false);
+
+  // Lobby ism tahrirlash (ruchka bosilganda)
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editingNameVal, setEditingNameVal] = useState("");
+  const nameInputRef = useRef(null);
 
   // States: 'join' | 'lobby' | 'question' | 'answered' | 'answer_result' | 'ended'
   const [playerState, setPlayerState] = useState("join");
@@ -361,6 +384,21 @@ export default function LivePlayer() {
       }
     });
 
+    newSocket.on("player:name:updated", (data) => {
+      const currentPid = sessionInfoRef.current.playerId;
+      if (data.playerId === currentPid) {
+        setName(data.name);
+        sessionInfoRef.current.name = data.name;
+        try {
+          const saved = JSON.parse(
+            localStorage.getItem("ziyo_live_player") || "{}",
+          );
+          saved.name = data.name;
+          localStorage.setItem("ziyo_live_player", JSON.stringify(saved));
+        } catch {}
+      }
+    });
+
     newSocket.on("player:join:error", (data) => {
       const msg = data.msg || "O'yinga qo'shilishda xatolik";
       setErrorMsg(msg);
@@ -393,9 +431,6 @@ export default function LivePlayer() {
     });
 
     newSocket.on("player:answer:ok", (data) => {
-      // Kahoot kabi: javob qabul qilinganini saqlab turamiz,
-      // lekin barcha o'yinchilar javob berib (yoki vaqt tugab) raund yakunlanmaguncha
-      // bal qo'shilmaydi va ovoz chalinmaydi
       pendingAnswerFeedbackRef.current = data;
     });
 
@@ -475,31 +510,72 @@ export default function LivePlayer() {
     });
   };
 
-  // Handle Join (event parametrini ixtiyoriy qilamiz)
-  const handleJoin = async (e) => {
+  // Bosqich 1: O'yin kodini tekshirish va tasdiqlash
+  const handlePinSubmit = async (e) => {
     if (e && typeof e.preventDefault === "function") {
       e.preventDefault();
     }
     setErrorMsg("");
 
-    if (!pin.trim() || !name.trim()) {
-      const msg = "PIN kod va ismingizni kiriting!";
+    const cleanPin = pin.trim();
+    if (!cleanPin) {
+      setErrorMsg("Iltimos, o'yin kodini kiriting!");
+      return;
+    }
+
+    setIsVerifyingPin(true);
+    try {
+      const res = await joinByPin(cleanPin);
+      if (!res || !res.sessionId) {
+        const msg = "Bunday kodli faol o'yin topilmadi!";
+        setErrorMsg(msg);
+        toast.error(msg);
+        setIsVerifyingPin(false);
+        return;
+      }
+
+      setSessionId(res.sessionId);
+      if (res.title) setQuizTitle(res.title);
+
+      // Kod to'g'ri: endi ism so'rash bosqichiga o'tamiz
+      setJoinStep("name");
+      setIsVerifyingPin(false);
+    } catch (err) {
+      const msg = err.message || "Bunday kodli faol o'yin topilmadi!";
       setErrorMsg(msg);
+      toast.error(msg);
+      setIsVerifyingPin(false);
+    }
+  };
+
+  // Bosqich 2: Ism kiritilgandan so'ng o'yinga ulanish
+  const handleNameSubmit = async (e) => {
+    if (e && typeof e.preventDefault === "function") {
+      e.preventDefault();
+    }
+    setErrorMsg("");
+
+    const cleanName = name.trim();
+    if (!cleanName) {
+      setErrorMsg("Iltimos, ismingizni kiriting!");
       return;
     }
 
     setIsJoining(true);
     try {
-      const res = await joinByPin(pin.trim());
-      if (!res.sessionId) {
-        const msg = "Bunday o'yin topilmadi!";
-        setErrorMsg(msg);
-        toast.error(msg);
-        setIsJoining(false);
-        return;
+      let targetSessionId = sessionId;
+      if (!targetSessionId) {
+        const res = await joinByPin(pin.trim());
+        if (!res || !res.sessionId) {
+          const msg = "Bunday o'yin topilmadi!";
+          setErrorMsg(msg);
+          toast.error(msg);
+          setIsJoining(false);
+          return;
+        }
+        targetSessionId = res.sessionId;
+        setSessionId(res.sessionId);
       }
-
-      setSessionId(res.sessionId);
 
       let saved = null;
       try {
@@ -507,13 +583,13 @@ export default function LivePlayer() {
       } catch {}
 
       const existingPlayerId =
-        saved && saved.sessionId === res.sessionId ? saved.playerId : null;
+        saved && saved.sessionId === targetSessionId ? saved.playerId : null;
 
       connectToGame({
         pinToUse: pin.trim(),
-        sessionIdToUse: res.sessionId,
+        sessionIdToUse: targetSessionId,
         playerIdToUse: existingPlayerId,
-        nameToUse: name.trim(),
+        nameToUse: cleanName,
         profilePicToUse: profilePic,
       });
     } catch (err) {
@@ -524,35 +600,115 @@ export default function LivePlayer() {
     }
   };
 
-  // Auto verify PIN or stored session / auto login
+  // Lobbyda ismni ruchka orqali tahrirlash va saqlash
+  const handleSaveName = () => {
+    const trimmed = (editingNameVal || "").trim();
+    if (!trimmed) {
+      toast.warning("Ism bo'sh bo'lishi mumkin emas!");
+      setIsEditingName(false);
+      return;
+    }
+    if (trimmed !== name) {
+      setName(trimmed);
+      sessionInfoRef.current.name = trimmed;
+
+      try {
+        const saved = JSON.parse(
+          localStorage.getItem("ziyo_live_player") || "{}",
+        );
+        saved.name = trimmed;
+        localStorage.setItem("ziyo_live_player", JSON.stringify(saved));
+      } catch {}
+
+      const activeSocket = socketRef.current || socket;
+      if (activeSocket && sessionId && playerId) {
+        activeSocket.emit("player:update-name", {
+          sessionId,
+          playerId,
+          name: trimmed,
+        });
+      }
+      toast.success("Ismingiz yangilandi! ✨");
+    }
+    setIsEditingName(false);
+  };
+
+  // URL orqali kirilganda va sessiyani qayta tiklash
   useEffect(() => {
     let saved = null;
     try {
       saved = JSON.parse(localStorage.getItem("ziyo_live_player"));
     } catch {}
 
-    if (saved && saved.sessionId && saved.pin) {
-      if (!urlPin || urlPin === saved.pin) {
-        setPin(saved.pin);
-        if (saved.name) setName(saved.name);
-        if (saved.profilePic) setProfilePic(saved.profilePic);
-        setSessionId(saved.sessionId);
-        setPlayerId(saved.playerId);
-        setIsJoining(true);
+    // Agar o'yinchi avval shu PIN bo'yicha o'ynab turgan bo'lsa
+    if (
+      saved &&
+      saved.sessionId &&
+      saved.pin &&
+      urlPin &&
+      urlPin === saved.pin
+    ) {
+      setPin(saved.pin);
+      if (saved.name) setName(saved.name);
+      if (saved.profilePic) setProfilePic(saved.profilePic);
+      setSessionId(saved.sessionId);
+      setPlayerId(saved.playerId);
+      setIsJoining(true);
 
-        connectToGame({
-          pinToUse: saved.pin,
-          sessionIdToUse: saved.sessionId,
-          playerIdToUse: saved.playerId,
-          nameToUse: saved.name,
-          profilePicToUse: saved.profilePic,
-        });
-        return;
-      }
+      connectToGame({
+        pinToUse: saved.pin,
+        sessionIdToUse: saved.sessionId,
+        playerIdToUse: saved.playerId,
+        nameToUse: saved.name,
+        profilePicToUse: saved.profilePic,
+      });
+      return;
     }
 
     if (urlPin) {
-      setPin(urlPin);
+      const cleanPin = urlPin.trim();
+      setPin(cleanPin);
+
+      const loggedUser = getLoggedInUser();
+      const accountName = loggedUser?.firstName
+        ? `${loggedUser.firstName || ""}`.trim()
+        : loggedUser?.name || "";
+
+      // Agar o'yin kodi bilan kirgan bo'lsa va akkaunti ochilgan bo'lsa: to'g'ridan-to'g'ri o'yinga o'tish
+      if (loggedUser && accountName && !hasAutoJoinedUrlPinRef.current) {
+        hasAutoJoinedUrlPinRef.current = true;
+        setName(accountName);
+        setIsJoining(true);
+
+        joinByPin(cleanPin)
+          .then((res) => {
+            if (res && res.sessionId) {
+              setSessionId(res.sessionId);
+              connectToGame({
+                pinToUse: cleanPin,
+                sessionIdToUse: res.sessionId,
+                playerIdToUse: null,
+                nameToUse: accountName,
+                profilePicToUse: loggedUser.profilePic || profilePic,
+              });
+            } else {
+              setErrorMsg("Bunday o'yin topilmadi!");
+              setIsJoining(false);
+              setJoinStep("name");
+            }
+          })
+          .catch((err) => {
+            setErrorMsg(err.message || "Ulanishda xatolik yuz berdi");
+            setIsJoining(false);
+            setJoinStep("name");
+          });
+      } else {
+        // O'yin kodi bilan kirgan, lekin akkaunti bo'lmasa: darhol ism so'raladi
+        setJoinStep("name");
+      }
+    } else {
+      // /live/ da kodsiz kirganda: avval kod so'raladi
+      setJoinStep("pin");
     }
 
     return () => {
@@ -560,20 +716,6 @@ export default function LivePlayer() {
       if (socketRef.current) socketRef.current.disconnect();
     };
   }, [urlPin]);
-
-  // Faqat URL orqali PIN kelganda (QR-kod yoki havola orqali ochilganda) va user login bo'lsa bir marta avtomatik kirish
-  useEffect(() => {
-    if (urlPin && !hasAutoJoinedUrlPinRef.current) {
-      const userIsLogin =
-        !!localStorage.getItem("ziyo_user") ||
-        !!localStorage.getItem("ziyo_user_profile");
-
-      if (userIsLogin && name.trim() && playerState === "join") {
-        hasAutoJoinedUrlPinRef.current = true;
-        handleJoin();
-      }
-    }
-  }, [urlPin, name]);
 
   const handleSelectAvatar = (avatarSrc) => {
     setProfilePic(avatarSrc);
@@ -649,7 +791,7 @@ export default function LivePlayer() {
       {/* ==================== KAHOOT COUNTDOWN OVERLAY ==================== */}
       {isCountingDown && (
         <KahootCountdown
-          quizTitle={quizTitle || "Ziyo Quiz"}
+          quizTitle={quizTitle || "Hatif Quiz"}
           onComplete={handleCountdownComplete}
         />
       )}
@@ -693,43 +835,75 @@ export default function LivePlayer() {
       {playerState === "join" && (
         <div className="player-join-container">
           <div className="player-join-card">
-            <h2>Ziyo QUIZ</h2>
+            <img src={hatif} alt="" />
+            {joinStep === "pin" ? (
+              /* Bosqich 1: Avval faqat kod kiritiladi */
+              <form onSubmit={handlePinSubmit} className="player-join-form">
+                <div className="join-input-group">
+                  <label>O'YIN KODI (PIN)</label>
+                  <input
+                    type="text"
+                    placeholder="Kodni kiritish"
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value)}
+                    maxLength={10}
+                    autoFocus
+                    required
+                  />
+                </div>
 
-            {errorMsg && <div className="join-error-text">{errorMsg}</div>}
+                <button
+                  type="submit"
+                  className="player-enter-btn"
+                  disabled={isVerifyingPin}
+                >
+                  {isVerifyingPin ? "Tekshirilmoqda..." : "Qo'shilish"}
+                </button>
+              </form>
+            ) : (
+              /* Bosqich 2: Ism so'raladi */
+              <form onSubmit={handleNameSubmit} className="player-join-form">
+                <div className="join-pin-preview-chip">
+                  <span>
+                    KOD: <strong>{pin}</strong>
+                  </span>
+                  {!urlPin && (
+                    <button
+                      type="button"
+                      className="join-pin-change-btn"
+                      onClick={() => {
+                        setJoinStep("pin");
+                        setErrorMsg("");
+                      }}
+                    >
+                      O'zgartirish
+                    </button>
+                  )}
+                </div>
+                {errorMsg && <div className="join-error-text">{errorMsg}</div>}
 
-            <form onSubmit={handleJoin} className="player-join-form">
-              <div className="join-input-group">
-                <label>O'YIN KODI (PIN)</label>
-                <input
-                  type="text"
-                  placeholder="Kodni kiritish"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value)}
-                  maxLength={10}
-                  required
-                />
-              </div>
+                <div className="join-input-group">
+                  <label>SIZNING ISMINGIZ</label>
+                  <input
+                    type="text"
+                    placeholder="Ismingiz yoki taxallusingiz"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    maxLength={30}
+                    autoFocus
+                    required
+                  />
+                </div>
 
-              <div className="join-input-group">
-                <label>SIZNING ISMINGIZ</label>
-                <input
-                  type="text"
-                  placeholder="Ismingiz yoki taxallusingiz"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={30}
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="player-enter-btn"
-                disabled={isJoining}
-              >
-                {isJoining ? "Ulanmoqda..." : "O'yinga kirish 🚀"}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="player-enter-btn"
+                  disabled={isJoining}
+                >
+                  {isJoining ? "Ulanmoqda..." : "Qo'shilish"}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}
@@ -749,7 +923,62 @@ export default function LivePlayer() {
                 name.charAt(0).toUpperCase()
               )}
             </div>
-            <h2>Siz o'yindasiz, {name}! 🎉</h2>
+
+            <h2>
+              Siz o'yindasiz,{" "}
+              {isEditingName ? (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSaveName();
+                  }}
+                  className="lobby-name-inline-form"
+                >
+                  <input
+                    ref={nameInputRef}
+                    type="text"
+                    className="lobby-name-inline-input"
+                    value={editingNameVal}
+                    onChange={(e) => setEditingNameVal(e.target.value)}
+                    onBlur={handleSaveName}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSaveName();
+                      } else if (e.key === "Escape") {
+                        setIsEditingName(false);
+                      }
+                    }}
+                    maxLength={25}
+                    autoFocus
+                  />
+                </form>
+              ) : (
+                <span className="lobby-name-inline-wrap">
+                  <span
+                    className="lobby-name-highlight"
+                    onClick={() => {
+                      setEditingNameVal(name);
+                      setIsEditingName(true);
+                    }}
+                    title="Ismni tahrirlash uchun bosing"
+                  >
+                    {name}
+                  </span>
+                  <button
+                    type="button"
+                    className="lobby-name-edit-btn"
+                    onClick={() => {
+                      setEditingNameVal(name);
+                      setIsEditingName(true);
+                    }}
+                    title="Ismni tahrirlash"
+                  >
+                    <FaPen className="lobby-pen-icon" />
+                  </button>
+                </span>
+              )}
+            </h2>
             <p className="lobby-wait-text">
               Boshlovchi o'yinni boshlashini kuting...
             </p>
@@ -882,9 +1111,6 @@ export default function LivePlayer() {
                     currentRank <= 3 ? currentRank : "other"
                   }`}
                 >
-                  <span className="feedback-rank-sublabel">
-                    Sizning joriy o'rningiz:
-                  </span>
                   <div className="feedback-rank-main">
                     {currentRank === 1 && "🥇 1-o'rin 🔥"}
                     {currentRank === 2 && "🥈 2-o'rin"}

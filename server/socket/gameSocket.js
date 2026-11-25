@@ -62,8 +62,10 @@ export function initSocketIO(io) {
           if (timeLeft <= 0) {
             clearTimeout(sessionTimers[`${sessionId}_q`]);
             await showAnswer(io, sessionId, session, session.currentQuestion);
-            const freshSession = await GameSession.findById(sessionId).populate("quiz");
-            const freshQ = freshSession.quiz.questions[freshSession.currentQuestion];
+            const freshSession =
+              await GameSession.findById(sessionId).populate("quiz");
+            const freshQ =
+              freshSession.quiz.questions[freshSession.currentQuestion];
             const leaderboard = [...freshSession.players]
               .sort((a, b) => b.score - a.score)
               .slice(0, 5)
@@ -87,7 +89,9 @@ export function initSocketIO(io) {
             baseData.leaderboard = leaderboard;
           } else {
             const answeredCount = session.players.filter((p) =>
-              p.answers.some((a) => a.questionIndex === session.currentQuestion),
+              p.answers.some(
+                (a) => a.questionIndex === session.currentQuestion,
+              ),
             ).length;
 
             baseData.currentQuestion = {
@@ -151,7 +155,8 @@ export function initSocketIO(io) {
       "player:join",
       async ({ sessionId, playerId, name, profilePic }) => {
         try {
-          const session = await GameSession.findById(sessionId).populate("quiz");
+          const session =
+            await GameSession.findById(sessionId).populate("quiz");
 
           if (!session) {
             return socket.emit("player:join:error", {
@@ -173,7 +178,8 @@ export function initSocketIO(io) {
           }
           if (!player && socket.userId) {
             player = session.players.find(
-              (p) => p.userId && p.userId.toString() === socket.userId.toString(),
+              (p) =>
+                p.userId && p.userId.toString() === socket.userId.toString(),
             );
           }
 
@@ -230,9 +236,16 @@ export function initSocketIO(io) {
               // Agar internet uzilgan paytda savol vaqti tugab bo'lgan bo'lsa
               if (timeLeft <= 0) {
                 clearTimeout(sessionTimers[`${sessionId}_q`]);
-                await showAnswer(io, sessionId, session, session.currentQuestion);
-                const freshSession = await GameSession.findById(sessionId).populate("quiz");
-                const freshQ = freshSession.quiz.questions[freshSession.currentQuestion];
+                await showAnswer(
+                  io,
+                  sessionId,
+                  session,
+                  session.currentQuestion,
+                );
+                const freshSession =
+                  await GameSession.findById(sessionId).populate("quiz");
+                const freshQ =
+                  freshSession.quiz.questions[freshSession.currentQuestion];
                 const allLeaderboard = [...freshSession.players]
                   .sort((a, b) => b.score - a.score)
                   .map((p, i) => ({
@@ -242,7 +255,10 @@ export function initSocketIO(io) {
                     score: p.score,
                     profilePic: p.profilePic,
                   }));
-                const myRank = allLeaderboard.findIndex(p => p.id === player._id.toString()) + 1;
+                const myRank =
+                  allLeaderboard.findIndex(
+                    (p) => p.id === player._id.toString(),
+                  ) + 1;
 
                 responseData.status = "answer";
                 responseData.currentQuestion = {
@@ -275,7 +291,9 @@ export function initSocketIO(io) {
                 };
                 responseData.timeLeft = timeLeft;
                 responseData.hasAnswered = !!myAnswer;
-                responseData.chosenIndex = myAnswer ? myAnswer.chosenIndex : null;
+                responseData.chosenIndex = myAnswer
+                  ? myAnswer.chosenIndex
+                  : null;
               }
             } else if (
               session.status === "answer" &&
@@ -291,7 +309,10 @@ export function initSocketIO(io) {
                   score: p.score,
                   profilePic: p.profilePic,
                 }));
-              const myRank = allLeaderboard.findIndex(p => p.id === player._id.toString()) + 1;
+              const myRank =
+                allLeaderboard.findIndex(
+                  (p) => p.id === player._id.toString(),
+                ) + 1;
 
               responseData.currentQuestion = {
                 questionIndex: session.currentQuestion,
@@ -322,12 +343,17 @@ export function initSocketIO(io) {
                   score: p.score,
                   profilePic: p.profilePic,
                 }));
-              const myRank = finalLeaderboard.findIndex(p => p.id === player._id.toString()) + 1;
-              const questionsReview = (session.quiz?.questions || []).map((q) => ({
-                text: q.text,
-                correctIndex: q.correctIndex,
-                explanation: q.explanation || "",
-              }));
+              const myRank =
+                finalLeaderboard.findIndex(
+                  (p) => p.id === player._id.toString(),
+                ) + 1;
+              const questionsReview = (session.quiz?.questions || []).map(
+                (q) => ({
+                  text: q.text,
+                  correctIndex: q.correctIndex,
+                  explanation: q.explanation || "",
+                }),
+              );
 
               responseData.status = "ended";
               responseData.leaderboard = finalLeaderboard;
@@ -416,6 +442,33 @@ export function initSocketIO(io) {
         }
       },
     );
+
+    // ===================== ISMNI YANGILASH =====================
+    socket.on("player:update-name", async ({ sessionId, playerId, name }) => {
+      try {
+        const newName = (name || "").trim();
+        if (!newName) return;
+        const session = await GameSession.findById(sessionId);
+        if (!session) return;
+
+        const player = session.players.find(
+          (p) => p._id.toString() === playerId,
+        );
+        if (player) {
+          player.name = newName;
+          await session.save();
+
+          socket.playerName = newName;
+
+          io.to(`session:${sessionId}`).emit("player:name:updated", {
+            playerId,
+            name: newName,
+          });
+        }
+      } catch (err) {
+        console.error("player:update-name error:", err);
+      }
+    });
 
     socket.on("send_reaction", ({ emoji, sessionId, user, name }) => {
       try {
@@ -733,7 +786,7 @@ async function endGame(io, sessionId) {
 
   io.to(`session:${sessionId}`).emit("game:ended", {
     leaderboard: finalLeaderboard,
-    quizTitle: session.quiz?.title || "Ziyo Live",
+    quizTitle: session.quiz?.title || "Hatif Live",
     questionsReview,
   });
 

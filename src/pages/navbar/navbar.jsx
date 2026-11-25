@@ -1,8 +1,8 @@
 import { VscLayoutSidebarLeftOff, VscLayoutSidebarLeft } from "react-icons/vsc";
 import { NavLink } from "react-router-dom";
-import { PiPlusBold } from "react-icons/pi";
 import { GoHome, GoTrophy, GoPerson } from "react-icons/go";
 import { SiWikibooks } from "react-icons/si";
+import { IoGameControllerOutline } from "react-icons/io5";
 import logo from "../../assets/logo.jpg";
 import "./navbar.css";
 
@@ -10,7 +10,7 @@ function Navbar({ isCollapsed, onToggle }) {
   const navbarItems = [
     { name: "Bosh sahifa", icon: <GoHome />, path: "/" },
     { name: "Kutubxona", icon: <SiWikibooks />, path: "/kutubxona" },
-    { name: "Yaratish", icon: <PiPlusBold />, path: "/yaratish" },
+    { name: "O'yinlar", icon: <IoGameControllerOutline />, path: "/oyinlar" },
     { name: "Reytinglar", icon: <GoTrophy />, path: "/reytinglar" },
     { name: "Profil", icon: <GoPerson />, path: "/profil" },
   ];

@@ -19,7 +19,8 @@ function App() {
     location.pathname.startsWith("/oktagon/battle") ||
     location.pathname.startsWith("/jumanji/");
 
-  const showNavbar = !NO_NAVBAR_PAGES.includes(location.pathname) && !isQuizFullScreen;
+  const showNavbar =
+    !NO_NAVBAR_PAGES.includes(location.pathname) && !isQuizFullScreen;
 
   return (
     <div className="app-layout">
@@ -34,6 +35,7 @@ function App() {
         draggable
         pauseOnHover
         theme="colored"
+        style={{ zIndex: 999999 }}
       />
       {showNavbar && (
         <Navbar
