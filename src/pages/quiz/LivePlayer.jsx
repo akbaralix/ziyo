@@ -100,9 +100,24 @@ export default function LivePlayer() {
   const navigate = useNavigate();
 
   // Join form state
-  const [pin, setPin] = useState(urlPin || "");
+  const [pin, setPin] = useState(() => {
+    if (urlPin) return urlPin;
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("hatify_live_player") ||
+          localStorage.getItem("ziyo_live_player"),
+      );
+      if (saved && saved.pin) return saved.pin;
+    } catch {}
+    return "";
+  });
   const [name, setName] = useState(() => {
     try {
+      const saved = JSON.parse(
+        localStorage.getItem("hatify_live_player") ||
+          localStorage.getItem("ziyo_live_player"),
+      );
+      if (saved && saved.name) return saved.name;
       const token = getAuthToken();
       if (token) {
         const u =
@@ -139,8 +154,26 @@ export default function LivePlayer() {
   });
 
   const [socket, setSocket] = useState(null);
-  const [sessionId, setSessionId] = useState(null);
-  const [playerId, setPlayerId] = useState(null);
+  const [sessionId, setSessionId] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("hatify_live_player") ||
+          localStorage.getItem("ziyo_live_player"),
+      );
+      if (saved && saved.sessionId) return saved.sessionId;
+    } catch {}
+    return null;
+  });
+  const [playerId, setPlayerId] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("hatify_live_player") ||
+          localStorage.getItem("ziyo_live_player"),
+      );
+      if (saved && saved.playerId) return saved.playerId;
+    } catch {}
+    return null;
+  });
   const [quizTitle, setQuizTitle] = useState("");
 
   const getLoggedInUser = useCallback(() => {
@@ -215,6 +248,7 @@ export default function LivePlayer() {
     pin: "",
     sessionId: "",
     playerId: null,
+    playerToken: null,
     name: "",
     profilePic: "",
   });
@@ -1628,7 +1662,6 @@ export default function LivePlayer() {
               </span>
             </div>
 
-            {/* ==================== XP MUKOFOTI ==================== */}
             {xpReward && (
               <div
                 className={`player-xp-reward-card ${
@@ -1647,11 +1680,6 @@ export default function LivePlayer() {
                       {xpReward.duplicate
                         ? "Takroriy o'yin (XP berilmaydi)"
                         : "O'yindan yutilgan XP"}
-                    </span>
-                    <span className="xp-badge-cap">
-                      {xpReward.duplicate
-                        ? "Anti-farm tizimi faol"
-                        : "Maksimal chegara: 200 XP"}
                     </span>
                   </div>
                 </div>

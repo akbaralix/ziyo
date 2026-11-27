@@ -11,7 +11,7 @@ import {
 import { JWT_SECRET } from "../utils/jwtSecret.js";
 
 const COUNTDOWN_MS = 3500;
-const LOBBY_DISCONNECT_GRACE_MS = 3000;
+const LOBBY_DISCONNECT_GRACE_MS = 45000;
 const QUESTION_TIMER_BUFFER_MS = 250;
 
 // Har bir sessiya uchun timerlar va async qulf (race-condition oldini olish uchun)
@@ -413,7 +413,14 @@ export function initSocketIO(io) {
     // ===================== O'YINCHI ULANISHI =====================
     socket.on(
       "player:join",
-      async ({ sessionId, playerId, name, profilePic, userId } = {}) => {
+      async ({
+        sessionId,
+        playerId,
+        playerToken,
+        name,
+        profilePic,
+        userId,
+      } = {}) => {
         if (!sessionId) {
           return socket.emit("player:join:error", {
             msg: "O'yin topilmadi yoki tugagan",
@@ -422,6 +429,8 @@ export function initSocketIO(io) {
 
         const effectiveUserId =
           socket.userId || (typeof userId === "string" && userId ? userId : null);
+        const cleanName =
+          typeof name === "string" ? name.trim().slice(0, 30) : "";
 
         try {
           await withSessionLock(sessionId, async () => {
@@ -433,28 +442,46 @@ export function initSocketIO(io) {
               });
             }
 
-            // Mavjud o'yinchini aniqlash: faqat playerId yoki autentifikatsiya qilingan userId orqali
+            // Mavjud o'yinchini aniqlash:
+            // Faqat playerId + to'g'ri playerToken / ism mosligi orqali!
+            // Hech kim boshqa birovning ismini kiritib uning o'rniga kirib keta olmaydi!
             let player = null;
             if (playerId) {
               const candidate = (session.players || []).find(
                 (p) => p._id?.toString() === String(playerId),
               );
               if (candidate) {
+                const tokenMatches =
+                  !candidate.playerToken ||
+                  !playerToken ||
+                  candidate.playerToken === playerToken;
+                const nameMatches =
+                  !cleanName ||
+                  candidate.name.trim().toLowerCase() === cleanName.toLowerCase();
                 const sameAccountOrGuest =
                   !candidate.userId ||
                   !effectiveUserId ||
                   String(candidate.userId) === String(effectiveUserId);
-                if (sameAccountOrGuest) {
+
+                if (tokenMatches && nameMatches && sameAccountOrGuest) {
                   player = candidate;
                 }
               }
             }
             if (!player && effectiveUserId) {
-              player = (session.players || []).find(
+              const candidate = (session.players || []).find(
                 (p) =>
                   p.userId &&
                   String(p.userId) === String(effectiveUserId),
               );
+              if (candidate) {
+                const nameMatches =
+                  !cleanName ||
+                  candidate.name.trim().toLowerCase() === cleanName.toLowerCase();
+                if (nameMatches) {
+                  player = candidate;
+                }
+              }
             }
 
             if (player) {
@@ -529,6 +556,7 @@ export function initSocketIO(io) {
 
               const responseData = {
                 playerId: pidStr,
+                playerToken: player.playerToken || "",
                 name: player.name,
                 score: player.score || 0,
                 profilePic: player.profilePic || "",
@@ -675,13 +703,16 @@ export function initSocketIO(io) {
               });
             }
 
+            const generatedPlayerToken = `pt_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
             const newPlayer = {
               _id: session._isMemory ? generateMemoryId() : undefined,
               socketId: socket.id,
               userId: effectiveUserId || socket.userId || null,
+              playerToken: generatedPlayerToken,
               name: cleanName,
               profilePic: typeof profilePic === "string" ? profilePic : "",
               score: 0,
+              streak: 0,
               connected: true,
               lastSeenAt: new Date(),
               answers: [],
@@ -704,6 +735,7 @@ export function initSocketIO(io) {
 
             socket.emit("player:joined", {
               playerId: savedPid,
+              playerToken: savedPlayer.playerToken || generatedPlayerToken,
               name: savedPlayer.name,
               score: 0,
               profilePic: savedPlayer.profilePic,

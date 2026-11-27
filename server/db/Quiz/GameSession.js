@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const playerSchema = new mongoose.Schema({
   socketId: String,
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  playerToken: { type: String, default: "" },
   name: { type: String, required: true },
   profilePic: { type: String, default: "" },
   score: { type: Number, default: 0 },
