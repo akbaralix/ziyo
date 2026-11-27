@@ -35,7 +35,7 @@ import quizAvatar10 from "../../assets/quiz-avatar/quiz-avatar10.png";
 import quizAvatar11 from "../../assets/quiz-avatar/quiz-avatar11.png";
 import quizAvatar12 from "../../assets/quiz-avatar/quiz-avatar12.jpg";
 
-import hatif from "../../assets/hatif.png";
+import hatifyLogo from "../../assets/hatify-logo.png";
 
 export const QUIZ_AVATARS = [
   { id: 1, src: quizAvatar1, name: "Qahramon 1" },
@@ -81,10 +81,14 @@ export default function LivePlayer() {
     try {
       const token = getAuthToken();
       if (token) {
-        const u = JSON.parse(localStorage.getItem("ziyo_user"));
+        const u =
+          JSON.parse(localStorage.getItem("hatify_user")) ||
+          JSON.parse(localStorage.getItem("ziyo_user"));
         if (u && (u.firstName || u.lastName))
           return `${u.firstName || ""}`.trim();
-        const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+        const p =
+          JSON.parse(localStorage.getItem("hatify_user_profile")) ||
+          JSON.parse(localStorage.getItem("ziyo_user_profile"));
         if (p && p.name) return p.name;
       }
     } catch {}
@@ -93,11 +97,18 @@ export default function LivePlayer() {
 
   const [profilePic, setProfilePic] = useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem("ziyo_live_player"));
+      const saved = JSON.parse(
+        localStorage.getItem("hatify_live_player") ||
+          localStorage.getItem("ziyo_live_player"),
+      );
       if (saved && saved.profilePic) return saved.profilePic;
-      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      const u =
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("ziyo_user"));
       if (u && u.profilePic) return u.profilePic;
-      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+      const p =
+        JSON.parse(localStorage.getItem("hatify_user_profile")) ||
+        JSON.parse(localStorage.getItem("ziyo_user_profile"));
       if (p && p.profilePic) return p.profilePic;
     } catch {}
     return quizAvatar1;
@@ -112,9 +123,13 @@ export default function LivePlayer() {
     try {
       const token = getAuthToken();
       if (!token) return null;
-      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      const u =
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("ziyo_user"));
       if (u && (u.firstName || u.name)) return u;
-      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+      const p =
+        JSON.parse(localStorage.getItem("hatify_user_profile")) ||
+        JSON.parse(localStorage.getItem("ziyo_user_profile"));
       if (p && (p.firstName || p.name)) return p;
     } catch {}
     return null;
@@ -1050,7 +1065,7 @@ export default function LivePlayer() {
       {/* ==================== KAHOOT COUNTDOWN OVERLAY ==================== */}
       {isCountingDown && (
         <KahootCountdown
-          quizTitle={quizTitle || "Hatif Quiz"}
+          quizTitle={quizTitle || "Hatify Quiz"}
           startsAt={countdownStartsAt}
           serverOffsetMs={serverOffsetMs}
           onComplete={handleCountdownComplete}
@@ -1096,7 +1111,7 @@ export default function LivePlayer() {
       {playerState === "join" && (
         <div className="player-join-container">
           <div className="player-join-card">
-            <img src={hatif} alt="" />
+            <img src={hatifyLogo} alt="Hatify" />
             {joinStep === "pin" ? (
               <form onSubmit={handlePinSubmit} className="player-join-form">
                 {errorMsg && <div className="join-error-text">{errorMsg}</div>}

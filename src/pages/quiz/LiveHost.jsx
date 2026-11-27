@@ -347,9 +347,13 @@ export default function LiveHost() {
 
   const getCurrentUserId = useCallback(() => {
     try {
-      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      const u =
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("ziyo_user"));
       if (u && (u._id || u.id)) return String(u._id || u.id);
-      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+      const p =
+        JSON.parse(localStorage.getItem("hatify_user_profile")) ||
+        JSON.parse(localStorage.getItem("ziyo_user_profile"));
       if (p && (p._id || p.id)) return String(p._id || p.id);
       const token = getAuthToken();
       if (token) {

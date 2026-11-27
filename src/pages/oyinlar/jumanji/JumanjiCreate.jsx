@@ -14,9 +14,13 @@ export default function JumanjiCreate() {
   // User checking
   const currentUser = (() => {
     try {
-      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      const u =
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("ziyo_user"));
       if (u) return u;
-      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+      const p =
+        JSON.parse(localStorage.getItem("hatify_user_profile")) ||
+        JSON.parse(localStorage.getItem("ziyo_user_profile"));
       if (p) return p;
     } catch {}
     return null;

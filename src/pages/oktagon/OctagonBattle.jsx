@@ -39,9 +39,13 @@ export default function OctagonBattle() {
   const token = getAuthToken() || "";
   const currentUser = (() => {
     try {
-      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      const u =
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("ziyo_user"));
       if (u) return u;
-      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+      const p =
+        JSON.parse(localStorage.getItem("hatify_user_profile")) ||
+        JSON.parse(localStorage.getItem("ziyo_user_profile"));
       if (p) return p;
     } catch {}
     return { firstName: "Siz", xp: 100 };
@@ -289,10 +293,14 @@ export default function OctagonBattle() {
 
       // LocalStorage XP ni yangilash
       try {
-        const u = JSON.parse(localStorage.getItem("ziyo_user") || "{}");
+        const u =
+          JSON.parse(localStorage.getItem("hatify_user")) ||
+          JSON.parse(localStorage.getItem("ziyo_user") || "{}");
         const newXp = Math.max(0, (u.xp || 0) + fData.xpChange);
         u.xp = newXp;
-        localStorage.setItem("ziyo_user", JSON.stringify(u));
+        const uStr = JSON.stringify(u);
+        localStorage.setItem("hatify_user", uStr);
+        localStorage.setItem("ziyo_user", uStr);
       } catch {}
 
       if (fData.result === "victory") {
@@ -433,9 +441,13 @@ export default function OctagonBattle() {
 
     // XP update
     try {
-      const u = JSON.parse(localStorage.getItem("ziyo_user") || "{}");
+      const u =
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("ziyo_user") || "{}");
       u.xp = Math.max(0, (u.xp || 0) + xp);
-      localStorage.setItem("ziyo_user", JSON.stringify(u));
+      const uStr = JSON.stringify(u);
+      localStorage.setItem("hatify_user", uStr);
+      localStorage.setItem("ziyo_user", uStr);
     } catch {}
 
     const payload = {

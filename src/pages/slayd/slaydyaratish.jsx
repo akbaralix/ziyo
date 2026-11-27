@@ -23,7 +23,7 @@ const DRAFT_KEY = "ziyo_slayd_draft";
 const THEMES = [
   {
     id: "ziyo-purple",
-    name: "Hatif",
+    name: "Hatify",
     bg: "#ffffff",
     cardBg: "#f8f8fc",
     cardBorder: "#e4e5ef",
@@ -287,7 +287,7 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
     };
 
     try {
-      setLoadingStep("ZIYO slaydlari generatsiya qilinmoqda...");
+      setLoadingStep("Hatify slaydlari generatsiya qilinmoqda...");
       let response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
@@ -626,7 +626,7 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
     try {
       const pptx = new pptxgen();
       pptx.layout = "LAYOUT_16x9";
-      pptx.author = "ziyo AI";
+      pptx.author = "Hatify AI";
       pptx.title = slaydText || "Taqdimot";
 
       const bgColor = currentTheme.bg.replace("#", "");
@@ -1657,7 +1657,7 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
 
                   {/* Slayd pastki ma'lumot qatori */}
                   <div className="slide-footer-row">
-                    <span>Hatif Taqdimot</span>
+                    <span>Hatify Taqdimot</span>
                     <span>
                       {sIdx + 1} / {slides.length}
                     </span>

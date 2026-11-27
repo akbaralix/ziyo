@@ -11,7 +11,7 @@ import "./oyinlar.css";
 const gamesList = [
   {
     id: "quiz",
-    title: "Hatif Quiz",
+    title: "Hatify Quiz",
     href: "/quiz/builder",
     bgimg: quiz,
     description:

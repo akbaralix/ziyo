@@ -64,7 +64,9 @@ function Reytinglar() {
 
   const currentUserId = useMemo(() => {
     try {
-      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      const u =
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("ziyo_user"));
       return u?._id || u?.id || null;
     } catch {
       return null;
@@ -73,7 +75,9 @@ function Reytinglar() {
 
   const currentUsername = useMemo(() => {
     try {
-      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      const u =
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("ziyo_user"));
       return u?.username || u?.telegramUsername || null;
     } catch {
       return null;

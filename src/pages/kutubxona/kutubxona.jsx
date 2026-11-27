@@ -66,7 +66,9 @@ function Kutubxona() {
   useEffect(() => {
     const progressMap = {};
     BOOKS_DATA.forEach((book) => {
-      const savedPage = localStorage.getItem(`ziyo_last_page_${book.id}`);
+      const savedPage =
+        localStorage.getItem(`hatify_last_page_${book.id}`) ||
+        localStorage.getItem(`ziyo_last_page_${book.id}`);
       if (savedPage) {
         progressMap[book.id] = parseInt(savedPage, 10);
       }
@@ -154,12 +156,16 @@ function Kutubxona() {
     setIsLoadingPdf(true);
     setRenderError(null);
 
-    const savedLastPage = localStorage.getItem(`ziyo_last_page_${book.id}`);
+    const savedLastPage =
+      localStorage.getItem(`hatify_last_page_${book.id}`) ||
+      localStorage.getItem(`ziyo_last_page_${book.id}`);
     const initialPage = savedLastPage ? parseInt(savedLastPage, 10) : 1;
     setCurrentPage(initialPage);
     setPageInputValue(String(initialPage));
 
-    const savedBookmarks = localStorage.getItem(`ziyo_bookmarks_${book.id}`);
+    const savedBookmarks =
+      localStorage.getItem(`hatify_bookmarks_${book.id}`) ||
+      localStorage.getItem(`ziyo_bookmarks_${book.id}`);
     setBookmarks(savedBookmarks ? JSON.parse(savedBookmarks) : []);
 
     try {
@@ -217,6 +223,10 @@ function Kutubxona() {
       // Oxirgi sahifani saqlash
       if (activeBook) {
         localStorage.setItem(
+          `hatify_last_page_${activeBook.id}`,
+          String(currentPage),
+        );
+        localStorage.setItem(
           `ziyo_last_page_${activeBook.id}`,
           String(currentPage),
         );
@@ -235,14 +245,16 @@ function Kutubxona() {
           currentPage: currentPage,
           updatedAt: new Date().toISOString(),
         };
-        localStorage.setItem(
-          "ziyo_current_reading_book",
-          JSON.stringify(currentReadingObj),
-        );
+        const currentReadingStr = JSON.stringify(currentReadingObj);
+        localStorage.setItem("hatify_current_reading_book", currentReadingStr);
+        localStorage.setItem("ziyo_current_reading_book", currentReadingStr);
 
         // Bir nechta o'qilayotgan kitoblar ro'yxatiga ham saqlash / yangilash
         try {
-          const listStr = localStorage.getItem("ziyo_current_reading_books") || "[]";
+          const listStr =
+            localStorage.getItem("hatify_current_reading_books") ||
+            localStorage.getItem("ziyo_current_reading_books") ||
+            "[]";
           let readingList = JSON.parse(listStr);
           if (!Array.isArray(readingList)) readingList = [];
           const existingIdx = readingList.findIndex((b) => b.bookId === activeBook.id);
@@ -251,16 +263,18 @@ function Kutubxona() {
           } else {
             readingList.unshift(currentReadingObj);
           }
-          localStorage.setItem(
-            "ziyo_current_reading_books",
-            JSON.stringify(readingList),
-          );
+          const readingListStr = JSON.stringify(readingList);
+          localStorage.setItem("hatify_current_reading_books", readingListStr);
+          localStorage.setItem("ziyo_current_reading_books", readingListStr);
         } catch {}
 
         // Agar kitob oxirgi betigacha o'qilgan bo'lsa
         if (currentPage >= (activeBook.pages || totalPages)) {
           try {
-            const finStr = localStorage.getItem("ziyo_finished_books") || "[]";
+            const finStr =
+              localStorage.getItem("hatify_finished_books") ||
+              localStorage.getItem("ziyo_finished_books") ||
+              "[]";
             const finList = JSON.parse(finStr);
             if (!finList.some((b) => b.bookId === activeBook.id)) {
               finList.push({
@@ -271,10 +285,9 @@ function Kutubxona() {
                 pages: activeBook.pages,
                 finishedAt: new Date().toISOString(),
               });
-              localStorage.setItem(
-                "ziyo_finished_books",
-                JSON.stringify(finList),
-              );
+              const finListStr = JSON.stringify(finList);
+              localStorage.setItem("hatify_finished_books", finListStr);
+              localStorage.setItem("ziyo_finished_books", finListStr);
             }
           } catch {}
         }
@@ -365,10 +378,9 @@ function Kutubxona() {
     }
 
     setBookmarks(updated);
-    localStorage.setItem(
-      `ziyo_bookmarks_${activeBook.id}`,
-      JSON.stringify(updated),
-    );
+    const updatedStr = JSON.stringify(updated);
+    localStorage.setItem(`hatify_bookmarks_${activeBook.id}`, updatedStr);
+    localStorage.setItem(`ziyo_bookmarks_${activeBook.id}`, updatedStr);
   };
 
   // Klaviatura hodisalarini tinglash

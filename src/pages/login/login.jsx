@@ -10,7 +10,7 @@ import {
   checkTelegramSession,
   registerTelegramUser,
 } from "../../api/authApi.js";
-import logo from "../../assets/logo.jpg";
+import logo from "../../assets/hatify-logo.png";
 import telegramImg from "../../assets/telegram.png";
 import "./login.css";
 import ModalOverlay from "../../components/ModalOverlay/ModalOverlay.jsx";
@@ -139,7 +139,9 @@ function Login() {
           if (!res.isNewUser && res.token) {
             // 1. Foydalanuvchi allaqachon ro'yxatdan o'tgan -> To'g'ridan-to'g'ri tizimga kiradi
             setAuthSession(res.token, res.user);
-            toast.success(`Xush kelibsiz! ${res.user?.firstName || "Foydalanuvchi"} 🎉`);
+            toast.success(
+              `Xush kelibsiz! ${res.user?.firstName || "Foydalanuvchi"} 🎉`,
+            );
             setTimeout(() => {
               navigate("/");
             }, 800);
@@ -173,7 +175,9 @@ function Login() {
         ) {
           stopPolling();
           setStepTelegram(false);
-          toast.info("Login sessiyasi eskirgan. Qaytadan kirish tugmasini bosing.");
+          toast.info(
+            "Login sessiyasi eskirgan. Qaytadan kirish tugmasini bosing.",
+          );
         }
       }
     }, 2000);

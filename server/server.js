@@ -100,7 +100,7 @@ app.use("/api/rating", ratingRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", message: "Hatif server is running 🚀" });
+  res.json({ status: "ok", message: "Hatify server is running 🚀" });
 });
 
 // Database offline error fallback middleware

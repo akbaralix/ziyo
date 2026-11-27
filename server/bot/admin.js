@@ -91,7 +91,7 @@ export async function renderOverviewMessage() {
   const data = await getFullDashboardStats();
   const time = new Date().toLocaleTimeString("uz-UZ", { hour12: false });
 
-  let text = `👑 <b>HATIF PLATFORMASI — ADMIN BOSHQARUV PANELI</b>\n`;
+  let text = `👑 <b>HATIFY PLATFORMASI — ADMIN BOSHQARUV PANELI</b>\n`;
   text += `━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
 
   // Real-time onlayn

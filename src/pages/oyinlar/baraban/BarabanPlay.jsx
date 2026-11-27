@@ -25,10 +25,14 @@ export default function BarabanPlay() {
   const getInitialGame = () => {
     let saved = null;
     if (id) {
-      saved = localStorage.getItem(`ziyo_baraban_${id}`);
+      saved =
+        localStorage.getItem(`hatify_baraban_${id}`) ||
+        localStorage.getItem(`ziyo_baraban_${id}`);
     }
     if (!saved) {
-      saved = localStorage.getItem("ziyo_active_baraban");
+      saved =
+        localStorage.getItem("hatify_active_baraban") ||
+        localStorage.getItem("ziyo_active_baraban");
     }
 
     if (saved) {

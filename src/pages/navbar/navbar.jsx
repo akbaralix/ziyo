@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 import { GoHome, GoTrophy, GoPerson } from "react-icons/go";
 import { SiWikibooks } from "react-icons/si";
 import { IoGameControllerOutline } from "react-icons/io5";
-import logo from "../../assets/logo.jpg";
+import logo from "../../assets/hatify-logo.png";
 import "./navbar.css";
 
 function Navbar({ isCollapsed, onToggle }) {
@@ -17,14 +17,18 @@ function Navbar({ isCollapsed, onToggle }) {
 
   const getUserData = () => {
     try {
-      const u = JSON.parse(localStorage.getItem("ziyo_user"));
+      const u =
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("ziyo_user"));
       if (u) {
         return {
           profilePic: u.profilePic || logo,
           name: u.firstName || (u.name ? u.name.split(" ")[0] : "Profil"),
         };
       }
-      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+      const p =
+        JSON.parse(localStorage.getItem("hatify_user_profile")) ||
+        JSON.parse(localStorage.getItem("ziyo_user_profile"));
       if (p) {
         return {
           profilePic: p.profilePic || logo,
@@ -44,7 +48,7 @@ function Navbar({ isCollapsed, onToggle }) {
       <aside className={`navbar ${isCollapsed ? "navbar--collapsed" : ""}`}>
         <div className="navbar-header">
           <div className="navbar-logo">
-            <img src={logo} alt="Logo" draggable="false" />
+            <img src={logo} alt="Hatify" draggable="false" />
           </div>
           <button
             type="button"

@@ -25,7 +25,9 @@ export default function BarabanCreate() {
   const getExistingGame = () => {
     if (!editId) return null;
     try {
-      const saved = localStorage.getItem(`ziyo_baraban_${editId}`);
+      const saved =
+        localStorage.getItem(`hatify_baraban_${editId}`) ||
+        localStorage.getItem(`ziyo_baraban_${editId}`);
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -207,12 +209,17 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
     };
 
     try {
-      localStorage.setItem(`ziyo_baraban_${gameId}`, JSON.stringify(gameData));
-      localStorage.setItem("ziyo_active_baraban", JSON.stringify(gameData));
+      const gameDataStr = JSON.stringify(gameData);
+      localStorage.setItem(`hatify_baraban_${gameId}`, gameDataStr);
+      localStorage.setItem(`ziyo_baraban_${gameId}`, gameDataStr);
+      localStorage.setItem("hatify_active_baraban", gameDataStr);
+      localStorage.setItem("ziyo_active_baraban", gameDataStr);
 
       // Also append to games catalog
       const existingList = JSON.parse(
-        localStorage.getItem("ziyo_baraban_list") || "[]",
+        localStorage.getItem("hatify_baraban_list") ||
+          localStorage.getItem("ziyo_baraban_list") ||
+          "[]",
       );
       const filtered = existingList.filter((g) => g.id !== gameId);
       filtered.unshift({
@@ -222,7 +229,9 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
         questionsCount: questions.length,
         updatedAt: gameData.updatedAt,
       });
-      localStorage.setItem("ziyo_baraban_list", JSON.stringify(filtered));
+      const filteredStr = JSON.stringify(filtered);
+      localStorage.setItem("hatify_baraban_list", filteredStr);
+      localStorage.setItem("ziyo_baraban_list", filteredStr);
 
       toast.success("O'yin saqlandi! O'yin sahifasiga o'tilmoqda... 🎮");
       navigate(`/oyinlar/baraban/play/${gameId}`);

@@ -5,7 +5,7 @@ import "./countdown.css";
 
 export default function KahootCountdown({
   onComplete,
-  quizTitle = "Hatif Quiz",
+  quizTitle = "Hatify Quiz",
   startsAt = null,
   serverOffsetMs = 0,
 }) {

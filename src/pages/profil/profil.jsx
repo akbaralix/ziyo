@@ -71,9 +71,7 @@ const COVER_BANNERS = [
 const DEFAULT_COVER_ID = "cosmic-waves";
 
 const resolveCoverBanner = (coverId) => {
-  return (
-    COVER_BANNERS.find((item) => item.id === coverId) || COVER_BANNERS[0]
-  );
+  return COVER_BANNERS.find((item) => item.id === coverId) || COVER_BANNERS[0];
 };
 
 const formatAvatarUrl = (pic) => {
@@ -111,7 +109,11 @@ function Profil() {
   // Joriy login qilgan foydalanuvchi
   const currentLoggedUser = useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem("ziyo_user") || "{}");
+      return (
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("ziyo_user")) ||
+        {}
+      );
     } catch {
       return {};
     }
@@ -209,11 +211,15 @@ function Profil() {
   const loadBarabanGames = () => {
     try {
       const savedList = JSON.parse(
-        localStorage.getItem("ziyo_baraban_list") || "[]",
+        localStorage.getItem("hatify_baraban_list") ||
+          localStorage.getItem("ziyo_baraban_list") ||
+          "[]",
       );
-      // Agar ro'yxat bo'sh bo'lsa, ziyo_active_baraban bormi tekshiramiz
+      // Agar ro'yxat bo'sh bo'lsa, active_baraban bormi tekshiramiz
       if (savedList.length === 0) {
-        const active = localStorage.getItem("ziyo_active_baraban");
+        const active =
+          localStorage.getItem("hatify_active_baraban") ||
+          localStorage.getItem("ziyo_active_baraban");
         if (active) {
           const parsed = JSON.parse(active);
           if (parsed && parsed.title) {
@@ -278,9 +284,12 @@ function Profil() {
 
     if (type === "baraban") {
       try {
+        localStorage.removeItem(`hatify_baraban_${id}`);
         localStorage.removeItem(`ziyo_baraban_${id}`);
         const updated = barabanGames.filter((g) => g.id !== id);
-        localStorage.setItem("ziyo_baraban_list", JSON.stringify(updated));
+        const updatedStr = JSON.stringify(updated);
+        localStorage.setItem("hatify_baraban_list", updatedStr);
+        localStorage.setItem("ziyo_baraban_list", updatedStr);
         setBarabanGames(updated);
         toast.success("Baraban o'yini o'chirildi!");
       } catch {
@@ -361,7 +370,9 @@ function Profil() {
       return `${u.firstName || ""} ${u.lastName || ""}`.trim();
     }
     try {
-      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+      const p =
+        JSON.parse(localStorage.getItem("hatify_user_profile")) ||
+        JSON.parse(localStorage.getItem("ziyo_user_profile"));
       if (p && p.name) return p.name;
     } catch {}
     return u?.telegramUsername || "Foydalanuvchi";
@@ -426,7 +437,7 @@ function Profil() {
       u?.bio ||
       (isMe
         ? "Kitob mutolaasi va bilimlarni oshirish yo'lidaman."
-        : "Hatif platformasi foydalanuvchisi."),
+        : "Hatify platformasi foydalanuvchisi."),
     studyPlace: studyPlaceType,
     studyLabel: `${studyLabel} ${studyCourseText}`.trim(),
     course: isTeacher ? "" : u?.course || (isSchool ? "Maktab" : "1-kurs"),
@@ -442,7 +453,9 @@ function Profil() {
     let list = [];
     if (isMe) {
       try {
-        const localList = localStorage.getItem("ziyo_current_reading_books");
+        const localList =
+          localStorage.getItem("hatify_current_reading_books") ||
+          localStorage.getItem("ziyo_current_reading_books");
         if (localList) {
           const parsed = JSON.parse(localList);
           if (Array.isArray(parsed) && parsed.length > 0) {
@@ -454,7 +467,9 @@ function Profil() {
       // Agar multiple list bo'sh bo'lsa, eski yagona kalitni tekshiramiz
       if (list.length === 0) {
         try {
-          const single = localStorage.getItem("ziyo_current_reading_book");
+          const single =
+            localStorage.getItem("hatify_current_reading_book") ||
+            localStorage.getItem("ziyo_current_reading_book");
           if (single) {
             const parsed = JSON.parse(single);
             if (parsed && parsed.title) {
@@ -464,13 +479,17 @@ function Profil() {
         } catch {}
       }
 
-      // Agar hali ham bo'sh yoki kam bo'lsa, ziyo_last_page_ kalitlaridan qidiramiz
+      // Agar hali ham bo'sh yoki kam bo'lsa, last_page_ kalitlaridan qidiramiz
       try {
-        const knownKeys = Object.keys(localStorage).filter((k) =>
-          k.startsWith("ziyo_last_page_"),
+        const knownKeys = Object.keys(localStorage).filter(
+          (k) =>
+            k.startsWith("hatify_last_page_") ||
+            k.startsWith("ziyo_last_page_"),
         );
         knownKeys.forEach((key) => {
-          const bookId = key.replace("ziyo_last_page_", "");
+          const bookId = key
+            .replace("hatify_last_page_", "")
+            .replace("ziyo_last_page_", "");
           if (!list.some((b) => b.bookId === bookId)) {
             const page = parseInt(localStorage.getItem(key), 10);
             if (page > 1) {
@@ -510,7 +529,9 @@ function Profil() {
     let list = [];
     if (isMe) {
       try {
-        const localFin = localStorage.getItem("ziyo_finished_books");
+        const localFin =
+          localStorage.getItem("hatify_finished_books") ||
+          localStorage.getItem("ziyo_finished_books");
         if (localFin) list = JSON.parse(localFin) || [];
       } catch {}
     }
@@ -534,12 +555,13 @@ function Profil() {
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
         queryClient.invalidateQueries({ queryKey: ["otherUserProfile"] });
         try {
-          const existingZiyoUser =
-            JSON.parse(localStorage.getItem("ziyo_user")) || {};
-          localStorage.setItem(
-            "ziyo_user",
-            JSON.stringify({ ...existingZiyoUser, ...res.user }),
-          );
+          const existingUser =
+            JSON.parse(localStorage.getItem("hatify_user")) ||
+            JSON.parse(localStorage.getItem("ziyo_user")) ||
+            {};
+          const updatedUser = JSON.stringify({ ...existingUser, ...res.user });
+          localStorage.setItem("hatify_user", updatedUser);
+          localStorage.setItem("ziyo_user", updatedUser);
         } catch {}
       }
       setIsEditModalOpen(false);
@@ -1046,17 +1068,10 @@ function Profil() {
       {/* TAB CONTENTS: QUIZZES */}
       {isMe && activeTab === "quizzes" && (
         <div className="profile-quizzes-section">
-          {/* 1. ZIYO LIVE VIKTORINALAR */}
+          {/* 1. HATIFY LIVE VIKTORINALAR */}
           <div className="profile-posts-header">
             <h3 className="profile-section-title">Viktorinalar</h3>
             <div className="profile-quiz-header-actions">
-              <button
-                type="button"
-                className="create-new-inline-btn tf-btn"
-                onClick={() => navigate("/quiz/builder?mode=true_false")}
-              >
-                <FaPlus /> To&apos;g&apos;ri / Noto&apos;g&apos;ri
-              </button>
               <button
                 type="button"
                 className="create-new-inline-btn"
@@ -1080,59 +1095,60 @@ function Profil() {
                   quiz.gameMode === "true_false"
                     ? "✓✕ True / False"
                     : quiz.gameMode === "mixed"
-                      ? "🎮 Hatif Live • Aralash"
-                      : "🎮 Hatif Live";
+                      ? "🎮 Hatify Live • Aralash"
+                      : "🎮 Hatify Live";
 
                 return (
-                <div key={quiz._id} className="profile-quiz-card">
-                  <div className="quiz-card-top">
-                    <span className={badgeClass}>{badgeLabel}</span>
-                    <span className="quiz-play-count">
-                      👁 {quiz.playCount || 0} marta o&apos;ynalgan
-                    </span>
-                  </div>
+                  <div key={quiz._id} className="profile-quiz-card">
+                    <div className="quiz-card-top">
+                      <span className={badgeClass}>{badgeLabel}</span>
+                      <span className="quiz-play-count">
+                        👁 {quiz.playCount || 0} marta o&apos;ynalgan
+                      </span>
+                    </div>
 
-                  <h4 className="profile-quiz-title">{quiz.title}</h4>
-                  {quiz.description && (
-                    <p className="profile-quiz-desc">{quiz.description}</p>
-                  )}
-
-                  <div className="profile-quiz-meta">
-                    <span>
-                      📅 {new Date(quiz.createdAt).toLocaleDateString("uz-UZ")}
-                    </span>
-                    {Number(quiz.questionCount) > 0 && (
-                      <span>📝 {quiz.questionCount} ta savol</span>
+                    <h4 className="profile-quiz-title">{quiz.title}</h4>
+                    {quiz.description && (
+                      <p className="profile-quiz-desc">{quiz.description}</p>
                     )}
-                  </div>
 
-                  <div className="profile-quiz-actions">
-                    <button
-                      type="button"
-                      className="quiz-host-btn"
-                      onClick={() => handleStartLiveQuiz(quiz._id)}
-                      disabled={startingQuizId === quiz._id}
-                    >
-                      {startingQuizId === quiz._id
-                        ? "Ochilmoqda..."
-                        : "🚀 Boshlash"}
-                    </button>
-                    <button
-                      type="button"
-                      className="quiz-edit-btn"
-                      onClick={() => navigate(`/quiz/builder/${quiz._id}`)}
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      type="button"
-                      className="quiz-delete-btn"
-                      onClick={() => handleDeleteQuiz(quiz._id, quiz.title)}
-                    >
-                      <IoClose />
-                    </button>
+                    <div className="profile-quiz-meta">
+                      <span>
+                        📅{" "}
+                        {new Date(quiz.createdAt).toLocaleDateString("uz-UZ")}
+                      </span>
+                      {Number(quiz.questionCount) > 0 && (
+                        <span>📝 {quiz.questionCount} ta savol</span>
+                      )}
+                    </div>
+
+                    <div className="profile-quiz-actions">
+                      <button
+                        type="button"
+                        className="quiz-host-btn"
+                        onClick={() => handleStartLiveQuiz(quiz._id)}
+                        disabled={startingQuizId === quiz._id}
+                      >
+                        {startingQuizId === quiz._id
+                          ? "Ochilmoqda..."
+                          : "🚀 Boshlash"}
+                      </button>
+                      <button
+                        type="button"
+                        className="quiz-edit-btn"
+                        onClick={() => navigate(`/quiz/builder/${quiz._id}`)}
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        type="button"
+                        className="quiz-delete-btn"
+                        onClick={() => handleDeleteQuiz(quiz._id, quiz.title)}
+                      >
+                        <IoClose />
+                      </button>
+                    </div>
                   </div>
-                </div>
                 );
               })}
             </div>
@@ -1141,8 +1157,9 @@ function Profil() {
               <div className="empty-tab-icon">💡</div>
               <h4>Hali viktorinalar tuzmagansiz</h4>
               <p>
-                O&apos;quvchilaringiz yoki do&apos;stlaringiz uchun qiziqarli jonli
-                viktorina yoki To&apos;g&apos;ri/Noto&apos;g&apos;ri o&apos;yin yarating!
+                O&apos;quvchilaringiz yoki do&apos;stlaringiz uchun qiziqarli
+                jonli viktorina yoki To&apos;g&apos;ri/Noto&apos;g&apos;ri
+                o&apos;yin yarating!
               </p>
             </div>
           )}
@@ -1325,7 +1342,9 @@ function Profil() {
                           alt={cover.label}
                           referrerPolicy="no-referrer"
                         />
-                        <span className="cover-picker-label">{cover.label}</span>
+                        <span className="cover-picker-label">
+                          {cover.label}
+                        </span>
                         {isSelected && (
                           <span className="cover-picker-check">
                             <IoCheckmark />

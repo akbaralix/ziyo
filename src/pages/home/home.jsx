@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MdNotificationsNone } from "react-icons/md";
 import { GoTrophy, GoBook } from "react-icons/go";
-import { IoGameControllerOutline } from "react-icons/io5";
+import { IoGameControllerOutline, IoArrowForward } from "react-icons/io5";
 import { getUserProfile } from "../../api/userApi";
 import { getAuthToken, subscribeAuthToken } from "../../utils/authSession.js";
 
-import hatif from "../../assets/hatif.png";
+import hatifyLogo from "../../assets/hatify-logo.png";
 import liveJoin from "../../assets/rasmlar/live-join.svg";
 import liveGame from "../../assets/rasmlar/livi-game.svg";
 import slaydCreate from "../../assets/rasmlar/slayd-create.svg";
@@ -18,14 +18,14 @@ const TOOLBAR_ITEMS = [
     id: 1,
     href: "/quiz/builder",
     img: liveGame,
-    title: "Hatif yarating",
+    title: "Hatify yarating",
     description: "Qiziqarli viktorina va savol-javob o'yinlarini tuzing",
   },
   {
     id: 2,
     href: "/live",
     img: liveJoin,
-    title: "Hatif qo'shiling",
+    title: "Hatify qo'shiling",
     description: "Maxsus kod orqali jonli o'yinlarda ishtirok eting",
   },
   {
@@ -45,6 +45,8 @@ function Home() {
   const getStoredUser = useCallback(() => {
     try {
       return (
+        JSON.parse(localStorage.getItem("hatify_user")) ||
+        JSON.parse(localStorage.getItem("hatify_user_profile")) ||
         JSON.parse(localStorage.getItem("ziyo_user")) ||
         JSON.parse(localStorage.getItem("ziyo_user_profile")) ||
         {}
@@ -84,14 +86,13 @@ function Home() {
         }
 
         const currentU = getStoredUser();
-        localStorage.setItem(
-          "ziyo_user",
-          JSON.stringify({
-            ...currentU,
-            ...(data?.user || {}),
-            xp: realXp ?? currentU.xp,
-          }),
-        );
+        const updatedUserData = JSON.stringify({
+          ...currentU,
+          ...(data?.user || {}),
+          xp: realXp ?? currentU.xp,
+        });
+        localStorage.setItem("hatify_user", updatedUserData);
+        localStorage.setItem("ziyo_user", updatedUserData);
       } catch (err) {
         if (err?.status === 401) {
           if (isMounted) setXp(0);
@@ -132,7 +133,7 @@ function Home() {
       <header className="home-header">
         <div className="home-brand-group">
           <div className="home-logo">
-            <img src={hatif} alt="Hatif logotipi" />
+            <img src={hatifyLogo} alt="Hatify logotipi" />
           </div>
         </div>
 
@@ -217,7 +218,9 @@ function Home() {
                 <h2>{item.title}</h2>
                 <p>{item.description}</p>
               </div>
-              <div className="toolbar-btn">→</div>
+              <div className="toolbar-btn">
+                <IoArrowForward />
+              </div>
             </Link>
           ))}
         </div>
@@ -240,7 +243,7 @@ function Home() {
           </div>
           <div className="home-card-info">
             <h3>Intellektual O'yinlar</h3>
-            <p>Oktagon, Jumanji, Sehrli Baraban va Hatif Quiz o'yinlari.</p>
+            <p>Oktagon, Jumanji, Sehrli Baraban va Hatify Quiz o'yinlari.</p>
           </div>
         </Link>
 

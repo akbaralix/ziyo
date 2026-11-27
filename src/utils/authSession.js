@@ -35,21 +35,23 @@ export function setAuthSession(token, user) {
   inMemoryToken = typeof token === "string" && token.trim() ? token.trim() : null;
   try {
     if (typeof window !== "undefined" && user) {
-      window.localStorage?.setItem("ziyo_user", JSON.stringify(user));
-      window.localStorage?.setItem(
-        "ziyo_user_profile",
-        JSON.stringify({
-          name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-          username: user.username || user.telegramUsername || "user",
-          profilePic: user.profilePic || "",
-          bio: user.bio || "",
-          studyPlace: user.studyPlace,
-          course: user.course,
-          xp: user.xp || 0,
-          readingBook: user.readingBook?.currentPage || 0,
-          solvedQuizzes: user.solvedQuizzes || 0,
-        }),
-      );
+      const userStr = JSON.stringify(user);
+      const profileStr = JSON.stringify({
+        name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        username: user.username || user.telegramUsername || "user",
+        profilePic: user.profilePic || "",
+        bio: user.bio || "",
+        studyPlace: user.studyPlace,
+        course: user.course,
+        xp: user.xp || 0,
+        readingBook: user.readingBook?.currentPage || 0,
+        solvedQuizzes: user.solvedQuizzes || 0,
+      });
+
+      window.localStorage?.setItem("hatify_user", userStr);
+      window.localStorage?.setItem("hatify_user_profile", profileStr);
+      window.localStorage?.setItem("ziyo_user", userStr);
+      window.localStorage?.setItem("ziyo_user_profile", profileStr);
       window.dispatchEvent(new Event("storage"));
     }
   } catch {
@@ -64,6 +66,8 @@ export function clearAuthSession() {
     if (typeof window !== "undefined") {
       window.localStorage?.removeItem("token");
       window.sessionStorage?.removeItem("token");
+      window.localStorage?.removeItem("hatify_user");
+      window.localStorage?.removeItem("hatify_user_profile");
       window.localStorage?.removeItem("ziyo_user");
       window.localStorage?.removeItem("ziyo_user_profile");
       window.dispatchEvent(new Event("storage"));

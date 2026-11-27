@@ -161,7 +161,7 @@ const SpinWheel = forwardRef(function SpinWheel(
     ctx.font = "bold 12px Inter, Poppins, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("HATIF", cx, cy);
+    ctx.fillText("HATIFY", cx, cy);
 
     // Top Pointer Arrow
     drawPointer(ctx, cx, cy, radius);

@@ -893,16 +893,6 @@
   flex-wrap: wrap;
 }
 
-.create-new-inline-btn.tf-btn {
-  background: rgba(38, 137, 12, 0.1);
-  color: #166534;
-}
-
-.create-new-inline-btn.tf-btn:hover {
-  background: rgb(38, 137, 12);
-  color: #ffffff;
-}
-
 .quiz-game-badge {
   background: linear-gradient(135deg, #6f56f2, rgb(81, 52, 228));
   color: #ffffff;
