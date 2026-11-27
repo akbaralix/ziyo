@@ -17,6 +17,8 @@ import {
   FaCheck,
   FaPen,
   FaTimes,
+  FaBolt,
+  FaShieldAlt,
 } from "react-icons/fa";
 
 import { FaDiamond } from "react-icons/fa6";
@@ -58,6 +60,28 @@ import { toast } from "react-toastify";
 import KahootCountdown from "./countdown.jsx";
 import LiveReactions from "./LiveReactions.jsx";
 import "./LivePlayer.css";
+
+export const XP_CONFIG = {
+  PARTICIPATION_XP: 10,
+  SCORE_XP_PERCENT: 0.1,
+  RANK_BONUS: { 1: 20, 2: 10 },
+  MAX_XP_PER_GAME: 200,
+};
+
+export function calculateQuizXp(score = 0, rank = null) {
+  const numScore = Math.max(0, Number(score) || 0);
+  const scoreXp = Math.floor(numScore * XP_CONFIG.SCORE_XP_PERCENT);
+  const rankBonus = XP_CONFIG.RANK_BONUS[rank] || 0;
+  const rawTotal = XP_CONFIG.PARTICIPATION_XP + scoreXp + rankBonus;
+  const total = Math.min(rawTotal, XP_CONFIG.MAX_XP_PER_GAME);
+
+  return {
+    participation: XP_CONFIG.PARTICIPATION_XP,
+    scoreXp,
+    rankBonus,
+    total,
+  };
+}
 
 const OPTION_COLORS = [
   { bg: "rgb(226, 27, 60)", text: "#ffffff", shape: <FaCaretUp /> },
@@ -181,6 +205,8 @@ export default function LivePlayer() {
   const [endViewTab, setEndViewTab] = useState("leaderboard");
   const [myAnswerHistory, setMyAnswerHistory] = useState([]);
   const [reactionsEnabled, setReactionsEnabled] = useState(true);
+  const [xpReward, setXpReward] = useState(null);
+  const hasAwardedXpRef = useRef(false);
 
   const timerRef = useRef(null);
   const socketRef = useRef(null);
@@ -406,11 +432,15 @@ export default function LivePlayer() {
         const currentName = s.name || savedLocal.name || nameToUse;
         const currentPic = s.profilePic || savedLocal.profilePic || activePic;
 
+        const loggedUser = getLoggedInUser();
+        const curUid = loggedUser?._id || loggedUser?.id || null;
+
         newSocket.emit("player:join", {
           sessionId: currentSid,
           playerId: currentPid,
           name: currentName,
           profilePic: currentPic,
+          userId: curUid,
         });
       });
 
@@ -748,16 +778,116 @@ export default function LivePlayer() {
         );
         if (found !== -1 && found !== undefined) {
           const me = data.leaderboard[found];
-          setMyRank(found + 1);
-          if (typeof me?.score === "number") {
-            setTotalScore(me.score);
-          }
+          const rank = found + 1;
+          setMyRank(rank);
+          const finalScore = typeof me?.score === "number" ? me.score : 0;
+          setTotalScore(finalScore);
           if (Array.isArray(me?.answers)) {
             setMyAnswerHistory(me.answers);
           }
           if (found < 3) {
             sfx.playFanfare();
             confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          }
+
+          // ===== XP TIZIMI & ANTI-FARM =====
+          // XP faqat yakunlangan o'yin uchun beriladi
+          const sid = String(
+            sessionInfoRef.current?.sessionId || sessionIdToUse || "",
+          );
+
+          // Anti-farm: sessiya ID bo'yicha takroriy XP olishdan himoyalash
+          let isAlreadyClaimed = false;
+          try {
+            const rawSessions =
+              localStorage.getItem("hatify_awarded_quiz_sessions") ||
+              localStorage.getItem("ziyo_awarded_quiz_sessions");
+            const awardedSessions = rawSessions ? JSON.parse(rawSessions) : [];
+            if (sid && awardedSessions.includes(sid)) {
+              isAlreadyClaimed = true;
+            }
+          } catch {
+            isAlreadyClaimed = false;
+          }
+
+          // Serverdan kelgan xpEarned ma'lumotini tekshirish
+          let xpData = me?.xpEarned;
+          if (xpData?.duplicate) {
+            isAlreadyClaimed = true;
+          }
+
+          if (!xpData || isAlreadyClaimed) {
+            const calculated = calculateQuizXp(finalScore, rank);
+            xpData = {
+              ...calculated,
+              total: isAlreadyClaimed ? 0 : calculated.total,
+              duplicate: isAlreadyClaimed,
+            };
+          }
+
+          setXpReward(xpData);
+
+          // Agar bu sessiyada hali XP berilmagan bo'lsa va takroriy bo'lmasa:
+          if (
+            !isAlreadyClaimed &&
+            !hasAwardedXpRef.current &&
+            xpData.total > 0
+          ) {
+            hasAwardedXpRef.current = true;
+            try {
+              // 1. Sessiyani saqlab qo'yish (Anti-farm ro'yxati)
+              if (sid) {
+                const rawSessions =
+                  localStorage.getItem("hatify_awarded_quiz_sessions") ||
+                  localStorage.getItem("ziyo_awarded_quiz_sessions");
+                const awardedSessions = rawSessions
+                  ? JSON.parse(rawSessions)
+                  : [];
+                const updatedSessions = [
+                  sid,
+                  ...awardedSessions.filter((s) => s !== sid),
+                ].slice(0, 50);
+                localStorage.setItem(
+                  "hatify_awarded_quiz_sessions",
+                  JSON.stringify(updatedSessions),
+                );
+                localStorage.setItem(
+                  "ziyo_awarded_quiz_sessions",
+                  JSON.stringify(updatedSessions),
+                );
+              }
+
+              // 2. Foydalanuvchi profiliga XP qo'shish
+              const rawUser =
+                localStorage.getItem("hatify_user") ||
+                localStorage.getItem("ziyo_user");
+              if (rawUser) {
+                const parsedUser = JSON.parse(rawUser);
+                parsedUser.xp = (Number(parsedUser.xp) || 0) + xpData.total;
+                parsedUser.solvedQuizzes =
+                  (Number(parsedUser.solvedQuizzes) || 0) + 1;
+                const userJson = JSON.stringify(parsedUser);
+                localStorage.setItem("hatify_user", userJson);
+                localStorage.setItem("ziyo_user", userJson);
+
+                const rawProf =
+                  localStorage.getItem("hatify_user_profile") ||
+                  localStorage.getItem("ziyo_user_profile");
+                if (rawProf) {
+                  const parsedProf = JSON.parse(rawProf);
+                  parsedProf.xp = (Number(parsedProf.xp) || 0) + xpData.total;
+                  parsedProf.solvedQuizzes =
+                    (Number(parsedProf.solvedQuizzes) || 0) + 1;
+                  const profJson = JSON.stringify(parsedProf);
+                  localStorage.setItem("hatify_user_profile", profJson);
+                  localStorage.setItem("ziyo_user_profile", profJson);
+                }
+
+                window.dispatchEvent(new Event("storage"));
+              }
+            } catch (err) {
+              console.error("Foydalanuvchiga XP yozishda xatolik:", err);
+            }
           }
         }
       });
@@ -1052,6 +1182,8 @@ export default function LivePlayer() {
 
   const handleExitGame = () => {
     localStorage.removeItem("ziyo_live_player");
+    hasAwardedXpRef.current = false;
+    setXpReward(null);
     clearQuestionTimer();
     if (socketRef.current) {
       socketRef.current.disconnect();
@@ -1306,7 +1438,8 @@ export default function LivePlayer() {
 
       {/* ==================== 3. QUESTION SCREEN ==================== */}
       {(playerState === "question" || playerState === "answered") &&
-        currentQuestion && (() => {
+        currentQuestion &&
+        (() => {
           const isTrueFalseQ =
             currentQuestion.type === "true_false" ||
             (currentQuestion.options?.length === 2 && !currentQuestion.type);
@@ -1327,7 +1460,7 @@ export default function LivePlayer() {
 
               <div className="player-q-text-card">
                 {isTrueFalseQ && (
-                  <span className="player-tf-badge">To&apos;g&apos;ri / Noto&apos;g&apos;ri</span>
+                  <span className="player-tf-badge">To'g'ri / Noto'g'ri</span>
                 )}
                 <h3>{currentQuestion.text}</h3>
               </div>
@@ -1385,7 +1518,7 @@ export default function LivePlayer() {
               animate={{ scale: 1, opacity: 1 }}
             >
               <FaCheckCircle className="feedback-icon correct" />
-              <h2>Barakalla! To'g'ri javob! 🎉</h2>
+              <h2>To'g'ri javob! 🎉</h2>
               <p className="points-won">+{answerFeedback.pointsEarned} ball</p>
               <span className="total-score-text">
                 Umumiy ball: <strong>{totalScore}</strong>
@@ -1495,6 +1628,77 @@ export default function LivePlayer() {
               </span>
             </div>
 
+            {/* ==================== XP MUKOFOTI ==================== */}
+            {xpReward && (
+              <div
+                className={`player-xp-reward-card ${
+                  xpReward.duplicate ? "is-duplicate" : ""
+                }`}
+              >
+                <div className="xp-reward-badge-header">
+                  <div className="xp-bubble-pill">
+                    <FaBolt className="xp-lightning-icon" />
+                    <span className="xp-bubble-amount">
+                      {xpReward.duplicate ? "+0 XP" : `+${xpReward.total} XP`}
+                    </span>
+                  </div>
+                  <div className="xp-badge-info">
+                    <span className="xp-badge-title">
+                      {xpReward.duplicate
+                        ? "Takroriy o'yin (XP berilmaydi)"
+                        : "O'yindan yutilgan XP"}
+                    </span>
+                    <span className="xp-badge-cap">
+                      {xpReward.duplicate
+                        ? "Anti-farm tizimi faol"
+                        : "Maksimal chegara: 200 XP"}
+                    </span>
+                  </div>
+                </div>
+
+                {xpReward.duplicate ? (
+                  <div className="xp-duplicate-notice">
+                    <FaShieldAlt className="xp-shield-icon" />
+                    <span>
+                      Ushbu o'yin uchun XP avval hisoblangan. Qayta o'ynash
+                      orqali XP farm qilishdan himoyalangan.
+                    </span>
+                  </div>
+                ) : (
+                  <div className="xp-breakdown-details">
+                    <div className="xp-breakdown-row">
+                      <span className="xp-breakdown-name">
+                        🎮 Ishtirok uchun:
+                      </span>
+                      <span className="xp-breakdown-value">
+                        +{xpReward.participation} XP
+                      </span>
+                    </div>
+                    <div className="xp-breakdown-row">
+                      <span className="xp-breakdown-name">
+                        🎯 Ballning 10% ulushi ({totalScore} balldan):
+                      </span>
+                      <span className="xp-breakdown-value">
+                        +{xpReward.scoreXp} XP
+                      </span>
+                    </div>
+                    {xpReward.rankBonus > 0 && (
+                      <div className="xp-breakdown-row rank-bonus-row">
+                        <span className="xp-breakdown-name">
+                          {myRank === 1
+                            ? "🥇 1-o'rin bonusi:"
+                            : "🥈 2-o'rin bonusi:"}
+                        </span>
+                        <span className="xp-breakdown-value bonus-val">
+                          +{xpReward.rankBonus} XP
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="ended-subtabs">
               <button
                 type="button"
@@ -1558,11 +1762,27 @@ export default function LivePlayer() {
                           </span>
                         )}
                         <span className="top3-player-name">
+                          {p.streak >= 3 && (
+                            <span
+                              className="player-streak-fire"
+                              title={`${p.streak} ta ketma-ket to'g'ri javob!`}
+                            >
+                              🔥 {p.streak}
+                            </span>
+                          )}
                           {p.name}{" "}
                           {isCurrent && <span className="me-label">(Siz)</span>}
                         </span>
                       </div>
-                      <strong>{p.score} ball</strong>
+                      <div className="top3-item-right">
+                        <strong>{p.score} ball</strong>
+                        {p.xpEarned?.total > 0 && (
+                          <span className="top3-xp-pill">
+                            <FaBolt className="top3-xp-icon" /> +
+                            {p.xpEarned.total} XP
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 })}

@@ -166,11 +166,24 @@ function buildLeaderboard(players, includeAnswers = false) {
   return [...(players || [])]
     .sort((a, b) => (b.score || 0) - (a.score || 0))
     .map((p, i) => {
+      let streak = typeof p.streak === "number" ? p.streak : 0;
+      if (typeof p.streak !== "number" && Array.isArray(p.answers)) {
+        streak = 0;
+        const sortedAnswers = [...p.answers].sort(
+          (a, b) => b.questionIndex - a.questionIndex,
+        );
+        for (const ans of sortedAnswers) {
+          if (ans.isCorrect) streak++;
+          else break;
+        }
+      }
+
       const entry = {
         rank: i + 1,
         id: p._id?.toString(),
         name: p.name,
         score: p.score || 0,
+        streak,
         profilePic: p.profilePic || "",
         connected: p.connected !== false,
       };
@@ -400,12 +413,15 @@ export function initSocketIO(io) {
     // ===================== O'YINCHI ULANISHI =====================
     socket.on(
       "player:join",
-      async ({ sessionId, playerId, name, profilePic } = {}) => {
+      async ({ sessionId, playerId, name, profilePic, userId } = {}) => {
         if (!sessionId) {
           return socket.emit("player:join:error", {
             msg: "O'yin topilmadi yoki tugagan",
           });
         }
+
+        const effectiveUserId =
+          socket.userId || (typeof userId === "string" && userId ? userId : null);
 
         try {
           await withSessionLock(sessionId, async () => {
@@ -426,18 +442,18 @@ export function initSocketIO(io) {
               if (candidate) {
                 const sameAccountOrGuest =
                   !candidate.userId ||
-                  !socket.userId ||
-                  String(candidate.userId) === String(socket.userId);
+                  !effectiveUserId ||
+                  String(candidate.userId) === String(effectiveUserId);
                 if (sameAccountOrGuest) {
                   player = candidate;
                 }
               }
             }
-            if (!player && socket.userId) {
+            if (!player && effectiveUserId) {
               player = (session.players || []).find(
                 (p) =>
                   p.userId &&
-                  String(p.userId) === String(socket.userId),
+                  String(p.userId) === String(effectiveUserId),
               );
             }
 
@@ -662,7 +678,7 @@ export function initSocketIO(io) {
             const newPlayer = {
               _id: session._isMemory ? generateMemoryId() : undefined,
               socketId: socket.id,
-              userId: socket.userId || null,
+              userId: effectiveUserId || socket.userId || null,
               name: cleanName,
               profilePic: typeof profilePic === "string" ? profilePic : "",
               score: 0,
@@ -989,6 +1005,12 @@ export function initSocketIO(io) {
               ? Math.round(basePoints * (1 + 5 * timeFactor))
               : 0;
 
+            if (isCorrect) {
+              player.streak = (player.streak || 0) + 1;
+            } else {
+              player.streak = 0;
+            }
+
             player.connected = true;
             player.lastSeenAt = new Date(now);
             player.answers.push({
@@ -997,6 +1019,7 @@ export function initSocketIO(io) {
               isCorrect,
               timeMs,
               pointsEarned,
+              streak: player.streak,
             });
             player.score = (player.score || 0) + pointsEarned;
             await persistSession(session);
@@ -1324,6 +1347,14 @@ async function showAnswerLocked(io, sessionId, questionIndex) {
   if (!question) return;
 
   session.status = "answer";
+  for (const p of session.players || []) {
+    const hasAnswered = (p.answers || []).some(
+      (a) => a.questionIndex === questionIndex,
+    );
+    if (!hasAnswered) {
+      p.streak = 0;
+    }
+  }
   await persistSession(session);
 
   const allLeaderboard = buildLeaderboard(session.players);
@@ -1368,33 +1399,95 @@ async function endGameLocked(io, sessionId) {
   }
   if (!session) return;
 
-  // Foydalanuvchilarga XP qo'shish (faqat 1 marta, atomik o'tishdan keyin)
-  for (const player of session.players || []) {
-    if (player.userId && player.score > 0) {
-      try {
-        if (isDbConnected()) {
-          await User.findByIdAndUpdate(player.userId, {
-            $inc: { xp: player.score, solvedQuizzes: 1 },
-          });
-        } else {
-          const memUser = findMemoryUserById(player.userId);
-          if (memUser) {
-            memUser.xp = (memUser.xp || 0) + player.score;
+  // --- XP TIZIMI ---
+  // Avval leaderboard quramiz (rank aniqlash uchun)
+  const sortedPlayers = [...(session.players || [])]
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  // Har bir o'yinchi uchun XP hisoblash
+  const MAX_XP_PER_GAME = 200;
+  const PARTICIPATION_XP = 10;
+  const RANK_BONUS = { 1: 20, 2: 10 };
+  const SCORE_XP_PERCENT = 0.1; // Ball ning 10% i
+
+  // Anti-farm: sessiya ID bo'yicha takroriy XP olishdan himoya
+  const sessionIdStr = String(sessionId);
+
+  // Har bir o'yinchi uchun XP va leaderboard tayyorlash
+  const playerXpMap = new Map(); // playerId -> { xpEarned, breakdown }
+
+  for (let i = 0; i < sortedPlayers.length; i++) {
+    const player = sortedPlayers[i];
+    const rank = i + 1;
+    const scoreXp = Math.floor((player.score || 0) * SCORE_XP_PERCENT);
+    const rankBonus = RANK_BONUS[rank] || 0;
+    let totalXp = PARTICIPATION_XP + scoreXp + rankBonus;
+    totalXp = Math.min(totalXp, MAX_XP_PER_GAME);
+
+    const breakdown = {
+      participation: PARTICIPATION_XP,
+      scoreXp,
+      rankBonus,
+      total: totalXp,
+    };
+
+    const pId = (player._id || player.id || "").toString();
+    playerXpMap.set(pId, breakdown);
+
+    if (!player.userId) continue;
+
+    // Anti-farm: foydalanuvchining oxirgi XP olgan sessiyalarini tekshirish
+    try {
+      let shouldAwardXp = true;
+      if (isDbConnected()) {
+        const user = await User.findById(player.userId);
+        if (user) {
+          const recentSessions = user.recentQuizSessions || [];
+          if (recentSessions.includes(sessionIdStr)) {
+            shouldAwardXp = false; // Bu sessiyadan allaqachon XP olgan
+            playerXpMap.set(pId, { ...breakdown, total: 0, duplicate: true });
+          } else {
+            // Oxirgi 50 ta sessiyani saqlash (anti-farm)
+            const updated = [sessionIdStr, ...recentSessions].slice(0, 50);
+            await User.findByIdAndUpdate(player.userId, {
+              $inc: { xp: totalXp, solvedQuizzes: 1 },
+              $set: { recentQuizSessions: updated },
+            });
+          }
+        }
+      } else {
+        const memUser = findMemoryUserById(player.userId);
+        if (memUser) {
+          if (!memUser.recentQuizSessions) memUser.recentQuizSessions = [];
+          if (memUser.recentQuizSessions.includes(sessionIdStr)) {
+            shouldAwardXp = false;
+            playerXpMap.set(pId, { ...breakdown, total: 0, duplicate: true });
+          } else {
+            memUser.recentQuizSessions = [sessionIdStr, ...memUser.recentQuizSessions].slice(0, 50);
+            memUser.xp = (memUser.xp || 0) + totalXp;
             memUser.solvedQuizzes = (memUser.solvedQuizzes || 0) + 1;
           }
         }
-      } catch (err) {
-        console.error("XP qo'shishda xatolik:", err);
       }
+    } catch (err) {
+      console.error("XP qo'shishda xatolik:", err);
     }
   }
 
   const finalLeaderboard = buildLeaderboard(session.players, true);
   const questionsReview = buildQuestionsReview(session.quiz);
 
+  // Har bir leaderboard entry ga xpEarned qo'shish
+  for (const entry of finalLeaderboard) {
+    const xpInfo = playerXpMap.get(entry.id);
+    if (xpInfo) {
+      entry.xpEarned = xpInfo;
+    }
+  }
+
   io.to(`session:${sessionId}`).emit("game:ended", {
     leaderboard: finalLeaderboard,
-    quizTitle: session.quiz?.title || "Hatif Live",
+    quizTitle: session.quiz?.title || "Hatify Live",
     questionsReview,
     serverTime: Date.now(),
   });

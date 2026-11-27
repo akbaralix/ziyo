@@ -926,6 +926,193 @@
   color: var(--text-muted);
 }
 
+/* ==================== XP REWARD CARD ==================== */
+.player-xp-reward-card {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(234, 88, 12, 0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.player-xp-reward-card.is-duplicate {
+  background: rgba(100, 116, 139, 0.06);
+  border-color: rgba(100, 116, 139, 0.2);
+}
+
+.xp-reward-badge-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.xp-bubble-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.35);
+  flex-shrink: 0;
+}
+
+.player-xp-reward-card.is-duplicate .xp-bubble-pill {
+  background: #64748b;
+  box-shadow: none;
+}
+
+.xp-lightning-icon {
+  font-size: 14px;
+  color: #fef08a;
+}
+
+.xp-bubble-amount {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+
+.xp-badge-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.xp-badge-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.xp-badge-cap {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.xp-breakdown-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  font-size: 12px;
+}
+
+.xp-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+.xp-breakdown-name {
+  font-weight: 500;
+}
+
+.xp-breakdown-value {
+  font-weight: 700;
+  color: #b45309;
+  font-variant-numeric: tabular-nums;
+}
+
+.xp-breakdown-row.rank-bonus-row {
+  padding-top: 4px;
+  border-top: 1px dashed rgba(245, 158, 11, 0.25);
+}
+
+.xp-breakdown-row.rank-bonus-row .bonus-val {
+  color: #d97706;
+}
+
+.xp-duplicate-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(100, 116, 139, 0.08);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.xp-shield-icon {
+  font-size: 14px;
+  color: #64748b;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.top3-item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.top3-xp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+}
+
+.top3-xp-icon {
+  font-size: 9px;
+  color: #d97706;
+}
+
+/* Streak Flame Badge */
+.player-streak-fire {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ea580c;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(239, 68, 68, 0.16));
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  border-radius: var(--radius-full, 9999px);
+  padding: 1px 6px;
+  line-height: 1.25;
+  vertical-align: middle;
+  animation: streakPulse 1.8s infinite ease-in-out;
+  box-shadow: 0 1px 4px rgba(234, 88, 12, 0.2);
+}
+
+@keyframes streakPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 1px 4px rgba(234, 88, 12, 0.2);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 2px 10px rgba(234, 88, 12, 0.45);
+  }
+}
+
 .ended-subtabs {
   display: flex;
   width: 100%;

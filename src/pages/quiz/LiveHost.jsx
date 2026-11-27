@@ -6,6 +6,7 @@ import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FaPlay,
+  FaPause,
   FaUsers,
   FaForward,
   FaTrophy,
@@ -118,8 +119,12 @@ export default function LiveHost() {
   const [confirmEndStep, setConfirmEndStep] = useState(false);
   const [reactionsEnabled, setReactionsEnabled] = useState(true);
   const [isRoomLocked, setIsRoomLocked] = useState(false);
+  const [avtoNextResponse, setAvtoNextResponse] = useState(false);
+  const [countdown, setCountdown] = useState(4);
   const [isFullscreen, setIsFullscreen] = useState(() =>
-    typeof document !== "undefined" ? Boolean(document.fullscreenElement) : false,
+    typeof document !== "undefined"
+      ? Boolean(document.fullscreenElement)
+      : false,
   );
   const [selectedBgId, setSelectedBgId] = useState(() => {
     try {
@@ -676,19 +681,28 @@ export default function LiveHost() {
     triggerConfetti,
   ]);
 
-  const handleStartGame = useCallback(() => {
+  const handleStartGame = useCallback(async () => {
     if (isStarting || isCountingDown) return;
+
     if (players.length === 0) {
       toast.warning(
         "O'yinni boshlash uchun kamida 1 ta o'yinchi qo'shilishi kerak!",
       );
       return;
     }
+
     if (!socket?.connected) {
       toast.warning("Server bilan aloqa tiklanmoqda, biroz kuting...");
       socket?.connect();
       return;
     }
+
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch (error) {
+      console.log("Fullscreen ochilmadi:", error);
+    }
+
     setIsStarting(true);
     socket.emit("host:start", { sessionId });
   }, [isStarting, isCountingDown, players.length, socket, sessionId]);
@@ -759,10 +773,9 @@ export default function LiveHost() {
     if (socket?.connected && sessionId) {
       socket.emit("host:toggle-reactions", { sessionId, enabled: nextVal });
     }
-    toast.info(
-      nextVal ? "Reaksiyalar yoqildi" : "Reaksiyalar o'chirildi",
-      { autoClose: 1800 },
-    );
+    toast.info(nextVal ? "Reaksiyalar yoqildi" : "Reaksiyalar o'chirildi", {
+      autoClose: 1800,
+    });
   }, [reactionsEnabled, socket, sessionId]);
 
   const handleToggleRoomLock = useCallback(() => {
@@ -787,7 +800,10 @@ export default function LiveHost() {
         localStorage.setItem(HOST_BG_STORAGE_KEY, bgId);
       } catch {}
       if (socket?.connected && sessionId) {
-        socket.emit("host:set-background", { sessionId, backgroundTheme: bgId });
+        socket.emit("host:set-background", {
+          sessionId,
+          backgroundTheme: bgId,
+        });
       }
     },
     [socket, sessionId],
@@ -822,6 +838,50 @@ export default function LiveHost() {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [isMenuOpen]);
+
+  const handleToggleAutoNextResponse = () => {
+    setAvtoNextResponse((prev) => !prev);
+  };
+
+  useEffect(() => {
+    if (!avtoNextResponse) return;
+    if (gameState !== "answer") return;
+    if (isAdvancing) return;
+
+    const timer = setTimeout(() => {
+      handleNextQuestion();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [
+    avtoNextResponse,
+    gameState,
+    currentQuestion?.questionIndex,
+    isAdvancing,
+    handleNextQuestion,
+  ]);
+
+  useEffect(() => {
+    if (!avtoNextResponse || gameState !== "answer") {
+      setCountdown(4);
+      return;
+    }
+
+    setCountdown(4);
+
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [avtoNextResponse, gameState, currentQuestion?.questionIndex]);
 
   const activeBackground = useMemo(
     () =>
@@ -865,7 +925,7 @@ export default function LiveHost() {
           }}
         >
           <h2 style={{ margin: "0 0 10px", fontSize: "20px" }}>
-            O&apos;yin ochilmadi
+            O'yin ochilmadi
           </h2>
           <p style={{ margin: "0 0 22px", color: "#cbd5e1", fontSize: "14px" }}>
             {sessionError}
@@ -876,7 +936,7 @@ export default function LiveHost() {
             onClick={() => navigate("/oyinlar")}
             style={{ width: "100%", justifyContent: "center" }}
           >
-            <FaArrowLeft /> O&apos;yinlarga qaytish
+            <FaArrowLeft /> O'yinlarga qaytish
           </button>
         </div>
       </div>
@@ -1039,148 +1099,170 @@ export default function LiveHost() {
         </div>
       )}
 
-      {gameState === "question" && currentQuestion && (() => {
-        const isTrueFalseQ =
-          currentQuestion.type === "true_false" ||
-          (currentQuestion.options?.length === 2 && !currentQuestion.type);
-        const palette = isTrueFalseQ ? TRUE_FALSE_COLORS : OPTION_COLORS;
-        return (
-          <div className="host-question-view">
-            <div className="question-top-bar">
-              <span className="question-counter">
-                Savol {currentQuestion.questionIndex + 1} /{" "}
-                {currentQuestion.totalQuestions}
-              </span>
+      {gameState === "question" &&
+        currentQuestion &&
+        (() => {
+          const isTrueFalseQ =
+            currentQuestion.type === "true_false" ||
+            (currentQuestion.options?.length === 2 && !currentQuestion.type);
+          const palette = isTrueFalseQ ? TRUE_FALSE_COLORS : OPTION_COLORS;
+          return (
+            <div className="host-question-view">
+              <div className="question-top-bar">
+                <span className="question-counter">
+                  Savol {currentQuestion.questionIndex + 1} /{" "}
+                  {currentQuestion.totalQuestions}
+                </span>
 
-              <div
-                className={`countdown-circle-badge ${timeLeft <= 5 ? "urgent" : ""}`}
-              >
-                {timeLeft}
+                <div
+                  className={`countdown-circle-badge ${timeLeft <= 5 ? "urgent" : ""}`}
+                >
+                  {timeLeft}
+                </div>
+
+                <span className="answers-counter">
+                  {answeredCount} / {players.length} Javob
+                </span>
               </div>
 
-              <span className="answers-counter">
-                {answeredCount} / {players.length} Javob
-              </span>
-            </div>
+              <div className="host-question-banner">
+                {isTrueFalseQ && (
+                  <span className="host-tf-type-tag">To'ri / Noto'ri</span>
+                )}
+                <h1>{currentQuestion.text}</h1>
+              </div>
 
-            <div className="host-question-banner">
-              {isTrueFalseQ && (
-                <span className="host-tf-type-tag">To&apos;g&apos;ri / Noto&apos;g&apos;ri</span>
-              )}
-              <h1>{currentQuestion.text}</h1>
-            </div>
-
-            <div
-              className={`host-options-grid ${isTrueFalseQ ? "true-false-grid" : ""}`}
-            >
-              {currentQuestion.options.map((opt, idx) => {
-                const optColor = palette[idx % palette.length];
-                return (
-                  <div
-                    key={idx}
-                    className={`host-option-card ${isTrueFalseQ ? "true-false-card" : ""}`}
-                    style={{ backgroundColor: optColor.bg }}
-                  >
-                    <span className="option-shape-icon">{optColor.shape}</span>
-                    <span className="option-text-label">{opt}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })()}
-
-      {gameState === "answer" && currentQuestion && (() => {
-        const isTrueFalseQ =
-          currentQuestion.type === "true_false" ||
-          (currentQuestion.options?.length === 2 && !currentQuestion.type);
-        const palette = isTrueFalseQ ? TRUE_FALSE_COLORS : OPTION_COLORS;
-        return (
-          <div className="host-answer-view">
-            <div className="answer-header-box">
-              <h2>Natijalar & To&apos;g&apos;ri javob</h2>
-              <button
-                type="button"
-                className="host-next-btn"
-                onClick={handleNextQuestion}
-                disabled={isAdvancing}
+              <div
+                className={`host-options-grid ${isTrueFalseQ ? "true-false-grid" : ""}`}
               >
-                {isAdvancing ? "Yuklanmoqda..." : "Keyingi"} <FaForward />
-              </button>
-            </div>
-
-            <div
-              className={`host-options-grid small ${isTrueFalseQ ? "true-false-grid" : ""}`}
-            >
-              {currentQuestion.options.map((opt, idx) => {
-                const optColor = palette[idx % palette.length];
-                const isCorrect = idx === correctIndex;
-                return (
-                  <div
-                    key={idx}
-                    className={`host-option-card ${isCorrect ? "correct-highlight" : "dimmed"}`}
-                    style={{
-                      backgroundColor: optColor.bg,
-                      boxShadow: "rgba(0, 0, 0, 0.2) 0px -6px 0px 0px inset",
-                    }}
-                  >
-                    <span className="option-shape-icon">{optColor.shape}</span>
-                    <span className="option-text-label">{opt}</span>
-                    {isCorrect && (
-                      <span className="correct-badge">✔ To&apos;g&apos;ri</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-          <div className="host-leaderboard-card">
-            <h3>
-              <FaTrophy /> Yetakchilar jadvali
-            </h3>
-            <div className="leaderboard-list">
-              {leaderboard.map((item, idx) => (
-                <motion.div
-                  key={item.id || item._id || item.name || idx}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={`leaderboard-row ${idx === 0 ? "top-1" : ""}`}
-                >
-                  <div className="lb-rank">
-                    {idx === 0
-                      ? "🥇 1"
-                      : idx === 1
-                        ? "🥈 2"
-                        : idx === 2
-                          ? "🥉 3"
-                          : `${idx + 1}`}
-                  </div>
-                  <div className="lb-player-cell">
-                    {item.profilePic ? (
-                      <img
-                        src={item.profilePic}
-                        alt={item.name}
-                        className="lb-avatar"
-                      />
-                    ) : (
-                      <span className="lb-avatar-fallback">
-                        {item.name?.charAt(0).toUpperCase()}
+                {currentQuestion.options.map((opt, idx) => {
+                  const optColor = palette[idx % palette.length];
+                  return (
+                    <div
+                      key={idx}
+                      className={`host-option-card ${isTrueFalseQ ? "true-false-card" : ""}`}
+                      style={{ backgroundColor: optColor.bg }}
+                    >
+                      <span className="option-shape-icon">
+                        {optColor.shape}
                       </span>
-                    )}
-                    <span className="lb-name">{item.name}</span>
-                  </div>
-                  <div className="lb-score">
-                    {item.score.toLocaleString()} ball
-                  </div>
-                </motion.div>
-              ))}
+                      <span className="option-text-label">{opt}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          );
+        })()}
+      {avtoNextResponse && gameState === "answer" && (
+        <div className="avtonext-countdown">
+          <span>{countdown}</span>
         </div>
-        );
-      })()}
+      )}
+      {gameState === "answer" &&
+        currentQuestion &&
+        (() => {
+          const isTrueFalseQ =
+            currentQuestion.type === "true_false" ||
+            (currentQuestion.options?.length === 2 && !currentQuestion.type);
+          const palette = isTrueFalseQ ? TRUE_FALSE_COLORS : OPTION_COLORS;
+          return (
+            <div className="host-answer-view">
+              <div className="answer-header-box">
+                <h2>Natijalar & To'ri javob</h2>
+                <button
+                  type="button"
+                  className="host-next-btn"
+                  onClick={handleNextQuestion}
+                  disabled={isAdvancing}
+                >
+                  {isAdvancing ? "Yuklanmoqda..." : "Keyingi"} <FaForward />
+                </button>
+              </div>
+
+              <div
+                className={`host-options-grid small ${isTrueFalseQ ? "true-false-grid" : ""}`}
+              >
+                {currentQuestion.options.map((opt, idx) => {
+                  const optColor = palette[idx % palette.length];
+                  const isCorrect = idx === correctIndex;
+                  return (
+                    <div
+                      key={idx}
+                      className={`host-option-card ${isCorrect ? "correct-highlight" : "dimmed"}`}
+                      style={{
+                        backgroundColor: optColor.bg,
+                        boxShadow: "rgba(0, 0, 0, 0.2) 0px -6px 0px 0px inset",
+                      }}
+                    >
+                      <span className="option-shape-icon">
+                        {optColor.shape}
+                      </span>
+                      <span className="option-text-label">{opt}</span>
+                      {isCorrect && (
+                        <span className="correct-badge">✔ To'g'ri</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="host-leaderboard-card">
+                <h3>
+                  <FaTrophy /> Yetakchilar jadvali
+                </h3>
+                <div className="leaderboard-list">
+                  {leaderboard.map((item, idx) => (
+                    <motion.div
+                      key={item.id || item._id || item.name || idx}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className={`leaderboard-row ${idx === 0 ? "top-1" : ""}`}
+                    >
+                      <div className="lb-rank">
+                        {idx === 0
+                          ? "🥇 1"
+                          : idx === 1
+                            ? "🥈 2"
+                            : idx === 2
+                              ? "🥉 3"
+                              : `${idx + 1}`}
+                      </div>
+                      <div className="lb-player-cell">
+                        {item.profilePic ? (
+                          <img
+                            src={item.profilePic}
+                            alt={item.name}
+                            className="lb-avatar"
+                          />
+                        ) : (
+                          <span className="lb-avatar-fallback">
+                            {item.name?.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                        <span className="lb-name">
+                          {item.streak >= 3 && (
+                            <span
+                              className="player-streak-fire"
+                              title={`${item.streak} ta ketma-ket to'g'ri javob!`}
+                            >
+                              🔥 {item.streak}
+                            </span>
+                          )}
+                          {item.name}
+                        </span>
+                      </div>
+                      <div className="lb-score">
+                        {item.score.toLocaleString()} ball
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
       {gameState === "ended" && (
         <div className="host-podium-view">
@@ -1209,6 +1291,14 @@ export default function LiveHost() {
                     )}
                   </div>
                   <span className="pillar-player-name">
+                    {finalLeaderboard[1].streak >= 3 && (
+                      <span
+                        className="player-streak-fire"
+                        title={`${finalLeaderboard[1].streak} ta ketma-ket to'g'ri javob!`}
+                      >
+                        🔥 {finalLeaderboard[1].streak}
+                      </span>
+                    )}
                     {finalLeaderboard[1].name}
                   </span>
                   <span className="pillar-score">
@@ -1242,6 +1332,14 @@ export default function LiveHost() {
                     )}
                   </div>
                   <span className="pillar-player-name">
+                    {finalLeaderboard[0].streak >= 3 && (
+                      <span
+                        className="player-streak-fire"
+                        title={`${finalLeaderboard[0].streak} ta ketma-ket to'g'ri javob!`}
+                      >
+                        🔥 {finalLeaderboard[0].streak}
+                      </span>
+                    )}
                     {finalLeaderboard[0].name}
                   </span>
                   <span className="pillar-score">
@@ -1274,6 +1372,14 @@ export default function LiveHost() {
                     )}
                   </div>
                   <span className="pillar-player-name">
+                    {finalLeaderboard[2].streak >= 3 && (
+                      <span
+                        className="player-streak-fire"
+                        title={`${finalLeaderboard[2].streak} ta ketma-ket to'g'ri javob!`}
+                      >
+                        🔥 {finalLeaderboard[2].streak}
+                      </span>
+                    )}
                     {finalLeaderboard[2].name}
                   </span>
                   <span className="pillar-score">
@@ -1309,7 +1415,17 @@ export default function LiveHost() {
                           {player.name?.charAt(0).toUpperCase()}
                         </span>
                       )}
-                      <span className="name-col">{player.name}</span>
+                      <span className="name-col">
+                        {player.streak >= 3 && (
+                          <span
+                            className="player-streak-fire"
+                            title={`${player.streak} ta ketma-ket to'g'ri javob!`}
+                          >
+                            🔥 {player.streak}
+                          </span>
+                        )}
+                        {player.name}
+                      </span>
                     </div>
                     <span className="score-col">{player.score} ball</span>
                   </div>
@@ -1355,7 +1471,7 @@ export default function LiveHost() {
             >
               <div className="host-drawer-header">
                 <div className="host-drawer-title-group">
-                  <h3>O&apos;yin boshqaruvi</h3>
+                  <h3>O'yin boshqaruvi</h3>
                   {pin && <span className="host-drawer-pin">PIN: {pin}</span>}
                 </div>
                 <button
@@ -1411,7 +1527,7 @@ export default function LiveHost() {
                 {/* 2. Game Settings */}
                 <section className="drawer-section">
                   <div className="drawer-section-header">
-                    <span>O&apos;yin sozlamalari</span>
+                    <span>O'yin sozlamalari</span>
                   </div>
 
                   <div className="drawer-toggle-list">
@@ -1500,7 +1616,7 @@ export default function LiveHost() {
                           {isFullscreen ? <FaCompress /> : <FaExpand />}
                         </span>
                         <div className="drawer-toggle-text">
-                          <strong>To&apos;liq ekran</strong>
+                          <strong>To'liq ekran</strong>
                           <span>
                             {isFullscreen
                               ? "Oddiy oynaga qaytish"
@@ -1510,6 +1626,31 @@ export default function LiveHost() {
                       </div>
                       <span
                         className={`drawer-switch ${isFullscreen ? "on" : ""}`}
+                      >
+                        <span className="drawer-switch-knob" />
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="drawer-toggle-row"
+                      onClick={handleToggleAutoNextResponse}
+                    >
+                      <div className="drawer-toggle-info">
+                        <span className="drawer-toggle-icon">
+                          {avtoNextResponse ? <FaPause /> : <FaPlay />}
+                        </span>
+                        <div className="drawer-toggle-text">
+                          <strong>Avtomatik o'tkazish</strong>
+                          <span>
+                            {avtoNextResponse
+                              ? "Avtomatik o'tishni o'chrish"
+                              : "Javobdan so'ng keyingi savolga avtomatik o'tish"}
+                          </span>
+                        </div>
+                      </div>
+                      <span
+                        className={`drawer-switch ${avtoNextResponse ? "on" : ""}`}
                       >
                         <span className="drawer-switch-knob" />
                       </span>
@@ -1530,12 +1671,8 @@ export default function LiveHost() {
                         onClick={() => {
                           navigator.clipboard
                             .writeText(pin)
-                            .then(() =>
-                              toast.success("PIN nusxalandi: " + pin),
-                            )
-                            .catch(() =>
-                              toast.error("PIN nusxalab bo'lmadi"),
-                            );
+                            .then(() => toast.success("PIN nusxalandi: " + pin))
+                            .catch(() => toast.error("PIN nusxalab bo'lmadi"));
                         }}
                       >
                         <FaCopy /> PIN nusxalash
@@ -1586,11 +1723,11 @@ export default function LiveHost() {
                       className="drawer-end-btn"
                       onClick={() => setConfirmEndStep(true)}
                     >
-                      <FaPowerOff /> O&apos;yinni yakunlash
+                      <FaPowerOff /> O'yinni yakunlash
                     </button>
                   ) : (
                     <div className="drawer-end-confirm">
-                      <p>O&apos;yinni hozir yakunlaysizmi?</p>
+                      <p>O'yinni hozir yakunlaysizmi?</p>
                       <div className="drawer-end-confirm-btns">
                         <button
                           type="button"
@@ -1616,7 +1753,7 @@ export default function LiveHost() {
                     style={{ width: "100%", justifyContent: "center" }}
                     onClick={() => navigate("/oyinlar")}
                   >
-                    <FaArrowLeft /> O&apos;yinlarga qaytish
+                    <FaArrowLeft /> O'yinlarga qaytish
                   </button>
                 )}
               </div>
