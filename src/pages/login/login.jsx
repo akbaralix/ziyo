@@ -14,6 +14,7 @@ import logo from "../../assets/logo.jpg";
 import telegramImg from "../../assets/telegram.png";
 import "./login.css";
 import ModalOverlay from "../../components/ModalOverlay/ModalOverlay.jsx";
+import { getAuthToken, setAuthSession } from "../../utils/authSession.js";
 
 const images = Object.values(
   import.meta.glob("../../assets/user/*.{png,jpg,jpeg,webp}", {
@@ -40,7 +41,7 @@ const normalizeTelegramText = (text) => {
 
 function Login() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const token = getAuthToken();
 
   // Step holatlari: 0 = tanlov, 1 = ism/familiya, 2 = maktab/institut, 3 = kurs/sinf
   const [stepTelegram, setStepTelegram] = useState(false);
@@ -121,11 +122,13 @@ function Login() {
       try {
         const res = await checkTelegramSession(currentToken);
 
-        if (res.expired) {
+        if (res.expired || res.notFound) {
           stopPolling();
-          setIsWaitingTg(false);
-          toast.error(
-            "Login havolasining muddati tugadi. Iltimos, qaytadan urinib ko'ring.",
+          setStepTelegram(false);
+          toast.info(
+            res.notFound
+              ? "Login sessiyasi eskirgan. Iltimos, qaytadan urinib ko'ring."
+              : "Login havolasining muddati tugadi. Iltimos, qaytadan urinib ko'ring.",
           );
           return;
         }
@@ -135,25 +138,8 @@ function Login() {
 
           if (!res.isNewUser && res.token) {
             // 1. Foydalanuvchi allaqachon ro'yxatdan o'tgan -> To'g'ridan-to'g'ri tizimga kiradi
-            localStorage.setItem("token", res.token);
-            if (res.user) {
-              localStorage.setItem("ziyo_user", JSON.stringify(res.user));
-              localStorage.setItem(
-                "ziyo_user_profile",
-                JSON.stringify({
-                  name: `${res.user.firstName} ${res.user.lastName}`,
-                  username: res.user.username || "user",
-                  profilePic: res.user.profilePic || "",
-                  bio: res.user.bio || "",
-                  studyPlace: res.user.studyPlace,
-                  course: res.user.course,
-                  xp: res.user.xp || 0,
-                  readingBook: res.user.readingBook?.currentPage || 0,
-                  solvedQuizzes: res.user.solvedQuizzes || 0,
-                }),
-              );
-            }
-            toast.success(`Xush kelibsiz! ${res.user.firstName} 🎉`);
+            setAuthSession(res.token, res.user);
+            toast.success(`Xush kelibsiz! ${res.user?.firstName || "Foydalanuvchi"} 🎉`);
             setTimeout(() => {
               navigate("/");
             }, 800);
@@ -180,7 +166,15 @@ function Login() {
           }
         }
       } catch (error) {
-        console.error("Polling xatosi:", error);
+        if (
+          error?.status === 404 ||
+          error?.status === 410 ||
+          error?.message?.includes("topilmadi")
+        ) {
+          stopPolling();
+          setStepTelegram(false);
+          toast.info("Login sessiyasi eskirgan. Qaytadan kirish tugmasini bosing.");
+        }
       }
     }, 2000);
   };
@@ -246,24 +240,15 @@ function Login() {
       });
 
       if (res.success && res.token) {
-        localStorage.setItem("token", res.token);
-        if (res.user) {
-          localStorage.setItem("ziyo_user", JSON.stringify(res.user));
-          localStorage.setItem(
-            "ziyo_user_profile",
-            JSON.stringify({
-              name: `${res.user.firstName} ${res.user.lastName}`,
-              username: res.user.telegramUsername || "user",
-              profilePic: res.user.profilePic || userData.profilePic,
-              bio: res.user.bio || "",
-              studyPlace: res.user.studyPlace,
-              course: res.user.course,
-              xp: res.user.xp || 0,
-              readingBook: res.user.readingBook?.currentPage || 0,
-              solvedQuizzes: res.user.solvedQuizzes || 0,
-            }),
-          );
-        }
+        setAuthSession(
+          res.token,
+          res.user
+            ? {
+                ...res.user,
+                profilePic: res.user.profilePic || userData.profilePic,
+              }
+            : null,
+        );
         toast.success("Ro'yxatdan o'tish muvaffaqiyatli yakunlandi! 🎉");
         setTimeout(() => {
           navigate("/");

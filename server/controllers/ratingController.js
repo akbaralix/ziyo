@@ -1,4 +1,6 @@
 import User from "../db/User/User.js";
+import { isDbConnected } from "../db/db.js";
+import { listMemoryUsers } from "../db/memoryStore.js";
 
 // Darajani hisoblash yordamchi funksiyasi
 const calculateLevel = (xp = 0) => {
@@ -16,18 +18,38 @@ const calculateLevel = (xp = 0) => {
  */
 export const getLeaderboard = async (req, res) => {
   try {
-    // Barcha ro'yxatdan o'tgan foydalanuvchilarni olish
-    const users = await User.find(
-      {},
-      "firstName lastName telegramUsername profilePic xp solvedQuizzes readingBook studyPlace course createdAt",
-    )
-      .sort({ xp: -1, solvedQuizzes: -1, readingBook: -1, createdAt: 1 })
-      .lean();
+    let users = [];
+    if (isDbConnected()) {
+      // Barcha ro'yxatdan o'tgan foydalanuvchilarni olish
+      users = await User.find(
+        {},
+        "firstName lastName username telegramUsername profilePic xp solvedQuizzes readingBook finishedBooks studyPlace course createdAt",
+      )
+        .sort({
+          xp: -1,
+          solvedQuizzes: -1,
+          "readingBook.currentPage": -1,
+          createdAt: 1,
+        })
+        .lean();
+    } else {
+      users = listMemoryUsers().sort((a, b) => {
+        if ((b.xp || 0) !== (a.xp || 0)) return (b.xp || 0) - (a.xp || 0);
+        if ((b.solvedQuizzes || 0) !== (a.solvedQuizzes || 0)) {
+          return (b.solvedQuizzes || 0) - (a.solvedQuizzes || 0);
+        }
+        const pageA = a.readingBook?.currentPage || 0;
+        const pageB = b.readingBook?.currentPage || 0;
+        if (pageB !== pageA) return pageB - pageA;
+        return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+      });
+    }
 
     const ratings = users.map((u, index) => {
       const name =
         `${u.firstName || ""} ${u.lastName || ""}`.trim() || "Foydalanuvchi";
       const username =
+        u.username ||
         u.telegramUsername ||
         (u._id ? `user_${u._id.toString().slice(-4)}` : "foydalanuvchi");
 
@@ -40,6 +62,9 @@ export const getLeaderboard = async (req, res) => {
         level: calculateLevel(u.xp || 0),
         solvedQuizzes: u.solvedQuizzes || 0,
         readingBook: u.readingBook?.currentPage || 0,
+        finishedBooksCount: Array.isArray(u.finishedBooks)
+          ? u.finishedBooks.length
+          : 0,
         studyPlace: u.studyPlace || "",
         course: u.course || "",
         rank: index + 1,

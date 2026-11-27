@@ -53,15 +53,25 @@
 .ziyo-game-card {
   position: relative;
   background-color: var(--bg-card);
-  border: 1.5px solid var(--border-color);
+  border: 1px solid var(--border-color);
   padding: 16px;
-  border-radius: var(--radius-2xl);
+  border-radius: 20px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   box-shadow: var(--shadow-card);
   overflow: hidden;
   min-height: 280px;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ziyo-game-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-border);
+  box-shadow: var(--shadow-md);
 }
 
 .ziyo-game-card:has(.ziyo-game-btn.disabled) {
@@ -141,9 +151,9 @@
 
 .ziyo-game-btn {
   background-color: var(--primary);
-  border: 1.5px solid var(--primary);
-  padding: 12px 20px;
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--primary);
+  padding: 11px 20px;
+  border-radius: 14px;
   font-size: var(--font-base);
   font-weight: 600;
   width: 100%;
@@ -157,6 +167,11 @@
   margin-top: auto;
   z-index: 10;
   position: relative;
+  transition: background-color var(--transition-fast);
+}
+
+.ziyo-game-btn:hover:not(.disabled) {
+  background-color: var(--primary-hover);
 }
 
 .ziyo-game-btn.disabled {

@@ -7,9 +7,9 @@
   z-index: 99999;
   background: radial-gradient(
     circle at center,
-    #2e1065 0%,
-    #1e1145 60%,
-    #0f0728 100%
+    #251e54 0%,
+    #151426 60%,
+    #0d0d1a 100%
   );
   display: flex;
   align-items: center;
@@ -137,6 +137,7 @@
   font-weight: 900;
   color: #ffffff;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
   text-shadow:
     0 4px 18px rgba(0, 0, 0, 0.35),
     0 0 20px rgba(255, 255, 255, 0.4);

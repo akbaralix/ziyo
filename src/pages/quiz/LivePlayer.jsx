@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import confetti from "canvas-confetti";
@@ -16,9 +16,11 @@ import {
   FaDice,
   FaCheck,
   FaPen,
+  FaTimes,
 } from "react-icons/fa";
 
 import { FaDiamond } from "react-icons/fa6";
+import { getAuthToken } from "../../utils/authSession.js";
 
 import quizAvatar1 from "../../assets/quiz-avatar/quiz-avatar1.jpg";
 import quizAvatar2 from "../../assets/quiz-avatar/quiz-avatar2.jpg";
@@ -46,8 +48,8 @@ export const QUIZ_AVATARS = [
   { id: 8, src: quizAvatar8, name: "Qahramon 8" },
   { id: 9, src: quizAvatar9, name: "Qahramon 9" },
   { id: 10, src: quizAvatar10, name: "Qahramon 10" },
-  { id: 12, src: quizAvatar11, name: "Qahramon 10" },
-  { id: 12, src: quizAvatar12, name: "Qahramon 10" },
+  { id: 11, src: quizAvatar11, name: "Qahramon 11" },
+  { id: 12, src: quizAvatar12, name: "Qahramon 12" },
 ];
 
 import { joinByPin } from "../../api/quizApi.js";
@@ -63,7 +65,11 @@ const OPTION_COLORS = [
   { bg: "rgb(216, 158, 0)", text: "#ffffff", shape: <FaCircle /> },
   { bg: "rgb(38, 137, 12)", text: "#ffffff", shape: <FaSquare /> },
 ];
-const REACT_EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "👏", "🎉"];
+
+const TRUE_FALSE_COLORS = [
+  { bg: "rgb(38, 137, 12)", text: "#ffffff", shape: <FaCheck /> },
+  { bg: "rgb(226, 27, 60)", text: "#ffffff", shape: <FaTimes /> },
+];
 
 export default function LivePlayer() {
   const { pin: urlPin } = useParams();
@@ -73,11 +79,14 @@ export default function LivePlayer() {
   const [pin, setPin] = useState(urlPin || "");
   const [name, setName] = useState(() => {
     try {
-      const u = JSON.parse(localStorage.getItem("ziyo_user"));
-      if (u && (u.firstName || u.lastName))
-        return `${u.firstName || ""}`.trim();
-      const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
-      if (p && p.name) return p.name;
+      const token = getAuthToken();
+      if (token) {
+        const u = JSON.parse(localStorage.getItem("ziyo_user"));
+        if (u && (u.firstName || u.lastName))
+          return `${u.firstName || ""}`.trim();
+        const p = JSON.parse(localStorage.getItem("ziyo_user_profile"));
+        if (p && p.name) return p.name;
+      }
     } catch {}
     return "";
   });
@@ -99,9 +108,9 @@ export default function LivePlayer() {
   const [playerId, setPlayerId] = useState(null);
   const [quizTitle, setQuizTitle] = useState("");
 
-  const getLoggedInUser = () => {
+  const getLoggedInUser = useCallback(() => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       if (!token) return null;
       const u = JSON.parse(localStorage.getItem("ziyo_user"));
       if (u && (u.firstName || u.name)) return u;
@@ -109,13 +118,13 @@ export default function LivePlayer() {
       if (p && (p.firstName || p.name)) return p;
     } catch {}
     return null;
-  };
+  }, []);
 
   // 'pin' | 'name'
   const [joinStep, setJoinStep] = useState(() => (urlPin ? "name" : "pin"));
   const [isVerifyingPin, setIsVerifyingPin] = useState(false);
 
-  // Lobby ism tahrirlash (ruchka bosilganda)
+  // Lobby ism tahrirlash
   const [isEditingName, setIsEditingName] = useState(false);
   const [editingNameVal, setEditingNameVal] = useState("");
   const nameInputRef = useRef(null);
@@ -139,10 +148,16 @@ export default function LivePlayer() {
 
   // Kahoot Countdown state
   const [isCountingDown, setIsCountingDown] = useState(false);
+  const [countdownStartsAt, setCountdownStartsAt] = useState(null);
+  const [serverOffsetMs, setServerOffsetMs] = useState(0);
   const isCountingDownRef = useRef(false);
+  const countdownFinishedRef = useRef(false);
+  const countdownFallbackTimerRef = useRef(null);
   const pendingQuestionRef = useRef(null);
   const pendingAnswerFeedbackRef = useRef(null);
-  const [showReactionIcons, setshowReactionIcons] = useState(false);
+  const currentQuestionRef = useRef(null);
+  const serverOffsetRef = useRef(0);
+  const lastTickSecRef = useRef(null);
 
   // Final Ended state & Review
   const [finalLeaderboard, setFinalLeaderboard] = useState([]);
@@ -150,6 +165,7 @@ export default function LivePlayer() {
   const [myRank, setMyRank] = useState(null);
   const [endViewTab, setEndViewTab] = useState("leaderboard");
   const [myAnswerHistory, setMyAnswerHistory] = useState([]);
+  const [reactionsEnabled, setReactionsEnabled] = useState(true);
 
   const timerRef = useRef(null);
   const socketRef = useRef(null);
@@ -162,31 +178,142 @@ export default function LivePlayer() {
     profilePic: "",
   });
 
-  // Internet uzilib qayta ulanganda avtomatik sinxronizatsiya
+  const syncServerClock = useCallback((serverTime) => {
+    if (typeof serverTime === "number" && Number.isFinite(serverTime)) {
+      const offset = serverTime - Date.now();
+      serverOffsetRef.current = offset;
+      setServerOffsetMs(offset);
+    }
+  }, []);
+
+  const clearQuestionTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    lastTickSecRef.current = null;
+  }, []);
+
+  const startSyncedTimer = useCallback(
+    (questionEndsAt, fallbackSeconds) => {
+      clearQuestionTimer();
+
+      const now = Date.now();
+      const targetLocalEnd =
+        typeof questionEndsAt === "number" && Number.isFinite(questionEndsAt)
+          ? questionEndsAt - serverOffsetRef.current
+          : now + Math.max(0, Number(fallbackSeconds) || 0) * 1000;
+
+      const updateRemaining = () => {
+        const remainingSec = Math.max(
+          0,
+          Math.ceil((targetLocalEnd - Date.now()) / 1000),
+        );
+        setTimeLeft(remainingSec);
+
+        if (
+          remainingSec > 0 &&
+          remainingSec <= 5 &&
+          lastTickSecRef.current !== remainingSec
+        ) {
+          lastTickSecRef.current = remainingSec;
+          sfx.playTick(true);
+        }
+
+        if (remainingSec <= 0) {
+          clearQuestionTimer();
+        }
+      };
+
+      updateRemaining();
+      if (targetLocalEnd > Date.now()) {
+        timerRef.current = setInterval(updateRemaining, 200);
+      }
+    },
+    [clearQuestionTimer],
+  );
+
+  const handleCountdownComplete = useCallback(() => {
+    if (pendingQuestionRef.current) {
+      if (countdownFallbackTimerRef.current) {
+        clearTimeout(countdownFallbackTimerRef.current);
+        countdownFallbackTimerRef.current = null;
+      }
+      countdownFinishedRef.current = false;
+      setIsCountingDown(false);
+      isCountingDownRef.current = false;
+
+      const qData = pendingQuestionRef.current;
+      pendingQuestionRef.current = null;
+      currentQuestionRef.current = qData;
+      sfx.playStart();
+      setPlayerState("question");
+      setCurrentQuestion(qData);
+      setSelectedOption(null);
+      setAnswerFeedback(null);
+      pendingAnswerFeedbackRef.current = null;
+      setCorrectIndex(null);
+      startSyncedTimer(qData.questionEndsAt, qData.timeLimit);
+    } else if (currentQuestionRef.current) {
+      countdownFinishedRef.current = false;
+      setIsCountingDown(false);
+      isCountingDownRef.current = false;
+      const qData = currentQuestionRef.current;
+      sfx.playStart();
+      setPlayerState("question");
+      startSyncedTimer(qData.questionEndsAt, qData.timeLimit);
+    } else {
+      // Savol hali yetib kelmagan bo'lsa, lobby'ga qaytmasdan kutamiz va kerak bo'lsa qayta sinxronlaymiz
+      countdownFinishedRef.current = true;
+      if (countdownFallbackTimerRef.current) {
+        clearTimeout(countdownFallbackTimerRef.current);
+      }
+      countdownFallbackTimerRef.current = setTimeout(() => {
+        if (countdownFinishedRef.current) {
+          const s = sessionInfoRef.current;
+          if (socketRef.current?.connected && s.sessionId) {
+            socketRef.current.emit("player:join", {
+              sessionId: s.sessionId,
+              playerId: s.playerId,
+              name: s.name,
+              profilePic: s.profilePic,
+            });
+          }
+        }
+      }, 2000);
+    }
+  }, [startSyncedTimer]);
+
+  // Internet uzilib qayta ulanganda yoki tab qayta ochilganda sinxronizatsiya
   useEffect(() => {
+    const syncPlayerSession = () => {
+      const currentSocket = socketRef.current;
+      if (!currentSocket) return;
+      const s = sessionInfoRef.current;
+      if (!s.sessionId) return;
+
+      if (!currentSocket.connected) {
+        currentSocket.connect();
+      } else {
+        let savedLocal = {};
+        try {
+          savedLocal =
+            JSON.parse(localStorage.getItem("ziyo_live_player")) || {};
+        } catch {}
+        currentSocket.emit("player:join", {
+          sessionId: s.sessionId || savedLocal.sessionId,
+          playerId: s.playerId || savedLocal.playerId,
+          name: s.name || savedLocal.name,
+          profilePic: s.profilePic || savedLocal.profilePic,
+        });
+      }
+    };
+
     const handleOnline = () => {
       toast.info("Internet aloqasi tiklandi. O'yin yangilanmoqda...", {
         autoClose: 2000,
       });
-      const currentSocket = socketRef.current;
-      if (currentSocket) {
-        if (!currentSocket.connected) {
-          currentSocket.connect();
-        } else {
-          const s = sessionInfoRef.current;
-          let savedLocal = {};
-          try {
-            savedLocal =
-              JSON.parse(localStorage.getItem("ziyo_live_player")) || {};
-          } catch {}
-          currentSocket.emit("player:join", {
-            sessionId: s.sessionId || savedLocal.sessionId,
-            playerId: s.playerId || savedLocal.playerId,
-            name: s.name || savedLocal.name,
-            profilePic: s.profilePic || savedLocal.profilePic,
-          });
-        }
-      }
+      syncPlayerSession();
     };
 
     const handleOffline = () => {
@@ -195,322 +322,435 @@ export default function LivePlayer() {
       });
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncPlayerSession();
+      }
+    };
+
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
-  const startTimer = (seconds) => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setTimeLeft(seconds);
-    if (seconds <= 0) return;
+  const connectToGame = useCallback(
+    ({
+      pinToUse,
+      sessionIdToUse,
+      playerIdToUse,
+      nameToUse,
+      profilePicToUse,
+    }) => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
 
-    timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          return 0;
-        }
-        if (prev <= 6) {
-          sfx.playTick(true);
-        }
-        return prev - 1;
+      const activePic = profilePicToUse || quizAvatar1;
+
+      sessionInfoRef.current = {
+        pin: pinToUse,
+        sessionId: sessionIdToUse,
+        playerId: playerIdToUse,
+        name: nameToUse,
+        profilePic: activePic,
+      };
+
+      const token = getAuthToken();
+      const socketUrl = import.meta.env.VITE_API_URL || window.location.origin;
+      const newSocket = io(socketUrl, {
+        auth: { token },
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000,
       });
-    }, 1000);
-  };
 
-  const handleCountdownComplete = () => {
-    setIsCountingDown(false);
-    isCountingDownRef.current = false;
+      socketRef.current = newSocket;
+      setSocket(newSocket);
 
-    if (pendingQuestionRef.current) {
-      const qData = pendingQuestionRef.current;
-      pendingQuestionRef.current = null;
-      sfx.playStart();
-      setPlayerState("question");
-      setCurrentQuestion(qData);
-      setSelectedOption(null);
-      setAnswerFeedback(null);
-      pendingAnswerFeedbackRef.current = null;
-      setCorrectIndex(null);
-      startTimer(qData.timeLimit);
-    } else if (currentQuestion) {
-      sfx.playStart();
-      setPlayerState("question");
-      startTimer(currentQuestion.timeLimit);
-    }
-  };
+      newSocket.on("connect", () => {
+        let savedLocal = {};
+        try {
+          savedLocal =
+            JSON.parse(localStorage.getItem("ziyo_live_player")) || {};
+        } catch {}
 
-  const connectToGame = ({
-    pinToUse,
-    sessionIdToUse,
-    playerIdToUse,
-    nameToUse,
-    profilePicToUse,
-  }) => {
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-    }
+        const s = sessionInfoRef.current;
+        const currentSid =
+          s.sessionId || savedLocal.sessionId || sessionIdToUse;
+        const currentPid =
+          s.playerId ||
+          (savedLocal.sessionId === currentSid ? savedLocal.playerId : null);
+        const currentName = s.name || savedLocal.name || nameToUse;
+        const currentPic = s.profilePic || savedLocal.profilePic || activePic;
 
-    const activePic = profilePicToUse || profilePic || quizAvatar1;
-
-    sessionInfoRef.current = {
-      pin: pinToUse,
-      sessionId: sessionIdToUse,
-      playerId: playerIdToUse,
-      name: nameToUse,
-      profilePic: activePic,
-    };
-
-    const token = localStorage.getItem("token");
-    const socketUrl =
-      import.meta.env.VITE_API_URL || "https://ziyo.onrender.com";
-    const newSocket = io(socketUrl, {
-      auth: { token },
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-    });
-
-    socketRef.current = newSocket;
-    setSocket(newSocket);
-
-    newSocket.on("connect", () => {
-      let savedLocal = {};
-      try {
-        savedLocal = JSON.parse(localStorage.getItem("ziyo_live_player")) || {};
-      } catch {}
-
-      const s = sessionInfoRef.current;
-      const currentPid = s.playerId || savedLocal.playerId || null;
-      const currentSid = s.sessionId || savedLocal.sessionId || sessionIdToUse;
-      const currentName = s.name || savedLocal.name || nameToUse;
-      const currentPic = s.profilePic || savedLocal.profilePic || activePic;
-
-      newSocket.emit("player:join", {
-        sessionId: currentSid,
-        playerId: currentPid,
-        name: currentName,
-        profilePic: currentPic,
+        newSocket.emit("player:join", {
+          sessionId: currentSid,
+          playerId: currentPid,
+          name: currentName,
+          profilePic: currentPic,
+        });
       });
-    });
 
-    newSocket.on("player:joined", (data) => {
-      setPlayerId(data.playerId);
-      sessionInfoRef.current.playerId = data.playerId;
-      if (data.name) {
-        setName(data.name);
-        sessionInfoRef.current.name = data.name;
-      }
-      if (data.profilePic) {
-        setProfilePic(data.profilePic);
-        sessionInfoRef.current.profilePic = data.profilePic;
-      }
-      if (data.quizTitle) {
-        setQuizTitle(data.quizTitle);
-      }
-      if (data.myAnswerHistory) setMyAnswerHistory(data.myAnswerHistory);
+      newSocket.on("player:joined", (data) => {
+        syncServerClock(data.serverTime);
+        setPlayerId(data.playerId);
+        sessionInfoRef.current.playerId = data.playerId;
 
-      localStorage.setItem(
-        "ziyo_live_player",
-        JSON.stringify({
-          pin: sessionInfoRef.current.pin || pinToUse,
-          sessionId: sessionInfoRef.current.sessionId || sessionIdToUse,
-          playerId: data.playerId,
-          name: data.name || sessionInfoRef.current.name || nameToUse,
-          profilePic:
-            data.profilePic || sessionInfoRef.current.profilePic || activePic,
-        }),
-      );
+        if (data.name) {
+          setName(data.name);
+          sessionInfoRef.current.name = data.name;
+        }
+        if (data.profilePic) {
+          setProfilePic(data.profilePic);
+          sessionInfoRef.current.profilePic = data.profilePic;
+        }
+        if (data.quizTitle) {
+          setQuizTitle(data.quizTitle);
+        }
+        if (typeof data.reactionsEnabled === "boolean") {
+          setReactionsEnabled(data.reactionsEnabled);
+        }
+        if (Array.isArray(data.myAnswerHistory)) {
+          setMyAnswerHistory(data.myAnswerHistory);
+        }
 
-      setIsJoining(false);
+        try {
+          localStorage.setItem(
+            "ziyo_live_player",
+            JSON.stringify({
+              pin: sessionInfoRef.current.pin || pinToUse,
+              sessionId: sessionInfoRef.current.sessionId || sessionIdToUse,
+              playerId: data.playerId,
+              name: data.name || sessionInfoRef.current.name || nameToUse,
+              profilePic:
+                data.profilePic ||
+                sessionInfoRef.current.profilePic ||
+                activePic,
+            }),
+          );
+        } catch {}
 
-      if (data.status === "question" && data.currentQuestion) {
-        setCurrentQuestion(data.currentQuestion);
-        setCorrectIndex(null);
-        setAnswerFeedback(null);
-        startTimer(data.timeLeft ?? data.currentQuestion.timeLimit);
-        if (data.hasAnswered) {
-          setSelectedOption(data.chosenIndex);
-          setPlayerState("answered");
-          if (data.myAnswer) {
-            pendingAnswerFeedbackRef.current = data.myAnswer;
-            setTotalScore(
-              Math.max(
-                0,
-                (data.score || 0) - (data.myAnswer.pointsEarned || 0),
-              ),
-            );
-          } else if (data.score !== undefined) {
+        setIsJoining(false);
+        setErrorMsg("");
+
+        if (data.status === "active") {
+          clearQuestionTimer();
+          if (countdownFallbackTimerRef.current) {
+            clearTimeout(countdownFallbackTimerRef.current);
+            countdownFallbackTimerRef.current = null;
+          }
+          countdownFinishedRef.current = false;
+          setCountdownStartsAt(data.startsAt || Date.now() + 2000);
+          setIsCountingDown(true);
+          isCountingDownRef.current = true;
+          setPlayerState("lobby");
+          if (data.score !== undefined) setTotalScore(data.score);
+        } else if (data.status === "question" && data.currentQuestion) {
+          if (countdownFallbackTimerRef.current) {
+            clearTimeout(countdownFallbackTimerRef.current);
+            countdownFallbackTimerRef.current = null;
+          }
+          countdownFinishedRef.current = false;
+          setIsCountingDown(false);
+          isCountingDownRef.current = false;
+          pendingQuestionRef.current = null;
+          currentQuestionRef.current = data.currentQuestion;
+          setCurrentQuestion(data.currentQuestion);
+          setCorrectIndex(null);
+          setAnswerFeedback(null);
+          startSyncedTimer(
+            data.questionEndsAt || data.currentQuestion.questionEndsAt,
+            data.timeLeft ?? data.currentQuestion.timeLimit,
+          );
+          if (data.score !== undefined) {
             setTotalScore(data.score);
           }
+          if (data.hasAnswered) {
+            setSelectedOption(data.chosenIndex);
+            setPlayerState("answered");
+            if (data.myAnswer) {
+              pendingAnswerFeedbackRef.current = {
+                ...data.myAnswer,
+                questionIndex: data.currentQuestion.questionIndex,
+              };
+            }
+          } else {
+            pendingAnswerFeedbackRef.current = null;
+            setSelectedOption(null);
+            setPlayerState("question");
+          }
+        } else if (data.status === "answer" && data.currentQuestion) {
+          setIsCountingDown(false);
+          isCountingDownRef.current = false;
+          pendingQuestionRef.current = null;
+          clearQuestionTimer();
+          currentQuestionRef.current = data.currentQuestion;
+          setCurrentQuestion(data.currentQuestion);
+          setCorrectIndex(data.correctIndex);
+          setAnswerFeedback(data.myAnswer);
+          setPlayerState("answer_result");
+          if (data.score !== undefined) setTotalScore(data.score);
+          if (data.myRank) setCurrentRank(data.myRank);
+          if (data.totalPlayers) setTotalPlayersCount(data.totalPlayers);
+        } else if (data.status === "ended") {
+          setIsCountingDown(false);
+          isCountingDownRef.current = false;
+          pendingQuestionRef.current = null;
+          clearQuestionTimer();
+          setPlayerState("ended");
+          if (data.score !== undefined) setTotalScore(data.score);
+          if (data.leaderboard) setFinalLeaderboard(data.leaderboard);
+          if (data.questionsReview) setQuestionsReview(data.questionsReview);
+          if (data.myRank) setMyRank(data.myRank);
         } else {
+          setIsCountingDown(false);
+          isCountingDownRef.current = false;
+          pendingQuestionRef.current = null;
+          clearQuestionTimer();
+          if (data.score !== undefined) setTotalScore(data.score);
+          setPlayerState("lobby");
+        }
+      });
+
+      newSocket.on("player:avatar:updated", (data) => {
+        const currentPid = sessionInfoRef.current.playerId;
+        if (data.playerId === currentPid) {
+          setProfilePic(data.profilePic);
+          sessionInfoRef.current.profilePic = data.profilePic;
+        }
+      });
+
+      newSocket.on("player:name:updated", (data) => {
+        const currentPid = sessionInfoRef.current.playerId;
+        if (data.playerId === currentPid) {
+          setName(data.name);
+          sessionInfoRef.current.name = data.name;
+          try {
+            const saved = JSON.parse(
+              localStorage.getItem("ziyo_live_player") || "{}",
+            );
+            saved.name = data.name;
+            localStorage.setItem("ziyo_live_player", JSON.stringify(saved));
+          } catch {}
+        }
+      });
+
+      newSocket.on("player:name:error", (data) => {
+        if (data?.msg) toast.warning(data.msg);
+      });
+
+      newSocket.on("session:reactions-toggled", (data) => {
+        setReactionsEnabled(data?.reactionsEnabled !== false);
+      });
+
+      newSocket.on("player:join:error", (data) => {
+        const msg = data?.msg || "O'yinga qo'shilishda xatolik";
+        setErrorMsg(msg);
+        toast.error(msg);
+        setIsJoining(false);
+        if (
+          msg.includes("topilmadi") ||
+          msg.includes("yakunlangan") ||
+          msg.includes("boshlangan") ||
+          msg.includes("qulflangan") ||
+          msg.includes("allaqachon band")
+        ) {
+          localStorage.removeItem("ziyo_live_player");
+          sessionInfoRef.current.playerId = null;
+          setPlayerState("join");
+          setJoinStep("name");
+        }
+      });
+
+      newSocket.on("game:started", (data) => {
+        syncServerClock(data?.serverTime);
+        if (countdownFallbackTimerRef.current) {
+          clearTimeout(countdownFallbackTimerRef.current);
+          countdownFallbackTimerRef.current = null;
+        }
+        countdownFinishedRef.current = false;
+        pendingQuestionRef.current = null;
+        setCountdownStartsAt(data?.startsAt || Date.now() + 3400);
+        setIsCountingDown(true);
+        isCountingDownRef.current = true;
+      });
+
+      newSocket.on("question:start", (data) => {
+        syncServerClock(data?.serverTime);
+        if (isCountingDownRef.current && !countdownFinishedRef.current) {
+          pendingQuestionRef.current = data;
+        } else {
+          if (countdownFallbackTimerRef.current) {
+            clearTimeout(countdownFallbackTimerRef.current);
+            countdownFallbackTimerRef.current = null;
+          }
+          countdownFinishedRef.current = false;
+          setIsCountingDown(false);
+          isCountingDownRef.current = false;
+          pendingQuestionRef.current = null;
+          currentQuestionRef.current = data;
+          sfx.playStart();
+          setPlayerState("question");
+          setCurrentQuestion(data);
+          setSelectedOption(null);
+          setAnswerFeedback(null);
+          pendingAnswerFeedbackRef.current = null;
+          setCorrectIndex(null);
+          startSyncedTimer(data.questionEndsAt, data.timeLimit);
+        }
+      });
+
+      newSocket.on("player:answer:ok", (data) => {
+        pendingAnswerFeedbackRef.current = data;
+      });
+
+      newSocket.on("player:answer:error", (data) => {
+        const activeQIdx = currentQuestionRef.current?.questionIndex;
+        if (
+          data?.questionIndex !== undefined &&
+          data.questionIndex !== activeQIdx
+        ) {
+          return;
+        }
+        if (data?.msg) {
+          toast.warning(data.msg);
+        }
+        if (!data?.msg?.includes("tugagan") && !data?.msg?.includes("Vaqt")) {
           setSelectedOption(null);
           setPlayerState("question");
-          if (data.score !== undefined) setTotalScore(data.score);
         }
-      } else if (data.status === "answer" && data.currentQuestion) {
-        if (timerRef.current) clearInterval(timerRef.current);
-        setCurrentQuestion(data.currentQuestion);
+      });
+
+      newSocket.on("question:ended", (data) => {
+        syncServerClock(data?.serverTime);
+        clearQuestionTimer();
+        if (countdownFallbackTimerRef.current) {
+          clearTimeout(countdownFallbackTimerRef.current);
+          countdownFallbackTimerRef.current = null;
+        }
+        countdownFinishedRef.current = false;
+        setIsCountingDown(false);
+        isCountingDownRef.current = false;
+        pendingQuestionRef.current = null;
         setCorrectIndex(data.correctIndex);
-        setAnswerFeedback(data.myAnswer);
-        setPlayerState("answer_result");
-        if (data.score !== undefined) setTotalScore(data.score);
-        if (data.myRank) setCurrentRank(data.myRank);
-        if (data.totalPlayers) setTotalPlayersCount(data.totalPlayers);
-      } else if (data.status === "ended") {
-        if (timerRef.current) clearInterval(timerRef.current);
-        setPlayerState("ended");
-        if (data.score !== undefined) setTotalScore(data.score);
-        if (data.leaderboard) setFinalLeaderboard(data.leaderboard);
-        if (data.questionsReview) setQuestionsReview(data.questionsReview);
-        if (data.myRank) setMyRank(data.myRank);
-      } else {
-        if (data.score !== undefined) setTotalScore(data.score);
-        setPlayerState("lobby");
-      }
-    });
 
-    newSocket.on("player:avatar:updated", (data) => {
-      const currentPid = sessionInfoRef.current.playerId;
-      if (data.playerId === currentPid) {
-        setProfilePic(data.profilePic);
-        sessionInfoRef.current.profilePic = data.profilePic;
-      }
-    });
-
-    newSocket.on("player:name:updated", (data) => {
-      const currentPid = sessionInfoRef.current.playerId;
-      if (data.playerId === currentPid) {
-        setName(data.name);
-        sessionInfoRef.current.name = data.name;
-        try {
-          const saved = JSON.parse(
-            localStorage.getItem("ziyo_live_player") || "{}",
-          );
-          saved.name = data.name;
-          localStorage.setItem("ziyo_live_player", JSON.stringify(saved));
-        } catch {}
-      }
-    });
-
-    newSocket.on("player:join:error", (data) => {
-      const msg = data.msg || "O'yinga qo'shilishda xatolik";
-      setErrorMsg(msg);
-      toast.error(msg);
-      setIsJoining(false);
-      if (msg.includes("topilmadi")) {
-        localStorage.removeItem("ziyo_live_player");
-        setPlayerState("join");
-      }
-    });
-
-    newSocket.on("game:started", () => {
-      setIsCountingDown(true);
-      isCountingDownRef.current = true;
-    });
-
-    newSocket.on("question:start", (data) => {
-      if (isCountingDownRef.current) {
-        pendingQuestionRef.current = data;
-      } else {
-        sfx.playStart();
-        setPlayerState("question");
-        setCurrentQuestion(data);
-        setSelectedOption(null);
-        setAnswerFeedback(null);
+        const rawFeedback = pendingAnswerFeedbackRef.current;
+        const feedback =
+          rawFeedback &&
+          (rawFeedback.questionIndex === undefined ||
+            rawFeedback.questionIndex === data.questionIndex)
+            ? rawFeedback
+            : null;
         pendingAnswerFeedbackRef.current = null;
-        setCorrectIndex(null);
-        startTimer(data.timeLimit);
-      }
-    });
 
-    newSocket.on("player:answer:ok", (data) => {
-      pendingAnswerFeedbackRef.current = data;
-    });
-
-    newSocket.on("question:ended", (data) => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      setCorrectIndex(data.correctIndex);
-
-      // Savol raundi tugadi: endi natijani ko'rsatamiz va bal qo'shamiz
-      const feedback = pendingAnswerFeedbackRef.current;
-      pendingAnswerFeedbackRef.current = null;
-
-      if (feedback) {
-        setAnswerFeedback(feedback);
-        if (feedback.isCorrect) {
-          sfx.playCorrect();
-          setTotalScore((prev) => prev + (feedback.pointsEarned || 0));
-        } else {
-          sfx.playWrong();
-        }
-        if (feedback.totalPlayers) {
-          setTotalPlayersCount(feedback.totalPlayers);
-        }
-      } else {
-        // O'yinchi savol vaqtida javob bermadi
-        sfx.playWrong();
-        setAnswerFeedback({
-          isCorrect: false,
-          pointsEarned: 0,
-          noAnswer: true,
-        });
-      }
-
-      const lb = data.allLeaderboard || data.leaderboard || [];
-      if (lb.length > 0) {
-        const myPid = sessionInfoRef.current.playerId || playerId;
-        const myName = (sessionInfoRef.current.name || name || "")
-          .trim()
-          .toLowerCase();
+        const lb = data.allLeaderboard || data.leaderboard || [];
+        const myPid = sessionInfoRef.current.playerId;
+        const myName = (sessionInfoRef.current.name || "").trim().toLowerCase();
         const foundIdx = lb.findIndex(
           (p) =>
             (myPid && p.id && String(p.id) === String(myPid)) ||
-            (p.name && p.name.trim().toLowerCase() === myName),
+            (myName && p.name && p.name.trim().toLowerCase() === myName),
         );
+        const lbPlayer = foundIdx !== -1 ? lb[foundIdx] : null;
+
+        if (feedback) {
+          setAnswerFeedback(feedback);
+          if (feedback.isCorrect) {
+            sfx.playCorrect();
+          } else {
+            sfx.playWrong();
+          }
+          if (lbPlayer && typeof lbPlayer.score === "number") {
+            setTotalScore(lbPlayer.score);
+          } else if (typeof feedback.score === "number") {
+            setTotalScore(feedback.score);
+          }
+          if (feedback.totalPlayers) {
+            setTotalPlayersCount(feedback.totalPlayers);
+          }
+        } else {
+          sfx.playWrong();
+          setAnswerFeedback({
+            isCorrect: false,
+            pointsEarned: 0,
+            noAnswer: true,
+          });
+          if (lbPlayer && typeof lbPlayer.score === "number") {
+            setTotalScore(lbPlayer.score);
+          }
+        }
+
         if (foundIdx !== -1) {
           setCurrentRank(foundIdx + 1);
           setTotalPlayersCount(data.totalPlayers || lb.length);
         } else if (feedback?.rank) {
           setCurrentRank(feedback.rank);
         }
-      } else if (feedback?.rank) {
-        setCurrentRank(feedback.rank);
-      }
 
-      setPlayerState("answer_result");
-    });
+        setPlayerState("answer_result");
+      });
 
-    newSocket.on("game:ended", (data) => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      setPlayerState("ended");
-      setFinalLeaderboard(data.leaderboard || []);
-      if (data.questionsReview) {
-        setQuestionsReview(data.questionsReview);
-      }
-
-      const currentPlayerName = nameToUse || name;
-      const found = data.leaderboard?.findIndex(
-        (p) =>
-          p.name?.toLowerCase() === currentPlayerName?.trim().toLowerCase(),
-      );
-      if (found !== -1 && found !== undefined) {
-        setMyRank(found + 1);
-        if (found < 3) {
-          sfx.playFanfare();
-          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      newSocket.on("game:ended", (data) => {
+        syncServerClock(data?.serverTime);
+        clearQuestionTimer();
+        if (countdownFallbackTimerRef.current) {
+          clearTimeout(countdownFallbackTimerRef.current);
+          countdownFallbackTimerRef.current = null;
         }
-      }
-    });
-  };
+        countdownFinishedRef.current = false;
+        setIsCountingDown(false);
+        isCountingDownRef.current = false;
+        pendingQuestionRef.current = null;
+        pendingAnswerFeedbackRef.current = null;
+        setPlayerState("ended");
+        setFinalLeaderboard(data.leaderboard || []);
+        if (data.questionsReview) {
+          setQuestionsReview(data.questionsReview);
+        }
 
-  // Bosqich 1: O'yin kodini tekshirish va tasdiqlash
+        const myPid = sessionInfoRef.current.playerId;
+        const currentPlayerName = (
+          sessionInfoRef.current.name ||
+          nameToUse ||
+          ""
+        )
+          .trim()
+          .toLowerCase();
+
+        const found = data.leaderboard?.findIndex(
+          (p) =>
+            (myPid && p.id && String(p.id) === String(myPid)) ||
+            (currentPlayerName &&
+              p.name?.trim().toLowerCase() === currentPlayerName),
+        );
+        if (found !== -1 && found !== undefined) {
+          const me = data.leaderboard[found];
+          setMyRank(found + 1);
+          if (typeof me?.score === "number") {
+            setTotalScore(me.score);
+          }
+          if (Array.isArray(me?.answers)) {
+            setMyAnswerHistory(me.answers);
+          }
+          if (found < 3) {
+            sfx.playFanfare();
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+          }
+        }
+      });
+    },
+    [syncServerClock, clearQuestionTimer, startSyncedTimer],
+  );
+
+  // Bosqich 1: O'yin kodini tekshirish
   const handlePinSubmit = async (e) => {
     if (e && typeof e.preventDefault === "function") {
       e.preventDefault();
@@ -535,9 +775,8 @@ export default function LivePlayer() {
       }
 
       setSessionId(res.sessionId);
-      if (res.title) setQuizTitle(res.title);
+      if (res.quizTitle || res.title) setQuizTitle(res.quizTitle || res.title);
 
-      // Kod to'g'ri: endi ism so'rash bosqichiga o'tamiz
       setJoinStep("name");
       setIsVerifyingPin(false);
     } catch (err) {
@@ -575,6 +814,9 @@ export default function LivePlayer() {
         }
         targetSessionId = res.sessionId;
         setSessionId(res.sessionId);
+        if (res.quizTitle || res.title) {
+          setQuizTitle(res.quizTitle || res.title);
+        }
       }
 
       let saved = null;
@@ -600,7 +842,7 @@ export default function LivePlayer() {
     }
   };
 
-  // Lobbyda ismni ruchka orqali tahrirlash va saqlash
+  // Lobbyda ismni ruchka orqali tahrirlash
   const handleSaveName = () => {
     const trimmed = (editingNameVal || "").trim();
     if (!trimmed) {
@@ -640,13 +882,12 @@ export default function LivePlayer() {
       saved = JSON.parse(localStorage.getItem("ziyo_live_player"));
     } catch {}
 
-    // Agar o'yinchi avval shu PIN bo'yicha o'ynab turgan bo'lsa
     if (
       saved &&
       saved.sessionId &&
       saved.pin &&
       urlPin &&
-      urlPin === saved.pin
+      urlPin.trim() === saved.pin
     ) {
       setPin(saved.pin);
       if (saved.name) setName(saved.name);
@@ -662,7 +903,18 @@ export default function LivePlayer() {
         nameToUse: saved.name,
         profilePicToUse: saved.profilePic,
       });
-      return;
+
+      return () => {
+        clearQuestionTimer();
+        if (countdownFallbackTimerRef.current) {
+          clearTimeout(countdownFallbackTimerRef.current);
+          countdownFallbackTimerRef.current = null;
+        }
+        if (socketRef.current) {
+          socketRef.current.disconnect();
+          socketRef.current = null;
+        }
+      };
     }
 
     if (urlPin) {
@@ -674,7 +926,6 @@ export default function LivePlayer() {
         ? `${loggedUser.firstName || ""}`.trim()
         : loggedUser?.name || "";
 
-      // Agar o'yin kodi bilan kirgan bo'lsa va akkaunti ochilgan bo'lsa: to'g'ridan-to'g'ri o'yinga o'tish
       if (loggedUser && accountName && !hasAutoJoinedUrlPinRef.current) {
         hasAutoJoinedUrlPinRef.current = true;
         setName(accountName);
@@ -684,12 +935,15 @@ export default function LivePlayer() {
           .then((res) => {
             if (res && res.sessionId) {
               setSessionId(res.sessionId);
+              if (res.quizTitle || res.title) {
+                setQuizTitle(res.quizTitle || res.title);
+              }
               connectToGame({
                 pinToUse: cleanPin,
                 sessionIdToUse: res.sessionId,
                 playerIdToUse: null,
                 nameToUse: accountName,
-                profilePicToUse: loggedUser.profilePic || profilePic,
+                profilePicToUse: loggedUser.profilePic || quizAvatar1,
               });
             } else {
               setErrorMsg("Bunday o'yin topilmadi!");
@@ -703,22 +957,28 @@ export default function LivePlayer() {
             setJoinStep("name");
           });
       } else {
-        // O'yin kodi bilan kirgan, lekin akkaunti bo'lmasa: darhol ism so'raladi
         setJoinStep("name");
       }
     } else {
-      // /live/ da kodsiz kirganda: avval kod so'raladi
       setJoinStep("pin");
     }
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (socketRef.current) socketRef.current.disconnect();
+      clearQuestionTimer();
+      if (countdownFallbackTimerRef.current) {
+        clearTimeout(countdownFallbackTimerRef.current);
+        countdownFallbackTimerRef.current = null;
+      }
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
     };
-  }, [urlPin]);
+  }, [urlPin, connectToGame, clearQuestionTimer, getLoggedInUser]);
 
   const handleSelectAvatar = (avatarSrc) => {
     setProfilePic(avatarSrc);
+    sessionInfoRef.current.profilePic = avatarSrc;
 
     try {
       const saved = JSON.parse(
@@ -747,42 +1007,41 @@ export default function LivePlayer() {
   };
 
   const handleSelectOption = (index) => {
-    if (selectedOption !== null || timeLeft <= 0) return;
+    if (selectedOption !== null || timeLeft <= 0 || !currentQuestion) return;
+
+    const activeSocket = socketRef.current || socket;
+    if (!activeSocket || !activeSocket.connected) {
+      toast.warning("Server bilan aloqa uzilgan, qayta ulanilmoqda...");
+      activeSocket?.connect();
+      return;
+    }
+
+    if (!sessionId || !playerId) return;
+
     setSelectedOption(index);
     setPlayerState("answered");
 
-    setMyAnswerHistory((prev) => [
-      ...prev,
-      { questionIndex: currentQuestion.questionIndex, chosenIndex: index },
-    ]);
+    const qIdx = currentQuestion.questionIndex;
+    setMyAnswerHistory((prev) => {
+      const filtered = prev.filter((item) => item.questionIndex !== qIdx);
+      return [...filtered, { questionIndex: qIdx, chosenIndex: index }];
+    });
 
-    const activeSocket = socketRef.current || socket;
-    if (activeSocket && sessionId && playerId && currentQuestion) {
-      activeSocket.emit("player:answer", {
-        sessionId,
-        playerId,
-        questionIndex: currentQuestion.questionIndex,
-        chosenIndex: index,
-      });
-    }
+    activeSocket.emit("player:answer", {
+      sessionId,
+      playerId,
+      questionIndex: qIdx,
+      chosenIndex: index,
+    });
   };
-  const handleSendEmoji = (emoji) => {
-    setshowReactionIcons(false);
 
-    // Faol socketni aniqlab olamiz
-    const activeSocket = socketRef.current || socket;
-
-    if (activeSocket && sessionId) {
-      activeSocket.emit("send_reaction", {
-        emoji: emoji,
-        sessionId: sessionId, // Xonani aniqlash uchun sessionId yuboriladi
-        name: name, // Kim yuborgani ko'rinishi uchun (ixtiyoriy)
-      });
-    }
-  };
   const handleExitGame = () => {
     localStorage.removeItem("ziyo_live_player");
-    if (socketRef.current) socketRef.current.disconnect();
+    clearQuestionTimer();
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
     navigate("/");
   };
 
@@ -792,6 +1051,8 @@ export default function LivePlayer() {
       {isCountingDown && (
         <KahootCountdown
           quizTitle={quizTitle || "Hatif Quiz"}
+          startsAt={countdownStartsAt}
+          serverOffsetMs={serverOffsetMs}
           onComplete={handleCountdownComplete}
         />
       )}
@@ -837,8 +1098,8 @@ export default function LivePlayer() {
           <div className="player-join-card">
             <img src={hatif} alt="" />
             {joinStep === "pin" ? (
-              /* Bosqich 1: Avval faqat kod kiritiladi */
               <form onSubmit={handlePinSubmit} className="player-join-form">
+                {errorMsg && <div className="join-error-text">{errorMsg}</div>}
                 <div className="join-input-group">
                   <label>O'YIN KODI (PIN)</label>
                   <input
@@ -861,7 +1122,6 @@ export default function LivePlayer() {
                 </button>
               </form>
             ) : (
-              /* Bosqich 2: Ism so'raladi */
               <form onSubmit={handleNameSubmit} className="player-join-form">
                 <div className="join-pin-preview-chip">
                   <span>
@@ -1031,63 +1291,74 @@ export default function LivePlayer() {
 
       {/* ==================== 3. QUESTION SCREEN ==================== */}
       {(playerState === "question" || playerState === "answered") &&
-        currentQuestion && (
-          <div className="player-question-view">
-            <div className="player-q-topbar">
-              <span className="player-q-num">
-                Savol {currentQuestion.questionIndex + 1} /{" "}
-                {currentQuestion.totalQuestions}
-              </span>
+        currentQuestion && (() => {
+          const isTrueFalseQ =
+            currentQuestion.type === "true_false" ||
+            (currentQuestion.options?.length === 2 && !currentQuestion.type);
+          const palette = isTrueFalseQ ? TRUE_FALSE_COLORS : OPTION_COLORS;
+          return (
+            <div className="player-question-view">
+              <div className="player-q-topbar">
+                <span className="player-q-num">
+                  Savol {currentQuestion.questionIndex + 1} /{" "}
+                  {currentQuestion.totalQuestions}
+                </span>
+                <div
+                  className={`player-timer-chip ${timeLeft <= 5 ? "urgent" : ""}`}
+                >
+                  <FaClock /> {timeLeft}s
+                </div>
+              </div>
+
+              <div className="player-q-text-card">
+                {isTrueFalseQ && (
+                  <span className="player-tf-badge">To&apos;g&apos;ri / Noto&apos;g&apos;ri</span>
+                )}
+                <h3>{currentQuestion.text}</h3>
+              </div>
+
+              {playerState === "answered" && (
+                <div className="player-answered-notice">
+                  <div className="answered-pulse-loader" />
+                  <span className="player-answered-title">
+                    Javobingiz qabul qilindi!
+                  </span>
+                  <span className="player-answered-sub">
+                    Boshqa ishtirokchilar javobi kutilmoqda... ⏳
+                  </span>
+                </div>
+              )}
+
               <div
-                className={`player-timer-chip ${timeLeft <= 5 ? "urgent" : ""}`}
+                className={`player-options-grid ${isTrueFalseQ ? "true-false-grid" : ""}`}
               >
-                <FaClock /> {timeLeft}s
+                {currentQuestion.options.map((opt, idx) => {
+                  const color = palette[idx % palette.length];
+                  const isSelected = selectedOption === idx;
+
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      className={`player-option-btn ${
+                        isTrueFalseQ ? "true-false-btn" : ""
+                      } ${isSelected ? "selected" : ""}`}
+                      style={{
+                        backgroundColor: color.bg,
+                        boxShadow: "rgba(0, 0, 0, 0.2) 0px -6px 0px 0px inset",
+                      }}
+                      disabled={selectedOption !== null || timeLeft <= 0}
+                      onClick={() => handleSelectOption(idx)}
+                    >
+                      <span className="btn-shape-icon">{color.shape}</span>
+                      <span className="btn-option-text">{opt}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-
-            <div className="player-q-text-card">
-              <h3>{currentQuestion.text}</h3>
-            </div>
-
-            {playerState === "answered" && (
-              <div className="player-answered-notice">
-                <div className="answered-pulse-loader" />
-                <span className="player-answered-title">
-                  Javobingiz qabul qilindi!
-                </span>
-                <span className="player-answered-sub">
-                  Boshqa ishtirokchilar javobi kutilmoqda... ⏳
-                </span>
-              </div>
-            )}
-
-            <div className="player-options-grid">
-              {currentQuestion.options.map((opt, idx) => {
-                const color = OPTION_COLORS[idx % OPTION_COLORS.length];
-                const isSelected = selectedOption === idx;
-
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    className={`player-option-btn ${
-                      isSelected ? "selected" : ""
-                    }`}
-                    style={{
-                      backgroundColor: color.bg,
-                      boxShadow: "rgba(0, 0, 0, 0.2) 0px -6px 0px 0px inset",
-                    }}
-                    disabled={selectedOption !== null || timeLeft <= 0}
-                    onClick={() => handleSelectOption(idx)}
-                  >
-                    <span className="btn-shape-icon">{color.shape}</span>
-                    <span className="btn-option-text">{opt}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
       {/* ==================== 4. ANSWER FEEDBACK RESULT ==================== */}
       {playerState === "answer_result" && (
@@ -1235,15 +1506,17 @@ export default function LivePlayer() {
                 <h4>Top ishtirokchilar reytingi:</h4>
                 {finalLeaderboard.slice(0, 5).map((p, idx) => {
                   const isCurrent =
-                    p.id === playerId ||
-                    p.name?.trim().toLowerCase() === name?.trim().toLowerCase();
+                    (playerId && p.id && String(p.id) === String(playerId)) ||
+                    (name &&
+                      p.name?.trim().toLowerCase() ===
+                        name?.trim().toLowerCase());
                   const pAvatar = isCurrent
                     ? profilePic || p.profilePic
                     : p.profilePic;
 
                   return (
                     <div
-                      key={idx}
+                      key={p.id || idx}
                       className={`top3-item ${
                         idx === 0 ? "first" : ""
                       } ${isCurrent ? "me-highlight" : ""}`}
@@ -1330,13 +1603,14 @@ export default function LivePlayer() {
           </motion.div>
         </div>
       )}
-      {/* Kahoot-style Live Reaksiyalar (barcha qatnashchilar va hostda ko'rinadi) */}
-      {playerState !== "join" && (
+
+      {playerState !== "join" && sessionId && socket && (
         <LiveReactions
-          socket={socketRef.current || socket}
+          socket={socket}
           sessionId={sessionId}
           senderName={name || "O'yinchi"}
-          showTrigger={true}
+          showTrigger={reactionsEnabled}
+          enabled={reactionsEnabled}
         />
       )}
     </div>

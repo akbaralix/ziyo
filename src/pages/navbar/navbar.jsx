@@ -70,7 +70,7 @@ function Navbar({ isCollapsed, onToggle }) {
         </nav>
 
         <div className="navbar-user-profil">
-          <div className="navbar-user">
+          <NavLink to="/profil" className="navbar-user">
             <div className="navbar-user-img">
               <img
                 src={userData.profilePic}
@@ -79,7 +79,7 @@ function Navbar({ isCollapsed, onToggle }) {
               />
             </div>
             {!isCollapsed && <span>{userData.name}</span>}
-          </div>
+          </NavLink>
         </div>
       </aside>
 

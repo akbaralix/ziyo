@@ -6,12 +6,16 @@ import {
   getQuizGameById,
   updateQuizGame,
   deleteQuizGame,
+  generateAiQuiz,
   createGameSession,
   joinByPin,
   getSessionResults,
 } from "../controllers/quizController.js";
 
 const router = express.Router();
+
+// AI yordamida test / True-False generatsiya (himoyalangan)
+router.post("/ai/generate", authMiddleware, generateAiQuiz);
 
 // Viktorina CRUD (himoyalangan)
 router.post("/", authMiddleware, createQuizGame);

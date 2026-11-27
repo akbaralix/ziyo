@@ -21,6 +21,17 @@ const gamesList = [
     isReady: true,
   },
   {
+    id: "true_false",
+    title: "True / False (To‘g‘ri / Noto‘g‘ri)",
+    href: "/quiz/builder?mode=true_false",
+    bgimg: quiz,
+    description:
+      "Kahoot uslubidagi tezkor To‘g‘ri yoki Noto‘g‘ri viktorinalarini yarating va jonli o‘ynang.",
+    icon: "✓✕",
+    category: "Tezkor Bellashuv",
+    isReady: true,
+  },
+  {
     id: "oktagon",
     title: "Oktagon (1v1 Duel)",
     href: "/oktagon",

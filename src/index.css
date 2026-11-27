@@ -1,40 +1,44 @@
-@import url(https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap);
+@import url(https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap);
 
 :root {
-  --primary: #461fe2;
-  --primary-hover: #3716b5;
-  --primary-active: #2e10a8;
-  --primary-light: #f5f3ff;
-  --primary-soft: #ede9fe;
-  --primary-border: #e0e7ff;
-  --primary-text: #461fe2;
+  --primary: rgb(81, 52, 228);
+  --primary-hover: #4328cc;
+  --primary-active: #371eb3;
+  --primary-light: #f3f1fe;
+  --primary-soft: #e7e3fd;
+  --primary-border: #d0c7fa;
+  --primary-text: #462ac9;
+  --tg-cyan: #7258f2;
+  --tg-deep: #151426;
+  --tg-bubble-in: #ffffff;
+  --tg-bubble-out: #effdde;
 
   /* Button Tokens */
   --button-bg: var(--primary);
   --button-hover: var(--primary-hover);
   --button-text-color: #ffffff;
-  --button-padding: 12px 20px;
-  --button-border-radius: var(--radius-pill);
+  --button-padding: 11px 20px;
+  --button-border-radius: 14px;
   --button-font-size: var(--font-md);
 
   /* --- Neutral & Surface Backgrounds --- */
-  --bg-main: #f0f2f5;
+  --bg-main: #f4f4f6;
   --bg-card: #ffffff;
-  --bg-subtle: #f8fafc;
-  --bg-muted: #f1f5f9;
-  --bg-hover: #f1f5f9;
-  --bg-active: #e2e8f0;
+  --bg-subtle: #f8f8fc;
+  --bg-muted: #efeff5;
+  --bg-hover: #f2f0fd;
+  --bg-active: #e6e2fc;
 
   /* --- Text & Content Colors --- */
-  --text-primary: #0f172a;
+  --text-primary: #111827;
   --text-secondary: #475569;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
+  --text-muted: #707579;
+  --text-light: #9ca3af;
   --text-white: #ffffff;
 
   /* --- Typography Scale --- */
   --font-family-base:
-    "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-xs: 0.75rem; /* 12px */
   --font-sm: 0.8125rem; /* 13px */
   --font-base: 0.875rem; /* 14px */
@@ -46,32 +50,32 @@
   --font-4xl: 1.875rem; /* 30px */
 
   /* --- Borders & Dividers --- */
-  --border-color: #e2e8f0;
-  --border-subtle: #f1f5f9;
-  --border-hover: #cbd5e1;
+  --border-color: #e4e5ef;
+  --border-subtle: #eeeff6;
+  --border-hover: #cfd1e3;
   --border-focus: var(--primary);
 
   /* --- Border Radii --- */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-2xl: 24px;
-  --radius-pill: 33px;
+  --radius-pill: 9999px;
   --radius-full: 9999px;
 
   /* --- Status Colors --- */
   /* Success (Green) */
-  --color-success: #10b981;
-  --color-success-dark: #059669;
+  --color-success: #22c55e;
+  --color-success-dark: #16a34a;
   --color-success-bg: #ecfdf5;
-  --color-success-border: #a7f3d0;
+  --color-success-border: #bbf7d0;
 
   /* Danger / Error (Red) */
-  --color-danger: #e90606;
-  --color-danger-dark: #dc2626;
-  --color-danger-bg: #eeeeee;
+  --color-danger: #e53935;
+  --color-danger-dark: #c62828;
+  --color-danger-bg: #fef2f2;
   --color-danger-border: #fecaca;
 
   /* Warning (Amber / Gold) */
@@ -80,27 +84,24 @@
   --color-warning-bg: #fffbeb;
   --color-warning-border: #fde68a;
 
-  /* Info (Blue) */
-  --color-info: #4925eb;
-  --color-info-dark: #4c1dd8;
-  --color-info-bg: #efefff;
-  --color-info-border: #c5bffe;
+  /* Info (Harmonized Indigo) */
+  --color-info: rgb(81, 52, 228);
+  --color-info-dark: #4328cc;
+  --color-info-bg: #f3f1fe;
+  --color-info-border: #d0c7fa;
 
-  /* --- Box Shadows --- */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md:
-    0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg:
-    0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-xl:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+  /* --- Box Shadows (subtle Telegram elevation) --- */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 10px 24px rgba(15, 23, 42, 0.08);
+  --shadow-xl: 0 20px 36px rgba(15, 23, 42, 0.12);
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.03);
 
   /* --- Transitions --- */
   --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s ease;
-  --transition-slow: 0.35s ease;
+  --transition-normal: 0.22s ease;
+  --transition-slow: 0.32s ease;
 }
 
 /* ==========================================================================
@@ -165,6 +166,10 @@ img {
   display: block;
 }
 
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -173,6 +178,6 @@ img {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.35);
+  background: rgba(112, 117, 121, 0.28);
   border-radius: 9999px;
 }

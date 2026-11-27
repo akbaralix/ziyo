@@ -13,11 +13,11 @@
 
 /* Base button & modal styles */
 .baraban-circle-btn {
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-muted);
-  border: 1.5px solid var(--border-color);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,18 +29,19 @@
 }
 
 .baraban-circle-btn:hover {
-  background: var(--border-color);
-  color: var(--text-primary);
+  background: var(--bg-hover);
+  color: var(--primary);
+  border-color: var(--primary-border);
 }
 
 .baraban-primary-btn {
   background: var(--primary);
   color: var(--text-white);
   border: 1.5px solid var(--primary);
-  border-radius: var(--radius-pill);
+  border-radius: 14px;
   padding: 10px 22px;
   font-size: var(--font-base);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -55,10 +56,10 @@
 }
 
 .baraban-secondary-btn {
-  background: var(--bg-muted);
+  background: var(--bg-card);
   color: var(--text-secondary);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
   padding: 10px 20px;
   font-size: var(--font-base);
   font-weight: 500;
@@ -71,7 +72,7 @@
 }
 
 .baraban-secondary-btn:hover {
-  background: var(--border-color);
+  background: var(--bg-hover);
   color: var(--text-primary);
 }
 
@@ -79,6 +80,7 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,8 +92,8 @@
 .modal-close-btn {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-muted);
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
   border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -103,7 +105,7 @@
 }
 
 .modal-close-btn:hover {
-  background: var(--border-color);
+  background: var(--bg-hover);
   color: var(--text-primary);
 }
 
@@ -179,14 +181,14 @@
 
 .play-wheel-box {
   background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
   padding: 30px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
 }
 
 .wheel-stage {
@@ -207,15 +209,16 @@
 .big-spin-btn {
   font-size: var(--font-lg);
   font-weight: 600;
-  padding: 16px 48px;
+  padding: 15px 44px;
   background: var(--primary);
   color: var(--text-white);
   border: 1.5px solid var(--primary);
-  border-radius: var(--radius-pill);
+  border-radius: 16px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  box-shadow: 0 4px 14px rgba(81, 52, 228, 0.26);
   transition: all var(--transition-fast);
 }
 
@@ -256,9 +259,9 @@
   padding: 20px;
   margin-bottom: 0;
   background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
-  box-shadow: var(--shadow-xs);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card);
 }
 
 .sidebar-section-title {
@@ -283,27 +286,28 @@
 .play-name-pill {
   font-size: var(--font-xs);
   font-weight: 500;
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-muted);
-  border: 1.5px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
   color: var(--text-primary);
 }
 
 .play-name-pill.strike {
   background: var(--bg-subtle);
   color: var(--text-light);
-  border-color: var(--border-hover);
+  border-color: var(--border-color);
   text-decoration: line-through;
 }
 
 /* Winner Modal */
 .winner-modal-card {
   max-width: 500px;
+  width: 100%;
   text-align: center;
   padding: 24px;
-  border-radius: var(--radius-pill);
-  border: 1.5px solid var(--border-color);
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
   background: var(--bg-card);
   box-shadow: var(--shadow-xl);
 }
@@ -318,9 +322,9 @@
 .winner-trophy-icon {
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-pill);
+  border-radius: 14px;
   background: var(--color-warning-bg);
-  border: 1.5px solid var(--color-warning-border);
+  border: 1px solid var(--color-warning-border);
   color: var(--color-warning-dark);
   display: inline-flex;
   align-items: center;
@@ -351,8 +355,8 @@
 .winner-question-card {
   text-align: left;
   background: var(--bg-subtle);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
   padding: 18px 20px;
   margin-top: 10px;
 }
@@ -384,10 +388,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 11px 16px;
   background: var(--bg-card);
-  border: 1.5px solid var(--border-hover);
-  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
   font-size: var(--font-base);
   color: var(--text-primary);
   cursor: pointer;
@@ -397,10 +401,15 @@
   transition: all var(--transition-fast);
 }
 
+.play-opt-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
 .opt-char {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-pill);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
   background: var(--bg-muted);
   display: flex;
   align-items: center;

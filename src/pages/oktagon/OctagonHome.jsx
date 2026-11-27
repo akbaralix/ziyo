@@ -55,8 +55,9 @@ const DISCIPLINES = [
     subtitle: "Dinamik sonlar & Aql charxi",
     description:
       "Parametrik formulalar, tenglamalar, foizlar va mantiq. Har safar mutlaqo yangi va takrorlanmas misollar!",
-    color: "#461fe2",
-    bgSoft: "#f5f3ff",
+    badge: "Cheksiz misollar",
+    color: "#5134e4",
+    bgSoft: "#f3f1fe",
   },
   {
     id: "tarix",
@@ -189,12 +190,14 @@ export default function OctagonHome() {
                         {currentDiffObj.tag}
                       </span>
                     )}
-                    <span
-                      className="discipline-badge"
-                      style={{ color: d.color, background: d.bgSoft }}
-                    >
-                      {d.badge}
-                    </span>
+                    {d.badge && (
+                      <span
+                        className="discipline-badge"
+                        style={{ color: d.color, background: d.bgSoft }}
+                      >
+                        {d.badge}
+                      </span>
+                    )}
                     {d.id === "matematika" && (
                       <button
                         type="button"

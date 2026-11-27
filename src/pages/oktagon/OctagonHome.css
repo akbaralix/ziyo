@@ -30,8 +30,9 @@
 .octagon-circle-btn {
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-pill);
-  background: none;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -42,13 +43,19 @@
   transition: all var(--transition-fast);
 }
 
+.octagon-circle-btn:hover {
+  background: var(--bg-hover);
+  color: var(--primary);
+  border-color: var(--primary-border);
+}
+
 .octagon-brand-tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: var(--font-md);
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   color: var(--primary);
   text-transform: uppercase;
   margin-bottom: 2px;
@@ -58,10 +65,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--bg-subtle);
-  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   padding: 8px 18px;
   border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-xs);
 }
 
 .stat-icon-gold {
@@ -73,6 +81,7 @@
   font-size: var(--font-base);
   font-weight: 700;
   color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Sections --- */
@@ -114,8 +123,8 @@
 
 .discipline-card {
   background: var(--bg-card);
-  border: 2px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-color);
+  border-radius: 20px;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -123,10 +132,12 @@
   cursor: pointer;
   transition: all var(--transition-fast);
   box-sizing: border-box;
+  box-shadow: var(--shadow-card);
 }
 
 .discipline-card:hover {
-  border-color: var(--border-hover);
+  border-color: var(--primary-border);
+  transform: translateY(-2px);
 }
 
 .discipline-card.selected {
@@ -188,12 +199,12 @@
 .select-btn {
   width: 100%;
   padding: 10px 16px;
-  border-radius: var(--radius-pill);
+  border-radius: 14px;
   font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
-  background: var(--bg-muted);
-  border: 1.5px solid var(--border-color);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
   color: var(--text-secondary);
   transition: all var(--transition-fast);
   font-family: inherit;
@@ -225,9 +236,10 @@
 .rule-num {
   width: 26px;
   height: 26px;
-  border-radius: var(--radius-pill);
-  background: var(--primary-border);
-  color: var(--primary-hover);
+  border-radius: var(--radius-full);
+  background: var(--primary-light);
+  border: 1px solid var(--primary-border);
+  color: var(--primary);
   font-weight: 700;
   font-size: var(--font-xs);
   display: flex;
@@ -250,13 +262,14 @@
   background: var(--primary);
   color: var(--text-white);
   border: 1.5px solid var(--primary);
-  padding: 16px 42px;
-  border-radius: var(--radius-pill);
+  padding: 15px 36px;
+  border-radius: 14px;
   font-size: var(--font-lg);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   font-family: inherit;
   width: min(100%, 350px);
+  box-shadow: 0 4px 14px rgba(81, 52, 228, 0.24);
   transition: all var(--transition-fast);
 }
 
@@ -471,7 +484,7 @@
   color: var(--text-white);
   border: none;
   padding: 11px 24px;
-  border-radius: var(--radius-pill);
+  border-radius: 14px;
   font-size: var(--font-base);
   font-weight: 600;
   cursor: pointer;
@@ -505,12 +518,12 @@
 
   .discipline-card {
     padding: 18px 16px;
-    border-radius: var(--radius-2xl);
+    border-radius: 16px;
   }
 
   .octagon-settings-modal {
     max-width: 100%;
-    border-radius: var(--radius-2xl);
+    border-radius: 20px;
     padding: 20px 16px;
   }
 

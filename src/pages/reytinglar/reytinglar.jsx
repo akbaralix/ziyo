@@ -74,7 +74,7 @@ function Reytinglar() {
   const currentUsername = useMemo(() => {
     try {
       const u = JSON.parse(localStorage.getItem("ziyo_user"));
-      return u?.telegramUsername || null;
+      return u?.username || u?.telegramUsername || null;
     } catch {
       return null;
     }
@@ -100,7 +100,9 @@ function Reytinglar() {
       const isMe = Boolean(
         (currentUserId &&
           (u.id === currentUserId || u._id === currentUserId)) ||
-        (currentUsername && u.username && u.username === currentUsername),
+          (currentUsername &&
+            u.username &&
+            u.username.toLowerCase() === currentUsername.toLowerCase()),
       );
 
       return {
@@ -110,12 +112,16 @@ function Reytinglar() {
       };
     });
 
+    const getReadingVal = (userItem) =>
+      typeof userItem.readingBook === "number"
+        ? userItem.readingBook
+        : userItem.readingBook?.currentPage || 0;
+
     // Kategoriya bo'yicha saralash / filtrlash
     if (selectedCategory === "Kitobxonlik") {
       users.sort(
         (a, b) =>
-          (b.readingBook?.currentPage || 0) -
-            (a.readingBook?.currentPage || 0) ||
+          getReadingVal(b) - getReadingVal(a) ||
           b.calculatedXp - a.calculatedXp,
       );
     } else {
@@ -376,8 +382,12 @@ function Reytinglar() {
                         <IoExtensionPuzzleOutline /> {user.solvedQuizzes || 0}{" "}
                         test
                       </span>
-                      <span className="act-pill" title="O'qilgan kitoblar">
-                        <IoBookOutline /> {user.readingBook || 0} kitob
+                      <span className="act-pill" title="O'qilgan sahifalar">
+                        <IoBookOutline />{" "}
+                        {typeof user.readingBook === "number"
+                          ? user.readingBook
+                          : user.readingBook?.currentPage || 0}{" "}
+                        bet
                       </span>
                     </div>
                   </div>

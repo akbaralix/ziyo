@@ -1,8 +1,29 @@
 import jwt from "jsonwebtoken";
 import User from "../db/User/User.js";
+import { isDbConnected } from "../db/db.js";
+import { findMemoryUserById, saveMemoryUser } from "../db/memoryStore.js";
+import { JWT_SECRET } from "../utils/jwtSecret.js";
 
-const getSecret = () =>
-  process.env.JWT_SECRET || "ziyo_secret_jwt_key_super_secure_2026_ziyo_app";
+async function resolveUserFromToken(decoded) {
+  if (!decoded?.userId) return null;
+
+  if (isDbConnected()) {
+    return await User.findById(decoded.userId);
+  }
+
+  let memUser = findMemoryUserById(decoded.userId);
+  if (!memUser) {
+    memUser = saveMemoryUser({
+      _id: String(decoded.userId),
+      telegramId: String(decoded.telegramId || ""),
+      firstName: "Foydalanuvchi",
+      lastName: "",
+      studyPlace: "maktab",
+      course: "10-sinf",
+    });
+  }
+  return memUser;
+}
 
 export const authMiddleware = async (req, res, next) => {
   try {
@@ -15,9 +36,9 @@ export const authMiddleware = async (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, getSecret());
+    const decoded = jwt.verify(token, JWT_SECRET);
 
-    const user = await User.findById(decoded.userId);
+    const user = await resolveUserFromToken(decoded);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -27,11 +48,10 @@ export const authMiddleware = async (req, res, next) => {
 
     req.user = user;
     next();
-  } catch (error) {
+  } catch {
     return res.status(401).json({
       success: false,
       message: "Yaroqsiz yoki muddati o'tgan token.",
-      error: error.message,
     });
   }
 };
@@ -41,8 +61,8 @@ export const optionalAuthMiddleware = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(token, getSecret());
-      const user = await User.findById(decoded.userId);
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const user = await resolveUserFromToken(decoded);
       if (user) {
         req.user = user;
       }

@@ -40,10 +40,7 @@ export default function JumanjiCreate() {
     setIsCreating(true);
 
     const socketUrl =
-      import.meta.env.VITE_API_URL ||
-      (window.location.hostname === "localhost"
-        ? "http://localhost:3000"
-        : window.location.origin);
+      import.meta.env.VITE_API_URL || window.location.origin;
 
     const socket = io(`${socketUrl}/jumanji`, {
       transports: ["websocket", "polling"],

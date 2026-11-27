@@ -1,11 +1,12 @@
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "https://ziyo.onrender.com";
+import { getAuthToken, clearAuthSession } from "../utils/authSession.js";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 /**
  * Universal fetch wrapper to handle JSON requests, token headers, and error parsing
  */
 export async function apiClient(endpoint, options = {}) {
-  const token = localStorage.getItem("token");
+  const token = getAuthToken();
 
   const headers = {
     "Content-Type": "application/json",
@@ -25,29 +26,30 @@ export async function apiClient(endpoint, options = {}) {
   try {
     const response = await fetch(url, config);
 
-    // If 401 Unauthorized, handle token expiration
+    // If 401 Unauthorized, clear stale session cleanly so SPA router updates
     if (response.status === 401) {
-      // If we got unauthorized on protected route, clean expired token
       if (token && !endpoint.includes("/auth/telegram")) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("ziyo_user");
-        window.location.href = "/login";
+        clearAuthSession();
       }
     }
 
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(
+      const apiErr = new Error(
         data.error ||
           data.message ||
           `Server xatoligi yuz berdi (${response.status})`,
       );
+      apiErr.status = response.status;
+      throw apiErr;
     }
 
     return data;
   } catch (error) {
-    console.error(`API Error [${endpoint}]:`, error);
+    if (error?.status !== 401) {
+      console.error(`API Error [${endpoint}]:`, error);
+    }
     throw error;
   }
 }

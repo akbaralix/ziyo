@@ -23,14 +23,14 @@ const DRAFT_KEY = "ziyo_slayd_draft";
 const THEMES = [
   {
     id: "ziyo-purple",
-    name: "Hatif Purple",
+    name: "Hatif",
     bg: "#ffffff",
-    cardBg: "#f8fafc",
-    cardBorder: "#e2e8f0",
+    cardBg: "#f8f8fc",
+    cardBorder: "#e4e5ef",
     titleColor: "#0f172a",
-    accent: "#461fe2",
+    accent: "#5134e4",
     textColor: "#334155",
-    badgeBg: "rgba(70, 31, 226, 0.1)",
+    badgeBg: "rgba(81, 52, 228, 0.12)",
   },
   {
     id: "dark-pro",
@@ -161,7 +161,15 @@ function SlaydYaratish() {
     setLoading(true);
     setLoadingStep("Mavzu chuqur tahlil qilinmoqda...");
 
-    const apiKey = process.env.VITE_GEMINI_API_KEY;
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+    if (!apiKey) {
+      toast.error(
+        "Gemini API kaliti topilmadi (.env faylida VITE_GEMINI_API_KEY ni sozlang)!",
+      );
+      setLoading(false);
+      setLoadingStep("");
+      return;
+    }
 
     const prompt = `Sen dunyo darajasidagi professional Gamma.app taqdimot dizayneri va analitigisan.
 Mavzu: "${slaydText}"
@@ -1708,7 +1716,7 @@ Matnlar chuqur, mazmunli, o'zbek tilida bexato va jozibali bo'lsin. Qisqartirib 
                   {item.premium && (
                     <span
                       style={{
-                        background: "var(--primary, #461fe2)",
+                        background: "var(--primary, #5134e4)",
                         padding: "2px 8px",
                         color: "white",
                         fontSize: 11,

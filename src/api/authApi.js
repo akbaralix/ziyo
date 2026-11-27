@@ -1,4 +1,5 @@
 import { apiClient } from "./apiClient.js";
+import { clearAuthSession } from "../utils/authSession.js";
 
 /**
  * 1. Telegram login sessiyasini boshlash (token va bot linkini olish)
@@ -57,7 +58,5 @@ export async function getMe() {
  * 5. Tizimdan chiqish
  */
 export function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("ziyo_user");
-  localStorage.removeItem("ziyo_user_profile");
+  clearAuthSession();
 }

@@ -174,17 +174,12 @@ function Kutubxona() {
       setPdfDoc(pdf);
       setTotalPages(pdf.numPages);
       setIsLoadingPdf(false);
-
-      // DOM da canvas tayyor bo'lishi uchun qisqa vaqt kutib render qilamiz
-      setTimeout(() => {
-        renderPage(initialPage, pdf, zoomScale);
-      }, 50);
     } catch (error) {
       console.error("PDF yuklashda xatolik:", error);
       setRenderError("PDF faylni yuklab bo'lmadi");
       setIsLoadingPdf(false);
     }
-  }, [renderPage, zoomScale]);
+  }, []);
 
   // Agar router state orqali bookId uzatilgan bo'lsa avtomatik ochish
   useEffect(() => {
@@ -295,7 +290,7 @@ function Kutubxona() {
         }).catch(() => {});
       }
     }
-  }, [pdfDoc, currentPage, zoomScale, renderPage, activeBook]);
+  }, [pdfDoc, currentPage, zoomScale, renderPage, activeBook, totalPages]);
 
   // Sahifa navigatsiyasi
   const handlePrevPage = () => {

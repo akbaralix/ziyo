@@ -1,25 +1,25 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import dotenv from "dotenv";
+import "../utils/loadEnv.js";
 import mongoose from "mongoose";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load server .env or root .env
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+export const isDbConnected = () => mongoose.connection.readyState === 1;
 
 export const connectDB = async () => {
+  mongoose.set("bufferCommands", false);
+
   const dbUrl =
+    process.env.MONGODB_URI ||
     process.env.DATABASE_URL ||
     process.env.VITE_DATABASE_URL ||
-    "mongodb+srv://tursunboyevakbarali807_db_user:C3XjuhqwsYHXz0B0@cluster0.qrz3eap.mongodb.net/?appName=Cluster0";
+    "mongodb://localhost/mock";
+
+  const isMockLocal = dbUrl === "mongodb://localhost/mock";
 
   try {
-    await mongoose.connect(dbUrl);
+    await mongoose.connect(dbUrl, {
+      serverSelectionTimeoutMS: isMockLocal ? 1500 : 8000,
+    });
     console.log("✅ MongoDB ga muvaffaqiyatli ulandi");
   } catch (err) {
-    console.error("❌ MongoDB ulanish xatosi:", err.message);
+    console.warn("MongoDB not connected — using in-memory fallback:", err.message);
   }
 };

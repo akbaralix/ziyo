@@ -40,6 +40,41 @@ import {
 } from "../../api/quizApi.js";
 
 import userPic from "../../assets/user.jpg";
+import coverCosmicWaves from "../../assets/images/cover_cosmic_waves_1795791495161.jpg";
+import coverLibraryDusk from "../../assets/images/cover_library_dusk_1795791495760.jpg";
+import coverIndigoPeaks from "../../assets/images/cover_indigo_peaks_1795791496631.jpg";
+import coverStudioPrisms from "../../assets/images/cover_studio_prisms_1795791497263.jpg";
+
+const COVER_BANNERS = [
+  {
+    id: "cosmic-waves",
+    label: "Koinot to'lqinlari",
+    src: coverCosmicWaves,
+  },
+  {
+    id: "library-dusk",
+    label: "Tungi kutubxona",
+    src: coverLibraryDusk,
+  },
+  {
+    id: "indigo-peaks",
+    label: "Tog' ufq chizig'i",
+    src: coverIndigoPeaks,
+  },
+  {
+    id: "studio-prisms",
+    label: "Geometrik prizmalar",
+    src: coverStudioPrisms,
+  },
+];
+
+const DEFAULT_COVER_ID = "cosmic-waves";
+
+const resolveCoverBanner = (coverId) => {
+  return (
+    COVER_BANNERS.find((item) => item.id === coverId) || COVER_BANNERS[0]
+  );
+};
 
 const formatAvatarUrl = (pic) => {
   if (!pic) return userPic;
@@ -86,9 +121,17 @@ function Profil() {
   const isMe = useMemo(() => {
     if (!cleanUsername || cleanUsername === "me") return true;
     const myTg = currentLoggedUser?.telegramUsername;
+    const myUsername = currentLoggedUser?.username;
     const myId = currentLoggedUser?._id || currentLoggedUser?.id;
 
     if (myId && String(myId) === cleanUsername) return true;
+    if (
+      myUsername &&
+      myUsername !== "user" &&
+      myUsername.toLowerCase() === cleanUsername.toLowerCase()
+    ) {
+      return true;
+    }
     if (
       myTg &&
       myTg !== "user" &&
@@ -112,6 +155,7 @@ function Profil() {
   });
   const [editBio, setEditBio] = useState("");
   const [editProfilePic, setEditProfilePic] = useState("");
+  const [editCoverImage, setEditCoverImage] = useState(DEFAULT_COVER_ID);
 
   // Profil rasmini tanlash modali
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
@@ -157,6 +201,7 @@ function Profil() {
 
   const myQuizzes = isMe ? myQuizzesResponse?.games || [] : [];
   const [startingQuizId, setStartingQuizId] = useState(null);
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState(null); // { type: 'quiz' | 'baraban', id, title }
 
   // LocalStorage dan Baraban o'yinlarini yuklash
   const [barabanGames, setBarabanGames] = useState([]);
@@ -196,20 +241,12 @@ function Profil() {
     }
   }, [isMe]);
 
-  const handleDeleteBaraban = (gameId) => {
-    if (
-      window.confirm("Rostdan ham ushbu baraban o'yinini o'chirmoqchimisiz?")
-    ) {
-      try {
-        localStorage.removeItem(`ziyo_baraban_${gameId}`);
-        const updated = barabanGames.filter((g) => g.id !== gameId);
-        localStorage.setItem("ziyo_baraban_list", JSON.stringify(updated));
-        setBarabanGames(updated);
-        toast.success("Baraban o'yini o'chirildi!");
-      } catch {
-        toast.error("O'chirishda xatolik yuz berdi");
-      }
-    }
+  const handleDeleteBaraban = (gameId, title) => {
+    setConfirmDeleteModal({
+      type: "baraban",
+      id: gameId,
+      title: title || "Baraban o'yini",
+    });
   };
 
   const handleStartLiveQuiz = async (quizId) => {
@@ -226,10 +263,32 @@ function Profil() {
     }
   };
 
-  const handleDeleteQuiz = async (quizId) => {
-    if (window.confirm("Rostdan ham ushbu viktorinani o'chirmoqchimisiz?")) {
+  const handleDeleteQuiz = (quizId, title) => {
+    setConfirmDeleteModal({
+      type: "quiz",
+      id: quizId,
+      title: title || "Viktorina",
+    });
+  };
+
+  const executeConfirmDelete = async () => {
+    if (!confirmDeleteModal) return;
+    const { type, id } = confirmDeleteModal;
+    setConfirmDeleteModal(null);
+
+    if (type === "baraban") {
       try {
-        await deleteQuizGame(quizId);
+        localStorage.removeItem(`ziyo_baraban_${id}`);
+        const updated = barabanGames.filter((g) => g.id !== id);
+        localStorage.setItem("ziyo_baraban_list", JSON.stringify(updated));
+        setBarabanGames(updated);
+        toast.success("Baraban o'yini o'chirildi!");
+      } catch {
+        toast.error("O'chirishda xatolik yuz berdi");
+      }
+    } else if (type === "quiz") {
+      try {
+        await deleteQuizGame(id);
         refetchQuizzes();
         toast.success("Viktorina muvaffaqiyatli o'chirildi!");
       } catch (err) {
@@ -361,6 +420,8 @@ function Profil() {
       (cleanUsername.length === 24 ? "us" : cleanUsername) ||
       "user",
     profilePic: formatAvatarUrl(u?.profilePic),
+    coverImage: resolveCoverBanner(u?.coverImage).id,
+    coverSrc: resolveCoverBanner(u?.coverImage).src,
     bio:
       u?.bio ||
       (isMe
@@ -471,6 +532,7 @@ function Profil() {
     onSuccess: (res) => {
       if (res?.user) {
         queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+        queryClient.invalidateQueries({ queryKey: ["otherUserProfile"] });
         try {
           const existingZiyoUser =
             JSON.parse(localStorage.getItem("ziyo_user")) || {};
@@ -575,6 +637,7 @@ function Profil() {
     setUsernameStatus({ loading: false, available: null, message: "" });
     setEditBio(profileData.bio || "");
     setEditProfilePic(profileData.profilePic || images[0] || userPic);
+    setEditCoverImage(profileData.coverImage || DEFAULT_COVER_ID);
     setIsEditModalOpen(true);
   };
 
@@ -603,6 +666,7 @@ function Profil() {
       username: trimmedUsername,
       bio: editBio.trim(),
       profilePic: editProfilePic,
+      coverImage: editCoverImage,
     });
   };
 
@@ -617,7 +681,7 @@ function Profil() {
     {
       id: 1,
       title: "O'qilgan kitoblar",
-      count: `${profileData.readingBook?.currentPage || 0} ta`,
+      count: `${finishedBooks.length} ta`,
       icon: <FaBook />,
       color: "#ffffff",
       bgColor: "#5134e4",
@@ -628,7 +692,7 @@ function Profil() {
       count: `${profileData.solvedQuizzes} ta`,
       icon: <IoExtensionPuzzleOutline />,
       color: "#ffffff",
-      bgColor: "#59fc08",
+      bgColor: "#22c55e",
     },
     {
       id: 3,
@@ -636,7 +700,7 @@ function Profil() {
       count: `${profileData.xp.toLocaleString()} XP`,
       icon: <FaFire />,
       color: "#ffffff",
-      bgColor: "#fdce12",
+      bgColor: "#f59e0b",
     },
     {
       id: 4,
@@ -644,7 +708,7 @@ function Profil() {
       count: `#${profileData.rank} o'rin`,
       icon: <GoTrophy />,
       color: "#ffffff",
-      bgColor: "#1e95d0",
+      bgColor: "#6f56f2",
     },
   ];
 
@@ -652,7 +716,26 @@ function Profil() {
     <div className="profile-page">
       {/* Profile Header Card */}
       <div className="profile-card">
-        <div className="profile-cover-banner" />
+        <div className="profile-cover-banner">
+          <img
+            src={profileData.coverSrc}
+            alt="Profil muqovasi"
+            className="profile-cover-img"
+            referrerPolicy="no-referrer"
+          />
+          <div className="profile-cover-overlay" />
+          {isMe && (
+            <button
+              type="button"
+              className="profile-cover-edit-btn"
+              onClick={handleOpenEdit}
+              title="Muqovani o'zgartirish"
+            >
+              <MdAddAPhoto />
+              <span>Muqova</span>
+            </button>
+          )}
+        </div>
 
         <div className="profile-header-body">
           <div className="profile-avatar-container">
@@ -670,7 +753,6 @@ function Profil() {
                   e.target.src = userPic;
                 }}
               />
-              <span className="profile-online-badge" title="Onlayn" />
             </div>
           </div>
 
@@ -737,8 +819,14 @@ function Profil() {
                       type="button"
                       className="profile-btn btn-secondary"
                       onClick={() => {
-                        navigator.clipboard.writeText(window.location.href);
-                        toast.success("Profil havolasi nusxalandi!");
+                        navigator.clipboard
+                          .writeText(window.location.href)
+                          .then(() => {
+                            toast.success("Profil havolasi nusxalandi!");
+                          })
+                          .catch(() => {
+                            toast.error("Havolani nusxalab bo'lmadi");
+                          });
                       }}
                       title="Profil havolasini nusxalash"
                     >
@@ -961,23 +1049,46 @@ function Profil() {
           {/* 1. ZIYO LIVE VIKTORINALAR */}
           <div className="profile-posts-header">
             <h3 className="profile-section-title">Viktorinalar</h3>
-            <button
-              type="button"
-              className="create-new-inline-btn"
-              onClick={() => navigate("/quiz/builder")}
-            >
-              <FaPlus /> Yangi viktorina tuzish
-            </button>
+            <div className="profile-quiz-header-actions">
+              <button
+                type="button"
+                className="create-new-inline-btn tf-btn"
+                onClick={() => navigate("/quiz/builder?mode=true_false")}
+              >
+                <FaPlus /> To&apos;g&apos;ri / Noto&apos;g&apos;ri
+              </button>
+              <button
+                type="button"
+                className="create-new-inline-btn"
+                onClick={() => navigate("/quiz/builder")}
+              >
+                <FaPlus /> Yangi viktorina tuzish
+              </button>
+            </div>
           </div>
 
           {myQuizzes.length > 0 ? (
             <div className="profile-quizzes-grid">
-              {myQuizzes.map((quiz) => (
+              {myQuizzes.map((quiz) => {
+                const badgeClass =
+                  quiz.gameMode === "true_false"
+                    ? "quiz-game-badge tf-badge"
+                    : quiz.gameMode === "mixed"
+                      ? "quiz-game-badge mixed-badge"
+                      : "quiz-game-badge";
+                const badgeLabel =
+                  quiz.gameMode === "true_false"
+                    ? "✓✕ True / False"
+                    : quiz.gameMode === "mixed"
+                      ? "🎮 Hatif Live • Aralash"
+                      : "🎮 Hatif Live";
+
+                return (
                 <div key={quiz._id} className="profile-quiz-card">
                   <div className="quiz-card-top">
-                    <span className="quiz-game-badge">🎮 Hatif Live</span>
+                    <span className={badgeClass}>{badgeLabel}</span>
                     <span className="quiz-play-count">
-                      👁 {quiz.playCount || 0} marta o'ynalgan
+                      👁 {quiz.playCount || 0} marta o&apos;ynalgan
                     </span>
                   </div>
 
@@ -990,6 +1101,9 @@ function Profil() {
                     <span>
                       📅 {new Date(quiz.createdAt).toLocaleDateString("uz-UZ")}
                     </span>
+                    {Number(quiz.questionCount) > 0 && (
+                      <span>📝 {quiz.questionCount} ta savol</span>
+                    )}
                   </div>
 
                   <div className="profile-quiz-actions">
@@ -1013,21 +1127,22 @@ function Profil() {
                     <button
                       type="button"
                       className="quiz-delete-btn"
-                      onClick={() => handleDeleteQuiz(quiz._id)}
+                      onClick={() => handleDeleteQuiz(quiz._id, quiz.title)}
                     >
                       <IoClose />
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="profile-empty-tab" style={{ padding: "20px" }}>
               <div className="empty-tab-icon">💡</div>
               <h4>Hali viktorinalar tuzmagansiz</h4>
               <p>
-                O'quvchilaringiz yoki do'stlaringiz uchun qiziqarli jonli
-                viktorina yarating!
+                O&apos;quvchilaringiz yoki do&apos;stlaringiz uchun qiziqarli jonli
+                viktorina yoki To&apos;g&apos;ri/Noto&apos;g&apos;ri o&apos;yin yarating!
               </p>
             </div>
           )}
@@ -1101,7 +1216,7 @@ function Profil() {
                     <button
                       type="button"
                       className="quiz-delete-btn"
-                      onClick={() => handleDeleteBaraban(game.id)}
+                      onClick={() => handleDeleteBaraban(game.id, game.title)}
                       title="O'chirish"
                     >
                       <IoClose />
@@ -1190,6 +1305,36 @@ function Profil() {
                 >
                   <MdAddAPhoto /> Rasmni o'zgartirish
                 </button>
+              </div>
+
+              <div className="form-field">
+                <label>Profil muqovasi (Banner)</label>
+                <div className="cover-picker-grid">
+                  {COVER_BANNERS.map((cover) => {
+                    const isSelected = editCoverImage === cover.id;
+                    return (
+                      <button
+                        key={cover.id}
+                        type="button"
+                        className={`cover-picker-option ${isSelected ? "selected" : ""}`}
+                        onClick={() => setEditCoverImage(cover.id)}
+                        aria-pressed={isSelected}
+                      >
+                        <img
+                          src={cover.src}
+                          alt={cover.label}
+                          referrerPolicy="no-referrer"
+                        />
+                        <span className="cover-picker-label">{cover.label}</span>
+                        {isSelected && (
+                          <span className="cover-picker-check">
+                            <IoCheckmark />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="form-field">
@@ -1337,6 +1482,39 @@ function Profil() {
                   );
                 })}
               </div>
+            </div>
+          </div>
+        </ModalOverlay>
+      )}
+
+      {/* O'CHIRISHNI TASDIQLASH MODALI */}
+      {isMe && (
+        <ModalOverlay
+          isOpen={Boolean(confirmDeleteModal)}
+          onClose={() => setConfirmDeleteModal(null)}
+        >
+          <div className="confirm-delete-modal">
+            <h3>O'chirishni tasdiqlang</h3>
+            <p>
+              Rostdan ham{" "}
+              <strong>{confirmDeleteModal?.title || "ushbu element"}</strong>{" "}
+              o'yinini o'chirmoqchimisiz? Bu amalni ortga qaytarib bo'lmaydi.
+            </p>
+            <div className="confirm-delete-actions">
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={() => setConfirmDeleteModal(null)}
+              >
+                Bekor qilish
+              </button>
+              <button
+                type="button"
+                className="danger-confirm-btn"
+                onClick={executeConfirmDelete}
+              >
+                Ha, o'chirish
+              </button>
             </div>
           </div>
         </ModalOverlay>

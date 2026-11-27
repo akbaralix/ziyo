@@ -12,6 +12,7 @@ import {
 } from "react-icons/io5";
 import { LuSword } from "react-icons/lu";
 import { sfx } from "../../utils/soundEffects.js";
+import { getAuthToken } from "../../utils/authSession.js";
 import "./OctagonBattle.css";
 
 // Fallback questions if offline/standalone testing
@@ -35,7 +36,7 @@ export default function OctagonBattle() {
   const navigate = useNavigate();
 
   // Foydalanuvchi
-  const token = localStorage.getItem("token") || "";
+  const token = getAuthToken() || "";
   const currentUser = (() => {
     try {
       const u = JSON.parse(localStorage.getItem("ziyo_user"));
@@ -186,7 +187,7 @@ export default function OctagonBattle() {
   // Socket Connection
   useEffect(() => {
     const socketUrl =
-      import.meta.env.VITE_API_URL || "https://ziyo.onrender.com";
+      import.meta.env.VITE_API_URL || window.location.origin;
 
     const socket = io(socketUrl, {
       auth: { token },
@@ -510,13 +511,6 @@ export default function OctagonBattle() {
                 </strong>
               </div>
             )}
-
-            {/* Connection status indicator */}
-            <div className={`connection-dot ${connectionStatus}`} style={{
-              width: 10, height: 10, borderRadius: "50%", margin: "8px auto",
-              background: connectionStatus === "connected" ? "#22c55e"
-                : connectionStatus === "offline" ? "#ef4444" : "#f59e0b",
-            }} />
 
             <button
               type="button"

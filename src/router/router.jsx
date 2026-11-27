@@ -17,24 +17,15 @@ import JumanjiCreate from "../pages/oyinlar/jumanji/JumanjiCreate.jsx";
 import JumanjiPlay from "../pages/oyinlar/jumanji/JumanjiPlay.jsx";
 import SlaydYaratish from "../pages/slayd/slaydyaratish.jsx";
 
+import { getAuthToken, subscribeAuthToken } from "../utils/authSession.js";
+
 function Router() {
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [token, setToken] = useState(() => getAuthToken());
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const current = localStorage.getItem("token");
-      setToken((prev) => (prev !== current ? current : prev));
-    }, 200);
-
-    const handleStorage = () => {
-      setToken(localStorage.getItem("token"));
-    };
-    window.addEventListener("storage", handleStorage);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("storage", handleStorage);
-    };
+    return subscribeAuthToken((nextToken) => {
+      setToken(nextToken);
+    });
   }, []);
 
   return (

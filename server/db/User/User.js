@@ -35,6 +35,11 @@ const userSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    coverImage: {
+      type: String,
+      trim: true,
+      default: "cosmic-waves",
+    },
     studyPlace: {
       type: String,
       enum: ["institut", "maktab", "ustoz"],

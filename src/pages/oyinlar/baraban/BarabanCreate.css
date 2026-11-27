@@ -28,11 +28,11 @@
 }
 
 .baraban-circle-btn {
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-muted);
-  border: 1.5px solid var(--border-color);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -43,13 +43,14 @@
 }
 
 .baraban-circle-btn:hover {
-  background: var(--border-color);
-  color: var(--text-primary);
+  background: var(--bg-hover);
+  color: var(--primary);
+  border-color: var(--primary-border);
 }
 
 .baraban-page-title {
   font-size: var(--font-2xl);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
 }
@@ -80,12 +81,12 @@
 /* Card base */
 .baraban-card {
   background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
   padding: 24px;
   margin-bottom: 20px;
   box-sizing: border-box;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-card);
 }
 
 /* Left Wheel Panel */
@@ -99,7 +100,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: var(--bg-subtle);
+  background: var(--bg-card);
 }
 
 .wheel-card-header {
@@ -180,10 +181,10 @@
   background: var(--primary);
   color: var(--text-white);
   border: 1.5px solid var(--primary);
-  border-radius: var(--radius-pill);
+  border-radius: 14px;
   padding: 10px 22px;
   font-size: var(--font-base);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -198,10 +199,10 @@
 }
 
 .baraban-secondary-btn {
-  background: var(--bg-muted);
+  background: var(--bg-subtle);
   color: var(--text-secondary);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
   padding: 10px 20px;
   font-size: var(--font-base);
   font-weight: 500;
@@ -214,14 +215,15 @@
 }
 
 .baraban-secondary-btn:hover {
-  background: var(--border-color);
+  background: var(--bg-hover);
   color: var(--text-primary);
 }
 
 .baraban-ai-btn {
   background: var(--primary);
   color: var(--text-white);
-  border-radius: var(--radius-pill);
+  border: none;
+  border-radius: 14px;
   padding: 10px 18px;
   font-size: var(--font-sm);
   font-weight: 600;
@@ -232,13 +234,17 @@
   transition: all var(--transition-fast);
 }
 
+.baraban-ai-btn:hover {
+  background: var(--primary-hover);
+}
+
 .baraban-text-btn {
   background: transparent;
   color: var(--primary);
   font-size: var(--font-sm);
   font-weight: 500;
   padding: 6px 12px;
-  border-radius: var(--radius-pill);
+  border-radius: 10px;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
@@ -250,13 +256,13 @@
 /* Inputs */
 .baraban-input {
   width: 100%;
-  padding: 12px 18px;
+  padding: 12px 16px;
   border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border-radius: 14px;
   font-size: var(--font-base);
   font-family: inherit;
   color: var(--text-primary);
-  background: var(--bg-card);
+  background: var(--bg-subtle);
   outline: none;
   box-sizing: border-box;
   transition: all var(--transition-fast);
@@ -264,6 +270,7 @@
 
 .baraban-input:focus {
   border-color: var(--primary);
+  background: var(--bg-card);
   box-shadow: 0 0 0 3px var(--primary-light);
 }
 
@@ -304,7 +311,7 @@
   gap: 14px;
   padding: 14px 18px;
   border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border-radius: 16px;
   background: var(--bg-card);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -365,10 +372,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--bg-card);
-  border: 0.5px solid var(--border-hover);
-  border-radius: 4px;
-  padding: 6px 14px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 6px 12px;
   font-size: var(--font-sm);
   font-weight: 500;
   color: var(--text-primary);
@@ -426,10 +433,10 @@
 }
 
 .question-item-card {
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
-  padding: 16px 20px;
-  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px 18px;
+  background: var(--bg-subtle);
 }
 
 .question-item-top {
@@ -440,13 +447,14 @@
 }
 
 .q-badge {
-  background: var(--bg-muted);
-  border: 1px solid var(--border-hover);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: var(--font-xs);
   font-weight: 600;
   padding: 4px 10px;
   border-radius: var(--radius-pill);
+  font-variant-numeric: tabular-nums;
 }
 
 .q-title-text {
@@ -463,7 +471,7 @@
   color: var(--color-danger-dark);
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -491,10 +499,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
-  background: var(--bg-subtle);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  padding: 9px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   font-size: var(--font-sm);
   color: var(--text-secondary);
 }
@@ -542,8 +550,8 @@
 
 .baraban-modal-card {
   background: var(--bg-card);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
   width: 100%;
   max-width: 540px;
   max-height: 90vh;
@@ -559,8 +567,8 @@
 }
 
 .modal-header {
-  padding: 20px 24px;
-  border-bottom: 1.5px solid var(--border-color);
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -576,8 +584,8 @@
 .modal-close-btn {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-pill);
-  background: var(--bg-muted);
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
   border: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -619,7 +627,7 @@
 .opt-radio-btn {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-full);
   border: 1.5px solid var(--border-hover);
   background: var(--bg-subtle);
   font-weight: 600;
@@ -640,7 +648,7 @@
 
 .modal-footer {
   padding: 16px 24px;
-  border-top: 1.5px solid var(--border-color);
+  border-top: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -657,10 +665,10 @@
 .ai-icon-bubble {
   width: 40px;
   height: 40px;
-  border-radius: var(--radius-pill);
-  background: #fdf2f8;
-  border: 1px solid #fbcfe8;
-  color: #db2777;
+  border-radius: var(--radius-full);
+  background: var(--primary-light);
+  border: 1px solid var(--primary-border);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -675,8 +683,8 @@
 
 .ai-step-box {
   background: var(--bg-subtle);
-  border: 1.5px solid var(--border-color);
-  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
   padding: 18px 20px;
 }
 

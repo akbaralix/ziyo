@@ -6,6 +6,13 @@ import QuizGame from "../db/Quiz/QuizGame.js";
 import GameSession from "../db/Quiz/GameSession.js";
 import OTP from "../db/OTP/otp.js";
 import VisitLog from "../db/Analytics/VisitLog.js";
+import { isDbConnected } from "../db/db.js";
+import {
+  getMemoryOtpStats,
+  listMemoryQuizzes,
+  listMemorySessions,
+  listMemoryUsers,
+} from "../db/memoryStore.js";
 
 // Socket.IO instansiyasi saqlanadigan joy
 let ioInstance = null;
@@ -65,6 +72,10 @@ export async function recordVisit(req) {
     // In-memory active tracker yangilash
     const activeKey = userId ? `user:${userId}` : `ip:${ipHash}`;
     recentActiveClients.set(activeKey, Date.now());
+
+    if (mongoose.connection.readyState !== 1) {
+      return;
+    }
 
     // Foydalanuvchining lastActiveAt maydonini yangilash
     if (userId) {
@@ -137,6 +148,14 @@ export function getOnlineStats() {
 
 // Tashriflar (Saytga kirganlar) statistikasi
 export async function getTrafficStats() {
+  if (!isDbConnected()) {
+    return {
+      today: { uniqueVisitors: 0, totalHits: 0, mobile: 0, desktop: 0 },
+      thisWeek: { uniqueVisitors: 0 },
+      thisMonth: { uniqueVisitors: 0, totalHits: 0 },
+      allTimeHits: 0,
+    };
+  }
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -209,6 +228,37 @@ export async function getTrafficStats() {
 
 // Foydalanuvchilar statistikasi
 export async function getUserStats() {
+  if (!isDbConnected()) {
+    const allUsers = listMemoryUsers();
+    const places = { maktab: 0, institut: 0, ustoz: 0 };
+    let totalXp = 0;
+    let activeReaders = 0;
+    for (const u of allUsers) {
+      totalXp += u.xp || 0;
+      if (u.readingBook?.bookId) activeReaders++;
+      if (u.studyPlace && places[u.studyPlace] !== undefined) {
+        places[u.studyPlace]++;
+      }
+    }
+    const topUsers = [...allUsers]
+      .sort((a, b) => (b.xp || 0) - (a.xp || 0))
+      .slice(0, 5);
+    const recentUsers = [...allUsers]
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 5);
+    return {
+      totalUsers: allUsers.length,
+      todayUsers: allUsers.length,
+      weekUsers: allUsers.length,
+      monthUsers: allUsers.length,
+      studyPlaces: places,
+      activeReaders,
+      totalXp,
+      avgXp: allUsers.length ? Math.round(totalXp / allUsers.length) : 0,
+      topUsers,
+      recentUsers,
+    };
+  }
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -280,6 +330,32 @@ export async function getUserStats() {
 
 // Quizlar statistikasi
 export async function getQuizStats() {
+  if (!isDbConnected()) {
+    const allQuizzes = listMemoryQuizzes();
+    const allSessions = listMemorySessions();
+    const totalPlays = allQuizzes.reduce((acc, q) => acc + (q.playCount || 0), 0);
+    const activeSessions = allSessions.filter((s) =>
+      ["waiting", "active", "question", "answer"].includes(s.status),
+    ).length;
+    return {
+      totalQuizzes: allQuizzes.length,
+      publicQuizzes: allQuizzes.filter((q) => q.isPublic).length,
+      privateQuizzes: allQuizzes.filter((q) => !q.isPublic).length,
+      totalPlays,
+      avgQuestions: allQuizzes.length
+        ? Math.round(
+            allQuizzes.reduce((acc, q) => acc + (q.questions?.length || 0), 0) /
+              allQuizzes.length,
+          )
+        : 0,
+      totalSessions: allSessions.length,
+      activeSessions,
+      topQuizzes: [...allQuizzes]
+        .sort((a, b) => (b.playCount || 0) - (a.playCount || 0))
+        .slice(0, 5),
+      recentQuizzes: allQuizzes.slice(0, 3),
+    };
+  }
   const [
     totalQuizzes,
     publicQuizzes,
@@ -332,6 +408,9 @@ export async function getQuizStats() {
 
 // OTP / Login statistikasi
 export async function getOtpStats() {
+  if (!isDbConnected()) {
+    return getMemoryOtpStats();
+  }
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

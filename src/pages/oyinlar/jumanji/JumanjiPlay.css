@@ -2,20 +2,11 @@
 
 .jumanji-play-page.light-mode {
   min-height: 100vh;
-  background: #f1f5f9;
-  color: #1e293b;
+  background: var(--bg-main);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    sans-serif;
+  font-family: var(--font-family-base);
   overflow-x: hidden;
 }
 
@@ -734,32 +725,34 @@
   min-height: 100vh;
   color: var(--text-primary);
   background: var(--bg-main);
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  font-family: var(--font-family-base);
 }
 .light-mode .jumanji-play-header {
-  min-height: 70px;
-  padding: 12px clamp(14px, 3vw, 42px);
+  min-height: 64px;
+  padding: 10px clamp(14px, 3vw, 42px);
   color: var(--text-primary);
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-xs);
 }
 .light-mode .jumanji-title-info h2 {
   color: var(--text-primary);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 .light-mode .jumanji-header-btn,
 .light-mode .jumanji-share-btn,
 .light-mode .jumanji-sound-btn {
   color: var(--text-secondary);
-  background: var(--bg-card);
-  border-radius: var(--radius-md);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+.light-mode .jumanji-header-btn:hover,
+.light-mode .jumanji-share-btn:hover,
+.light-mode .jumanji-sound-btn:hover {
+  background: var(--bg-hover);
+  color: var(--primary);
+  border-color: var(--primary-border);
 }
 .light-mode .jumanji-main-layout {
   gap: 18px;
@@ -769,8 +762,8 @@
 .light-mode .jumanji-sidebar-panel {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
 }
 .light-mode .jumanji-board-panel {
   padding: 16px;
@@ -905,6 +898,6 @@
     padding: 9px;
   }
   .light-mode .jumanji-sidebar-panel {
-    border: 1px solid #665638;
+    border: 1px solid var(--border-color);
   }
 }

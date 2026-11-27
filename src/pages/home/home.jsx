@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { MdNotificationsNone } from "react-icons/md";
 import { GoTrophy, GoBook } from "react-icons/go";
 import { IoGameControllerOutline } from "react-icons/io5";
 import { getUserProfile } from "../../api/userApi";
+import { getAuthToken, subscribeAuthToken } from "../../utils/authSession.js";
 
 import hatif from "../../assets/hatif.png";
 import liveJoin from "../../assets/rasmlar/live-join.svg";
@@ -37,6 +38,10 @@ const TOOLBAR_ITEMS = [
 ];
 
 function Home() {
+  const navigate = useNavigate();
+  const notifRef = useRef(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const getStoredUser = useCallback(() => {
     try {
       return (
@@ -49,20 +54,26 @@ function Home() {
     }
   }, []);
 
-  const [userName, setUserName] = useState(() => {
-    const u = getStoredUser();
-    return u?.firstName || (u?.name ? u.name.split(" ")[0] : "Foydalanuvchi");
-  });
-
   const [xp, setXp] = useState(() => {
     const u = getStoredUser();
     return u?.xp ?? u?.points ?? 0;
   });
 
   useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
 
     const fetchRealXp = async () => {
+      if (!getAuthToken()) return;
       try {
         const data = await getUserProfile();
         const realXp =
@@ -70,7 +81,6 @@ function Home() {
 
         if (isMounted) {
           if (realXp !== undefined && realXp !== null) setXp(realXp);
-          if (data?.user?.firstName) setUserName(data.user.firstName);
         }
 
         const currentU = getStoredUser();
@@ -83,6 +93,10 @@ function Home() {
           }),
         );
       } catch (err) {
+        if (err?.status === 401) {
+          if (isMounted) setXp(0);
+          return;
+        }
         console.error("Foydalanuvchi ma'lumotlarini yuklashda xatolik:", err);
       }
     };
@@ -96,11 +110,18 @@ function Home() {
       }
     };
 
+    const unsubscribeAuth = subscribeAuthToken((nextToken) => {
+      if (!nextToken && isMounted) {
+        setXp(0);
+      }
+    });
+
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("focus", fetchRealXp);
 
     return () => {
       isMounted = false;
+      unsubscribeAuth();
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("focus", fetchRealXp);
     };
@@ -109,15 +130,68 @@ function Home() {
   return (
     <div className="home-container">
       <header className="home-header">
-        <div className="home-logo">
-          <img src={hatif} alt="Hatif logotipi" />
+        <div className="home-brand-group">
+          <div className="home-logo">
+            <img src={hatif} alt="Hatif logotipi" />
+          </div>
         </div>
 
         <div className="header-action">
-          <div className="notification">
-            <button type="button" aria-label="Bildirishnomalar">
+          <div className="notification" ref={notifRef}>
+            <button
+              type="button"
+              aria-label="Bildirishnomalar"
+              aria-expanded={showNotifications}
+              onClick={() => setShowNotifications((prev) => !prev)}
+            >
               <MdNotificationsNone />
             </button>
+            {showNotifications && (
+              <div className="notification-popover">
+                <div className="notif-popover-header">
+                  <span>Bildirishnomalar</span>
+                </div>
+                <button
+                  type="button"
+                  className="notif-item-btn"
+                  onClick={() => {
+                    setShowNotifications(false);
+                    navigate("/oktagon");
+                  }}
+                >
+                  <span className="notif-item-title">Oktagon 1v1 Duel</span>
+                  <span className="notif-item-sub">
+                    Jonli bellashuvda XP to&apos;plang
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="notif-item-btn"
+                  onClick={() => {
+                    setShowNotifications(false);
+                    navigate("/kutubxona");
+                  }}
+                >
+                  <span className="notif-item-title">Elektron kutubxona</span>
+                  <span className="notif-item-sub">
+                    Kitobni tugatib +50 XP oling
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="notif-item-btn"
+                  onClick={() => {
+                    setShowNotifications(false);
+                    navigate("/reytinglar");
+                  }}
+                >
+                  <span className="notif-item-title">Peshqadamlar jadvali</span>
+                  <span className="notif-item-sub">
+                    Hozirgi reytingingizni tekshiring
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
           <span className="header-divider" />
           <div className="user-pointes" title="To'plangan ballar">
@@ -128,7 +202,7 @@ function Home() {
       </header>
 
       <div className="toolbar-for-business">
-        <h2 className="toolbar-section-title">Yaratish va boshlash </h2>
+        <h2 className="toolbar-section-title">Yaratish va boshlash</h2>
         <div className="tolbar-div">
           {TOOLBAR_ITEMS.map((item) => (
             <Link

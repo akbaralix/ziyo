@@ -9,6 +9,7 @@ export default function LiveReactions({
   sessionId,
   senderName = "O'yinchi",
   showTrigger = true,
+  enabled = true,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [floatingList, setFloatingList] = useState([]);
@@ -17,13 +18,23 @@ export default function LiveReactions({
   const [cooldownTime, setCooldownTime] = useState(0);
   const clickTimestampsRef = useRef([]);
   const counterRef = useRef(0); // Unikal ID uchun hisoblagich
+  const enabledRef = useRef(enabled);
 
   const pickerRef = useRef(null);
+
+  useEffect(() => {
+    enabledRef.current = enabled;
+    if (!enabled) {
+      setIsOpen(false);
+      setFloatingList([]);
+    }
+  }, [enabled]);
 
   useEffect(() => {
     if (!socket) return;
 
     const handleReaction = (data) => {
+      if (!enabledRef.current) return;
       if (!data || !data.emoji) return;
 
       // Unikal ID hosil qilish (vaqt + random + increment counter)
@@ -89,7 +100,7 @@ export default function LiveReactions({
   }, [isOpen]);
 
   const handleSend = (emoji) => {
-    if (!socket || !sessionId || cooldownTime > 0) return;
+    if (!enabled || !socket || !sessionId || cooldownTime > 0) return;
 
     const now = Date.now();
     const recentClicks = clickTimestampsRef.current.filter(
@@ -142,7 +153,7 @@ export default function LiveReactions({
         ))}
       </div>
 
-      {showTrigger && (
+      {showTrigger && enabled && (
         <div className="live-reaction-controls" ref={pickerRef}>
           {isOpen && (
             <div className="live-reaction-picker">

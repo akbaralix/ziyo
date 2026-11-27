@@ -6,6 +6,13 @@ export async function createQuizGame(data) {
   return apiClient("/api/quiz", { method: "POST", body: JSON.stringify(data) });
 }
 
+export async function generateAiQuizQuestions(data) {
+  return apiClient("/api/quiz/ai/generate", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function getMyQuizGames() {
 
   return apiClient("/api/quiz/my");

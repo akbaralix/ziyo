@@ -60,6 +60,10 @@ export default function JumanjiPlay() {
       : currentUser?.name || currentUser?.username || "");
 
   const [playerName, setPlayerName] = useState(initialName);
+  const playerNameRef = useRef(initialName);
+  useEffect(() => {
+    playerNameRef.current = playerName;
+  }, [playerName]);
   const [isNameModalOpen, setIsNameModalOpen] = useState(!initialName);
 
   const [socket, setSocket] = useState(null);
@@ -108,10 +112,7 @@ export default function JumanjiPlay() {
     if (!roomId) return;
 
     const socketUrl =
-      import.meta.env.VITE_API_URL ||
-      (window.location.hostname === "localhost"
-        ? "http://localhost:5000"
-        : window.location.origin);
+      import.meta.env.VITE_API_URL || window.location.origin;
 
     const s = io(`${socketUrl}/jumanji`, {
       transports: ["websocket", "polling"],
@@ -119,10 +120,11 @@ export default function JumanjiPlay() {
     });
 
     s.on("connect", () => {
-      if (initialName) {
+      const activeName = (playerNameRef.current || "").trim();
+      if (activeName) {
         s.emit("join_room", {
           roomId,
-          playerName: initialName,
+          playerName: activeName,
           userId: currentUser?._id || currentUser?.id || null,
         });
       }
@@ -327,10 +329,16 @@ export default function JumanjiPlay() {
 
   const handleCopyLink = () => {
     const link = `${window.location.origin}/jumanji/${roomId}`;
-    navigator.clipboard.writeText(link);
-    setCopied(true);
-    toast.success("O'yin havolasi nusxalandi!");
-    setTimeout(() => setCopied(false), 2500);
+    navigator.clipboard
+      .writeText(link)
+      .then(() => {
+        setCopied(true);
+        toast.success("O'yin havolasi nusxalandi!");
+        setTimeout(() => setCopied(false), 2500);
+      })
+      .catch(() => {
+        toast.info("Havolani nusxalab bo'lmadi.");
+      });
   };
 
   const handleStartGame = () => {

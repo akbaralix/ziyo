@@ -3,9 +3,27 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import OTP from "../db/OTP/otp.js";
 import User from "../db/User/User.js";
+import { isDbConnected } from "../db/db.js";
+import {
+  calculateMemoryUserRank,
+  createMemoryOtpSession,
+  findMemoryOtpByToken,
+  findMemoryUserByIdentifier,
+  findMemoryUserByTelegramId,
+  findMemoryUsernameConflict,
+  saveMemoryUser,
+} from "../db/memoryStore.js";
+import { JWT_SECRET } from "../utils/jwtSecret.js";
+import { getBotUsername } from "../bot/bot.js";
 
-const JWT_SECRET =
-  process.env.JWT_SECRET || "ziyo_secret_jwt_key_super_secure_2026_ziyo_app";
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const ALLOWED_COVERS = new Set([
+  "cosmic-waves",
+  "library-dusk",
+  "indigo-peaks",
+  "studio-prisms",
+]);
 
 const generateJwtToken = (user) => {
   return jwt.sign(
@@ -24,19 +42,25 @@ export const initTelegramSession = async (req, res) => {
     const rawToken = crypto.randomBytes(20).toString("hex");
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 daqiqa
 
-    const session = new OTP({
-      token: rawToken,
-      expiresAt,
-    });
+    if (isDbConnected()) {
+      const session = new OTP({
+        token: rawToken,
+        expiresAt,
+      });
+      await session.save();
+    } else {
+      createMemoryOtpSession({
+        token: rawToken,
+        expiresAt,
+      });
+    }
 
-    await session.save();
-
-    const botUsername = process.env.BOT_USERNAME || "eduziyobot";
+    const botUsername =
+      process.env.BOT_USERNAME || getBotUsername() || "eduziyobot";
     const botUrl = `https://t.me/${botUsername}?start=${rawToken}`;
 
     return res.status(201).json({
       success: true,
-
       token: rawToken,
       botUrl,
       expiresAt,
@@ -56,27 +80,34 @@ export const checkTelegramSession = async (req, res) => {
   try {
     const { token } = req.params;
 
-    if (!token) {
+    if (!token || typeof token !== "string" || token.length > 128) {
       return res.status(400).json({
         success: false,
         message: "Sessiya tokeni ko'rsatilmadi.",
       });
     }
 
-    const session = await OTP.findOne({ token });
+    const dbOnline = isDbConnected();
+    const session = dbOnline
+      ? await OTP.findOne({ token })
+      : findMemoryOtpByToken(token);
 
     if (!session) {
-      return res.status(404).json({
+      return res.json({
         success: false,
+        verified: false,
+        notFound: true,
+        expired: true,
         message: "Login sessiyasi topilmadi.",
       });
     }
 
-    if (session.expiresAt < new Date()) {
-      return res.status(410).json({
+    if (new Date(session.expiresAt) < new Date()) {
+      return res.json({
         success: false,
-        message: "Login havolasining muddati tugagan.",
+        verified: false,
         expired: true,
+        message: "Login havolasining muddati tugagan.",
       });
     }
 
@@ -90,12 +121,16 @@ export const checkTelegramSession = async (req, res) => {
     }
 
     // Botda tasdiqlangan: Foydalanuvchini bazadan qidiramiz
-    const user = await User.findOne({ telegramId: session.telegramId });
+    const user = dbOnline
+      ? await User.findOne({ telegramId: session.telegramId })
+      : findMemoryUserByTelegramId(session.telegramId);
 
     if (user) {
       // Mavjud foydalanuvchi -> To'g'ridan-to'g'ri JWT beramiz
       session.isClaimed = true;
-      await session.save();
+      if (dbOnline && typeof session.save === "function") {
+        await session.save();
+      }
 
       const jwtToken = generateJwtToken(user);
       const rank = await calculateUserRank(user);
@@ -146,20 +181,67 @@ export const registerTelegramUser = async (req, res) => {
       course,
     } = req.body;
 
-    if (!telegramId || !firstName || !lastName || !studyPlace || !course) {
+    if (
+      typeof firstName !== "string" ||
+      typeof lastName !== "string" ||
+      typeof studyPlace !== "string" ||
+      typeof course !== "string" ||
+      (typeof telegramId !== "string" && typeof telegramId !== "number") ||
+      !String(telegramId).trim() ||
+      !firstName.trim() ||
+      !lastName.trim() ||
+      !studyPlace.trim() ||
+      !course.trim()
+    ) {
       return res.status(400).json({
         success: false,
         message: "Barcha maydonlarni to'ldirish shart!",
       });
     }
 
-    // Sessiya mavjudligi va tasdiqlanganligini tekshiramiz
-    if (token) {
-      const session = await OTP.findOne({
-        token,
-        telegramId: String(telegramId),
-        verified: true,
+    const allowedPlaces = new Set(["institut", "maktab", "ustoz"]);
+    if (!allowedPlaces.has(studyPlace)) {
+      return res.status(400).json({
+        success: false,
+        message: "Noto'g'ri ta'lim maskani tanlandi.",
       });
+    }
+
+    const cleanTelegramId = String(telegramId).trim();
+    const cleanFirstName = firstName.trim().slice(0, 50);
+    const cleanLastName = lastName.trim().slice(0, 50);
+    const cleanProfilePic =
+      typeof profilePic === "string" ? profilePic.slice(0, 500) : "";
+    const cleanCourse = course.trim().slice(0, 40);
+
+    const dbOnline = isDbConnected();
+
+    // Sessiya mavjudligi va tasdiqlanganligini tekshiramiz
+    if (token !== undefined) {
+      if (typeof token !== "string" || !token.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Sessiya tokeni noto'g'ri.",
+        });
+      }
+
+      const session = dbOnline
+        ? await OTP.findOne({
+            token: token.trim(),
+            telegramId: cleanTelegramId,
+            verified: true,
+          })
+        : (() => {
+            const s = findMemoryOtpByToken(token.trim());
+            if (
+              s &&
+              s.verified &&
+              String(s.telegramId) === cleanTelegramId
+            ) {
+              return s;
+            }
+            return null;
+          })();
 
       if (!session) {
         return res.status(400).json({
@@ -168,29 +250,45 @@ export const registerTelegramUser = async (req, res) => {
         });
       }
       session.isClaimed = true;
-      await session.save();
+      if (dbOnline && typeof session.save === "function") {
+        await session.save();
+      }
     }
 
-    let user = await User.findOne({ telegramId: String(telegramId) });
+    let user;
+    if (dbOnline) {
+      user = await User.findOne({ telegramId: cleanTelegramId });
 
-    if (!user) {
-      user = new User({
-        telegramId: String(telegramId),
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        profilePic,
-        studyPlace,
-        course,
-      });
+      if (!user) {
+        user = new User({
+          telegramId: cleanTelegramId,
+          firstName: cleanFirstName,
+          lastName: cleanLastName,
+          profilePic: cleanProfilePic,
+          studyPlace,
+          course: cleanCourse,
+        });
+      } else {
+        user.firstName = cleanFirstName;
+        user.lastName = cleanLastName;
+        user.profilePic = cleanProfilePic;
+        user.studyPlace = studyPlace;
+        user.course = cleanCourse;
+      }
+
+      await user.save();
     } else {
-      user.firstName = firstName.trim();
-      user.lastName = lastName.trim();
-      user.profilePic = profilePic;
-      user.studyPlace = studyPlace;
-      user.course = course;
+      const existing = findMemoryUserByTelegramId(cleanTelegramId);
+      user = saveMemoryUser({
+        ...(existing || {}),
+        telegramId: cleanTelegramId,
+        firstName: cleanFirstName,
+        lastName: cleanLastName,
+        profilePic: cleanProfilePic,
+        studyPlace,
+        course: cleanCourse,
+      });
     }
-
-    await user.save();
 
     const jwtToken = generateJwtToken(user);
     const rank = await calculateUserRank(user);
@@ -216,23 +314,30 @@ export const registerTelegramUser = async (req, res) => {
 // Foydalanuvchining real reytingdagi o'rnini (rank) hisoblash
 export const calculateUserRank = async (user) => {
   if (!user) return 1;
+  if (!isDbConnected()) {
+    return calculateMemoryUserRank(user);
+  }
   try {
+    const curXp = user.xp || 0;
+    const curSolved = user.solvedQuizzes || 0;
+    const curPage = user.readingBook?.currentPage || 0;
+
     const higherCount = await User.countDocuments({
       $or: [
-        { xp: { $gt: user.xp || 0 } },
+        { xp: { $gt: curXp } },
         {
-          xp: user.xp || 0,
-          solvedQuizzes: { $gt: user.solvedQuizzes || 0 },
+          xp: curXp,
+          solvedQuizzes: { $gt: curSolved },
         },
         {
-          xp: user.xp || 0,
-          solvedQuizzes: user.solvedQuizzes || 0,
-          readingBook: { $gt: user.readingBook.currentPage || 0 },
+          xp: curXp,
+          solvedQuizzes: curSolved,
+          "readingBook.currentPage": { $gt: curPage },
         },
         {
-          xp: user.xp || 0,
-          solvedQuizzes: user.solvedQuizzes || 0,
-          readingBook: { $gt: user.readingBook.currentPage || 0 },
+          xp: curXp,
+          solvedQuizzes: curSolved,
+          "readingBook.currentPage": curPage,
           createdAt: { $lt: user.createdAt },
         },
       ],
@@ -280,17 +385,40 @@ export const updateProfile = async (req, res) => {
       lastName,
       username,
       profilePic,
+      coverImage,
       bio,
       studyPlace,
       course,
     } = req.body;
     const user = req.user;
+    const dbOnline = isDbConnected();
 
-    if (firstName) user.firstName = firstName.trim();
-    if (lastName) user.lastName = lastName.trim();
-    if (profilePic) user.profilePic = profilePic;
+    if (typeof firstName === "string" && firstName.trim()) {
+      user.firstName = firstName.trim().slice(0, 50);
+    }
+    if (typeof lastName === "string" && lastName.trim()) {
+      user.lastName = lastName.trim().slice(0, 50);
+    }
+    if (typeof profilePic === "string" && profilePic.trim()) {
+      user.profilePic = profilePic.slice(0, 500);
+    }
+    if (coverImage !== undefined) {
+      if (typeof coverImage !== "string" || !ALLOWED_COVERS.has(coverImage.trim())) {
+        return res.status(400).json({
+          success: false,
+          message: "Noto'g'ri muqova rasmi tanlandi.",
+        });
+      }
+      user.coverImage = coverImage.trim();
+    }
 
     if (username !== undefined) {
+      if (typeof username !== "string") {
+        return res.status(400).json({
+          success: false,
+          message: "Username noto'g'ri formatda.",
+        });
+      }
       const cleanUsername = username.replace(/^@/, "").trim().toLowerCase();
       if (cleanUsername) {
         if (cleanUsername.length < 3) {
@@ -309,13 +437,15 @@ export const updateProfile = async (req, res) => {
         }
 
         // Boshqa foydalanuvchida bor-yo'qligini tekshirish
-        const existingUser = await User.findOne({
-          _id: { $ne: user._id },
-          $or: [
-            { username: cleanUsername },
-            { telegramUsername: new RegExp(`^${cleanUsername}$`, "i") },
-          ],
-        });
+        const existingUser = dbOnline
+          ? await User.findOne({
+              _id: { $ne: user._id },
+              $or: [
+                { username: cleanUsername },
+                { telegramUsername: new RegExp(`^${cleanUsername}$`, "i") },
+              ],
+            })
+          : findMemoryUsernameConflict(cleanUsername, user._id);
 
         if (existingUser) {
           return res.status(400).json({
@@ -329,11 +459,22 @@ export const updateProfile = async (req, res) => {
       }
     }
 
-    if (bio !== undefined) user.bio = bio.trim();
-    if (studyPlace) user.studyPlace = studyPlace;
-    if (course) user.course = course;
+    if (typeof bio === "string") user.bio = bio.trim().slice(0, 300);
+    if (
+      typeof studyPlace === "string" &&
+      ["institut", "maktab", "ustoz"].includes(studyPlace)
+    ) {
+      user.studyPlace = studyPlace;
+    }
+    if (typeof course === "string" && course.trim()) {
+      user.course = course.trim().slice(0, 40);
+    }
 
-    await user.save();
+    if (dbOnline && typeof user.save === "function") {
+      await user.save();
+    } else {
+      saveMemoryUser(user);
+    }
 
     const rank = await calculateUserRank(user);
     const userObj = user.toObject ? user.toObject() : { ...user };
@@ -357,6 +498,13 @@ export const updateProfile = async (req, res) => {
 export const checkUsernameAvailability = async (req, res) => {
   try {
     const rawUsername = req.params.username || req.query.username || "";
+    if (typeof rawUsername !== "string") {
+      return res.status(400).json({
+        success: false,
+        available: false,
+        message: "Username noto'g'ri formatda.",
+      });
+    }
     const cleanUsername = rawUsername.replace(/^@/, "").trim().toLowerCase();
 
     if (!cleanUsername || cleanUsername.length < 3) {
@@ -393,18 +541,23 @@ export const checkUsernameAvailability = async (req, res) => {
       });
     }
 
-    const query = {
-      $or: [
-        { username: cleanUsername },
-        { telegramUsername: new RegExp(`^${cleanUsername}$`, "i") },
-      ],
-    };
+    let existingUser = null;
+    if (isDbConnected()) {
+      const query = {
+        $or: [
+          { username: cleanUsername },
+          { telegramUsername: new RegExp(`^${cleanUsername}$`, "i") },
+        ],
+      };
 
-    if (req.user?._id) {
-      query._id = { $ne: req.user._id };
+      if (req.user?._id) {
+        query._id = { $ne: req.user._id };
+      }
+
+      existingUser = await User.findOne(query);
+    } else {
+      existingUser = findMemoryUsernameConflict(cleanUsername, req.user?._id);
     }
-
-    const existingUser = await User.findOne(query);
 
     if (existingUser) {
       return res.json({
@@ -433,7 +586,7 @@ export const checkUsernameAvailability = async (req, res) => {
 export const getUserProfileById = async (req, res) => {
   try {
     const { idOrUsername } = req.params;
-    if (!idOrUsername) {
+    if (!idOrUsername || typeof idOrUsername !== "string") {
       return res.status(400).json({
         success: false,
         message: "Foydalanuvchi identifikatori ko'rsatilmadi.",
@@ -443,22 +596,29 @@ export const getUserProfileById = async (req, res) => {
     let user = null;
     const cleanUsername = idOrUsername.replace(/^@/, "").trim();
 
-    if (
-      mongoose.Types.ObjectId.isValid(cleanUsername) &&
-      cleanUsername.length === 24
-    ) {
-      user = await User.findById(cleanUsername);
-    }
+    if (isDbConnected()) {
+      if (
+        mongoose.Types.ObjectId.isValid(cleanUsername) &&
+        cleanUsername.length === 24
+      ) {
+        user = await User.findById(cleanUsername);
+      }
 
-    if (!user) {
-      const usernameRegex = new RegExp(`^${cleanUsername}$`, "i");
-      user = await User.findOne({
-        $or: [
-          { username: cleanUsername.toLowerCase() },
-          { telegramUsername: usernameRegex },
-          { telegramId: cleanUsername },
-        ],
-      });
+      if (!user) {
+        const usernameRegex = new RegExp(
+          `^${escapeRegex(cleanUsername)}$`,
+          "i",
+        );
+        user = await User.findOne({
+          $or: [
+            { username: cleanUsername.toLowerCase() },
+            { telegramUsername: usernameRegex },
+            { telegramId: cleanUsername },
+          ],
+        });
+      }
+    } else {
+      user = findMemoryUserByIdentifier(cleanUsername);
     }
 
     if (!user) {
@@ -498,21 +658,30 @@ export const updateReadingProgress = async (req, res) => {
     }
 
     const { bookId, title, author, img, pages, currentPage } = req.body;
-    if (!bookId) {
+    if (!bookId || typeof bookId !== "string") {
       return res.status(400).json({
         success: false,
         message: "Kitob ma'lumoti to'liq emas.",
       });
     }
 
-    const totalPages = Number(pages) || 100;
+    const totalPages = Math.max(Number(pages) || 100, 1);
     const curPage = Math.min(Math.max(Number(currentPage) || 1, 1), totalPages);
 
     user.readingBook = {
-      bookId,
-      title: title || user.readingBook?.title || "Kitob",
-      author: author || user.readingBook?.author || "",
-      img: img || user.readingBook?.img || "",
+      bookId: bookId.trim().slice(0, 120),
+      title:
+        typeof title === "string" && title.trim()
+          ? title.trim().slice(0, 200)
+          : user.readingBook?.title || "Kitob",
+      author:
+        typeof author === "string"
+          ? author.trim().slice(0, 120)
+          : user.readingBook?.author || "",
+      img:
+        typeof img === "string"
+          ? img.trim().slice(0, 500)
+          : user.readingBook?.img || "",
       pages: totalPages,
       currentPage: curPage,
       updatedAt: new Date(),
@@ -524,23 +693,26 @@ export const updateReadingProgress = async (req, res) => {
         user.finishedBooks = [];
       }
       const alreadyFinished = user.finishedBooks.some(
-        (b) => b.bookId === bookId,
+        (b) => b.bookId === user.readingBook.bookId,
       );
       if (!alreadyFinished) {
         user.finishedBooks.push({
-          bookId,
-          title: title || "Kitob",
-          author: author || "",
-          img: img || "",
+          bookId: user.readingBook.bookId,
+          title: user.readingBook.title,
+          author: user.readingBook.author,
+          img: user.readingBook.img,
           pages: totalPages,
           finishedAt: new Date(),
         });
-        user.readingBook = (user.readingBook?.currentPage || 0) + 1;
         user.xp = (user.xp || 0) + 50; // Kitob tugatgani uchun +50 XP!
       }
     }
 
-    await user.save();
+    if (isDbConnected() && typeof user.save === "function") {
+      await user.save();
+    } else {
+      saveMemoryUser(user);
+    }
 
     return res.json({
       success: true,

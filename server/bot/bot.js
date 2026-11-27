@@ -2,6 +2,11 @@ import "dotenv/config";
 import { Telegraf, Markup } from "telegraf";
 import OTP from "../db/OTP/otp.js";
 import User from "../db/User/User.js";
+import { isDbConnected } from "../db/db.js";
+import {
+  findMemoryOtpByTokenOrHash,
+  findMemoryUserByTelegramId,
+} from "../db/memoryStore.js";
 import {
   handleRegisterAdmin,
   isUserAdmin,
@@ -11,10 +16,15 @@ import {
 import { setSocketIO } from "../services/analyticsService.js";
 
 let bot = null;
+let resolvedBotUsername = "";
 export const ADMIN_CHAT_ID = process.env.ADMIN_CHAT_ID || 907402803;
 
 export function getBot() {
   return bot;
+}
+
+export function getBotUsername() {
+  return resolvedBotUsername;
 }
 
 function escapeHtml(text = "") {
@@ -64,6 +74,8 @@ export default function startBot(io = null) {
       }
 
       try {
+        const dbOnline = isDbConnected();
+
         // Tokensiz /start bosilgan holat
         if (!tokenParam) {
           // Agar foydalanuvchi Admin bo'lsa, to'g'ridan-to'g'ri Admin Panelni ko'rsatish
@@ -81,7 +93,9 @@ export default function startBot(io = null) {
             return;
           }
 
-          const existingUser = await User.findOne({ telegramId });
+          const existingUser = dbOnline
+            ? await User.findOne({ telegramId })
+            : findMemoryUserByTelegramId(telegramId);
           if (existingUser) {
             await ctx.reply(
               `Assalomu alaykum, <b>${escapeHtml(existingUser.firstName)} ${escapeHtml(existingUser.lastName)}</b>! 👋\n\n` +
@@ -109,9 +123,11 @@ export default function startBot(io = null) {
         }
 
         // Token mavjud bo'lgan holat (Saytdan kirish OTP)
-        const session = await OTP.findOne({
-          $or: [{ token: tokenParam }, { tokenHash: tokenParam }],
-        });
+        const session = dbOnline
+          ? await OTP.findOne({
+              $or: [{ token: tokenParam }, { tokenHash: tokenParam }],
+            })
+          : findMemoryOtpByTokenOrHash(tokenParam);
 
         if (!session) {
           await ctx.reply(
@@ -121,7 +137,7 @@ export default function startBot(io = null) {
           return;
         }
 
-        if (session.expiresAt < new Date()) {
+        if (new Date(session.expiresAt) < new Date()) {
           await ctx.reply(
             "⏰ <b>Muddati tugagan:</b> Ushbu login havolasining muddati tugagan. Saytdan yangi login havolasini oling.",
             { parse_mode: "HTML" }
@@ -135,9 +151,13 @@ export default function startBot(io = null) {
         session.telegramLastName = lastName;
         session.verified = true;
         session.verifiedAt = new Date();
-        await session.save();
+        if (dbOnline && typeof session.save === "function") {
+          await session.save();
+        }
 
-        const existingUser = await User.findOne({ telegramId });
+        const existingUser = dbOnline
+          ? await User.findOne({ telegramId })
+          : findMemoryUserByTelegramId(telegramId);
 
         let replyText = `✅ <b>Telegram hisobingiz muvaffaqiyatli tasdiqlandi!</b>\n\n`;
         replyText += `Salom, <b>${escapeHtml(firstName)}</b> 👋\n\n`;
@@ -179,6 +199,15 @@ export default function startBot(io = null) {
         { command: "broadcast", description: "📢 Foydalanuvchilarga xabar" },
         { command: "start", description: "🚀 Botni ishga tushirish" },
       ])
+      .catch(() => {});
+
+    bot.telegram
+      .getMe()
+      .then((me) => {
+        if (me?.username) {
+          resolvedBotUsername = me.username;
+        }
+      })
       .catch(() => {});
 
     bot.launch().catch((err) => {

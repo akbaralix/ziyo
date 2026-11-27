@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const questionSchema = new mongoose.Schema({
+  type: { type: String, enum: ["quiz", "true_false"], default: "quiz" },
   text: { type: String, required: true },
   options: [{ type: String, required: true }], // 2-4 ta variant
   correctIndex: { type: Number, required: true }, // 0-3
@@ -18,6 +19,12 @@ const quizGameSchema = new mongoose.Schema(
     },
     title: { type: String, required: true, maxlength: 100 },
     description: { type: String, default: "" },
+    gameMode: {
+      type: String,
+      enum: ["quiz", "true_false", "mixed"],
+      default: "quiz",
+    },
+    questionCount: { type: Number, default: 0 },
     questions: {
       type: [questionSchema],
       validate: {

@@ -1,5 +1,7 @@
 import { Markup } from "telegraf";
 import User from "../db/User/User.js";
+import { isDbConnected } from "../db/db.js";
+import { listMemoryUsers } from "../db/memoryStore.js";
 import {
   getFullDashboardStats,
   getUserStats,
@@ -513,9 +515,11 @@ async function executeBroadcast(ctx, bot, messageText) {
   const statusMsg = await ctx.reply("⏳ Xabar yuborilmoqda, kuting...");
   try {
     // Bazadagi barcha telegramId ga ega foydalanuvchilarni olish
-    const users = await User.find({
-      telegramId: { $exists: true, $ne: "" },
-    }).select("telegramId");
+    const users = isDbConnected()
+      ? await User.find({
+          telegramId: { $exists: true, $ne: "" },
+        }).select("telegramId")
+      : listMemoryUsers().filter((u) => u.telegramId);
     let sentCount = 0;
     let failedCount = 0;
 

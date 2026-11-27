@@ -1,5 +1,33 @@
+import mongoose from "mongoose";
 import User from "../db/User/User.js";
+import { isDbConnected } from "../db/db.js";
+import { findMemoryUserById } from "../db/memoryStore.js";
 import { getBattleQuestions } from "./octagonQuestions.js";
+
+async function updateUserBattleStats(userId, xpDelta, solvedInc = 0) {
+  if (!userId) return;
+  if (!isDbConnected()) {
+    const memUser = findMemoryUserById(userId);
+    if (!memUser) return;
+    memUser.xp = Math.max(0, (memUser.xp || 0) + xpDelta);
+    if (solvedInc > 0) {
+      memUser.solvedQuizzes = (memUser.solvedQuizzes || 0) + solvedInc;
+    }
+    return;
+  }
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return;
+  }
+  try {
+    const user = await User.findById(userId);
+    if (!user) return;
+    user.xp = Math.max(0, (user.xp || 0) + xpDelta);
+    if (solvedInc > 0) {
+      user.solvedQuizzes = (user.solvedQuizzes || 0) + solvedInc;
+    }
+    await user.save();
+  } catch {}
+}
 
 const queues = {
   "matematika:oson": [],
@@ -379,7 +407,8 @@ function simulateBotAnswer(io, battle, questionIndex) {
         wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
     }
 
-    const timeRemaining = Math.max(0, 12 - Math.round(delay / 1000));
+    const limit = currentQ.timeLimit || 12;
+    const timeRemaining = Math.max(0, limit - Math.round(delay / 1000));
     const points = isBotCorrect ? 100 + timeRemaining * 10 : 0;
 
     battle.player2.answers[questionIndex] = {
@@ -475,24 +504,10 @@ async function finishBattle(io, battle) {
     p2XpChange = xpConfig.win;
   }
 
-  // Bazada XP yangilash
-  let p1NewXp = battle.player1.user.xp + p1XpChange;
-  if (p1NewXp < 0) p1NewXp = 0;
-
-  if (battle.player1.userId) {
-    try {
-      await User.findByIdAndUpdate(battle.player1.userId, {
-        $inc: { xp: p1XpChange, solvedQuizzes: 10 },
-      });
-    } catch {}
-  }
-
-  if (!battle.player2.isBot && battle.player2.userId) {
-    try {
-      await User.findByIdAndUpdate(battle.player2.userId, {
-        $inc: { xp: p2XpChange, solvedQuizzes: 10 },
-      });
-    } catch {}
+  // Bazada XP yangilash (faqat haqiqiy ObjectId va online DB bo'lsa)
+  await updateUserBattleStats(battle.player1.userId, p1XpChange, 10);
+  if (!battle.player2.isBot) {
+    await updateUserBattleStats(battle.player2.userId, p2XpChange, 10);
   }
 
   const p1FinalPayload = {
@@ -542,20 +557,11 @@ async function handlePlayerForfeit(io, battle, forfeitSocketId) {
   const loser = isPlayer1 ? battle.player1 : battle.player2;
 
   // G'olibga avtomatik win XP
-  if (!winner.isBot && winner.userId) {
-    try {
-      await User.findByIdAndUpdate(winner.userId, {
-        $inc: { xp: xpConfig.win },
-      });
-    } catch {}
+  if (!winner.isBot) {
+    await updateUserBattleStats(winner.userId, xpConfig.win, 0);
   }
-
-  if (!loser.isBot && loser.userId) {
-    try {
-      await User.findByIdAndUpdate(loser.userId, {
-        $inc: { xp: xpConfig.lose },
-      });
-    } catch {}
+  if (!loser.isBot) {
+    await updateUserBattleStats(loser.userId, xpConfig.lose, 0);
   }
 
   if (!winner.isBot) {

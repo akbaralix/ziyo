@@ -1,8 +1,6 @@
 import jwt from "jsonwebtoken";
 import { recordVisit } from "../services/analyticsService.js";
-
-const JWT_SECRET =
-  process.env.JWT_SECRET || "ziyo_secret_jwt_key_super_secure_2026_ziyo_app";
+import { JWT_SECRET } from "../utils/jwtSecret.js";
 
 export function visitorTracker(req, res, next) {
   // Agar auth header bo'lsa, foydalanuvchi ID sini aniqlash

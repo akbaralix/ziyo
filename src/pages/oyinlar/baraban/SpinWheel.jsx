@@ -77,7 +77,7 @@ const SpinWheel = forwardRef(function SpinWheel(
       ctx.stroke();
 
       ctx.fillStyle = "#64748b";
-      ctx.font = "600 16px Poppins, sans-serif";
+      ctx.font = "600 16px Inter, Poppins, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("Qatnashchi qo'shing", cx, cy);
@@ -114,7 +114,7 @@ const SpinWheel = forwardRef(function SpinWheel(
 
       // Dynamic font size depending on count and length
       const fontSize = count > 20 ? 11 : count > 12 ? 13 : count > 8 ? 14 : 16;
-      ctx.font = `600 ${fontSize}px Poppins, sans-serif`;
+      ctx.font = `600 ${fontSize}px Inter, Poppins, sans-serif`;
       ctx.fillStyle = "#ffffff";
 
       // Text truncation
@@ -153,15 +153,15 @@ const SpinWheel = forwardRef(function SpinWheel(
 
     ctx.beginPath();
     ctx.arc(cx, cy, 22, 0, 2 * Math.PI);
-    ctx.fillStyle = "#461fe2";
+    ctx.fillStyle = "#5134e4";
     ctx.fill();
 
     // Center star / symbol
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 13px Poppins, sans-serif";
+    ctx.font = "bold 12px Inter, Poppins, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("ZIYO", cx, cy);
+    ctx.fillText("HATIF", cx, cy);
 
     // Top Pointer Arrow
     drawPointer(ctx, cx, cy, radius);

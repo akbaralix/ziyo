@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   FaPlus,
   FaTrash,
   FaCheck,
+  FaTimes,
   FaClock,
   FaAward,
   FaArrowLeft,
@@ -29,53 +30,159 @@ import { toast } from "react-toastify";
 import ModalOverlay from "../../components/ModalOverlay";
 import {
   createQuizGame,
+  generateAiQuizQuestions,
   getQuizGameById,
   updateQuizGame,
 } from "../../api/quizApi.js";
 
 import "./QuizBuilder.css";
 
-const DEFAULT_QUESTION = () => ({
-  text: "",
-  options: ["", "", "", ""],
-  correctIndex: 0,
-  timeLimit: 20,
-  points: 100,
-  explanation: "",
-});
+const MIN_QUESTIONS = 5;
+const MAX_QUESTIONS = 25;
+
+const DEFAULT_QUESTION = (qType = "quiz") =>
+  qType === "true_false"
+    ? {
+        type: "true_false",
+        text: "",
+        options: ["To'g'ri", "Noto'g'ri"],
+        correctIndex: 0,
+        timeLimit: 20,
+        points: 100,
+        explanation: "",
+      }
+    : {
+        type: "quiz",
+        text: "",
+        options: ["", "", "", ""],
+        correctIndex: 0,
+        timeLimit: 20,
+        points: 100,
+        explanation: "",
+      };
+
+const TRUE_FALSE_COLORS = [
+  {
+    bg: "rgb(38, 137, 12)",
+    text: "#ffffff",
+    shape: <FaCheck />,
+    name: "To'g'ri",
+  },
+  {
+    bg: "rgb(226, 27, 60)",
+    text: "#ffffff",
+    shape: <FaTimes />,
+    name: "Noto'g'ri",
+  },
+];
+
+const OPTION_COLORS = [
+  {
+    bg: "rgb(226, 27, 60)",
+    text: "#ffffff",
+    shape: <FaCaretUp />,
+    name: "Qizil",
+  },
+  {
+    bg: "rgb(19, 104, 206)",
+    text: "#ffffff",
+    shape: <FaDiamond />,
+    name: "Ko'k",
+  },
+  {
+    bg: "rgb(216, 158, 0)",
+    text: "#ffffff",
+    shape: <FaCircle />,
+    name: "Sariq",
+  },
+  {
+    bg: "rgb(38, 137, 12)",
+    text: "#ffffff",
+    shape: <FaSquare />,
+    name: "Yashil",
+  },
+];
 
 export default function QuizBuilder() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const isEditing = Boolean(id);
+  const initialModeParam =
+    !isEditing && searchParams.get("mode") === "true_false"
+      ? "true_false"
+      : "quiz";
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [questions, setQuestions] = useState([
-    DEFAULT_QUESTION(),
-    DEFAULT_QUESTION(),
-    DEFAULT_QUESTION(),
-    DEFAULT_QUESTION(),
-    DEFAULT_QUESTION(),
-    DEFAULT_QUESTION(),
-    DEFAULT_QUESTION(),
-    DEFAULT_QUESTION(),
-  ]);
+  const [questions, setQuestions] = useState(() =>
+    Array.from({ length: initialModeParam === "true_false" ? 5 : 8 }, () =>
+      DEFAULT_QUESTION(initialModeParam),
+    ),
+  );
   const [aiQuizOpen, setAiQuizOpen] = useState(false);
   const [aiMode, setAiMode] = useState("quick"); // 'quick' | 'manual'
   const [aiTopic, setAiTopic] = useState("");
-  const [aiCount, setAiCount] = useState(8);
+  const [aiCount, setAiCount] = useState(
+    initialModeParam === "true_false" ? 6 : 8,
+  );
   const [aiDifficulty, setAiDifficulty] = useState("o'rtacha");
   const [aiTimeLimit, setAiTimeLimit] = useState(20);
+  const [aiFormat, setAiFormat] = useState(initialModeParam); // 'quiz' | 'true_false' | 'mixed'
   const [aiJsonInput, setAiJsonInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
   const getAiPrompt = () => {
     const topic = aiTopic.trim() || "Umumiy bilimlar";
-    const count = Math.min(Math.max(Number(aiCount) || 8, 8), 25);
+    const count = Math.min(
+      Math.max(Number(aiCount) || 8, MIN_QUESTIONS),
+      MAX_QUESTIONS,
+    );
+
+    if (aiFormat === "true_false") {
+      return `Siz ta'lim bo'yicha ekspert AI siz. Menga '${topic}' mavzusida ${count} ta Kahoot uslubidagi "To'g'ri / Noto'g'ri" (True/False) savollarini ushbu JSON formatda tuzib bering:
+[
+  {
+    "type": "true_false",
+    "text": "Fakt yoki bayon matni",
+    "options": ["To'g'ri", "Noto'g'ri"],
+    "correctIndex": 0,
+    "explanation": "Qisqa izoh"
+  }
+]
+Qoida: correctIndex faqat 0 ("To'g'ri") yoki 1 ("Noto'g'ri") bo'lsin va javoblar aralash bo'lsin. Javobda faqat valid JSON massivini qaytaring.`;
+    }
+
+    if (aiFormat === "mixed") {
+      return `Siz ta'lim bo'yicha ekspert AI siz. Menga '${topic}' mavzusida ${count} ta aralash (ham 4 variantli test, ham "To'g'ri / Noto'g'ri") savollarini ushbu JSON formatda tuzib bering:
+[
+  {
+    "type": "quiz",
+    "text": "Test savol matni",
+    "options": ["A variant", "B variant", "C variant", "D variant"],
+    "correctIndex": 0,
+    "explanation": "Qisqa izoh"
+  },
+  {
+    "type": "true_false",
+    "text": "To'g'ri yoki noto'g'ri bayon matni",
+    "options": ["To'g'ri", "Noto'g'ri"],
+    "correctIndex": 1,
+    "explanation": "Qisqa izoh"
+  }
+]
+Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
+    }
+
     return `Siz ta'lim bo'yicha ekspert AI siz. Menga '${topic}' mavzusida ${count} ta test savolini aniq, variantlarni aralashtrib, qisqa variantli qilib ushbu JSON formatda tuzib bering:
 [
   {
+    "type": "quiz",
     "text": "Savol matni",
     "options": ["A variant", "B variant", "C variant", "D variant"],
     "correctIndex": 0,
@@ -89,7 +196,7 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
     const promptText = getAiPrompt();
     try {
       await navigator.clipboard.writeText(promptText);
-      toast.success("Prompt nusxalandi! Endi ChatGPT yoki Gemini-ga yuboring.");
+      toast.success("Prompt nusxalandi! Endi AI yordamchiga yuboring.");
     } catch {
       toast.info("Promptdan nusxa oling!");
     }
@@ -109,7 +216,6 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
       parsed = JSON.parse(raw);
     }
 
-    // Ba'zan AI obyekt ichida { questions: [...] } shaklida qaytarishi mumkin
     if (!Array.isArray(parsed) && parsed && typeof parsed === "object") {
       if (Array.isArray(parsed.questions)) parsed = parsed.questions;
       else if (Array.isArray(parsed.tests)) parsed = parsed.tests;
@@ -121,7 +227,7 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
       throw new Error("JSON ma'lumot testlar massivi bo'lishi kerak!");
     }
 
-    const validated = parsed.slice(0, 25).map((item, idx) => {
+    const validated = parsed.slice(0, MAX_QUESTIONS).map((item, idx) => {
       const questionText = item.text || item.question || item.savol;
       if (!questionText || !String(questionText).trim()) {
         throw new Error(`${idx + 1}-savol matni topilmadi.`);
@@ -129,6 +235,54 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
 
       const rawOpts =
         item.options || item.choices || item.variants || item.variantlar;
+
+      const isTrueFalseItem =
+        item.type === "true_false" ||
+        aiFormat === "true_false" ||
+        (Array.isArray(rawOpts) && rawOpts.length === 2) ||
+        typeof item.isTrue === "boolean" ||
+        typeof item.correct === "boolean";
+
+      if (isTrueFalseItem) {
+        let tfCorrect = 0;
+        if (typeof item.isTrue === "boolean") {
+          tfCorrect = item.isTrue ? 0 : 1;
+        } else if (typeof item.correct === "boolean") {
+          tfCorrect = item.correct ? 0 : 1;
+        } else if (item.correctIndex !== undefined) {
+          tfCorrect = Number(item.correctIndex) === 1 ? 1 : 0;
+        } else if (item.correctAnswer !== undefined) {
+          const val = String(item.correctAnswer).trim().toLowerCase();
+          tfCorrect =
+            val === "1" ||
+            val === "false" ||
+            val === "noto'g'ri" ||
+            val === "notogri" ||
+            val === "yo'q"
+              ? 1
+              : 0;
+        }
+
+        const opt0 =
+          Array.isArray(rawOpts) && rawOpts[0]
+            ? String(rawOpts[0]).trim()
+            : "To'g'ri";
+        const opt1 =
+          Array.isArray(rawOpts) && rawOpts[1]
+            ? String(rawOpts[1]).trim()
+            : "Noto'g'ri";
+
+        return {
+          type: "true_false",
+          text: String(questionText).trim(),
+          options: [opt0, opt1],
+          correctIndex: tfCorrect,
+          timeLimit: Number(item.timeLimit) || aiTimeLimit || 20,
+          points: Number(item.points) || 100,
+          explanation: item.explanation ? String(item.explanation).trim() : "",
+        };
+      }
+
       if (!Array.isArray(rawOpts) || rawOpts.length < 2) {
         throw new Error(
           `${idx + 1}-savolda kamida 2 ta javob varianti bo'lishi kerak.`,
@@ -163,10 +317,11 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
       }
 
       return {
+        type: "quiz",
         text: String(questionText).trim(),
         options: finalOptions,
         correctIndex: correct,
-        timeLimit: Number(item.timeLimit) || 20,
+        timeLimit: Number(item.timeLimit) || aiTimeLimit || 20,
         points: Number(item.points) || 100,
         explanation: item.explanation ? String(item.explanation).trim() : "",
       };
@@ -199,7 +354,7 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
     }
   };
 
-  // Real Gemini API orqali testlarni tezkor yaratish
+  // Server-side Gemini AI orqali test va True/False savollarni yaratish
   const handleGenerateWithGemini = async () => {
     const topic = aiTopic.trim();
     if (!topic) {
@@ -207,124 +362,48 @@ Javobda faqat valid JSON massivini qaytaring, boshqa ortiqcha matn yozmang.`;
       return;
     }
 
-    const count = Math.min(Math.max(Number(aiCount) || 8, 8), 25);
-    const apiKey =
-      import.meta.env.VITE_GEMINI_API_KEY ||
-      (typeof process !== "undefined" ? process.env?.VITE_GEMINI_API_KEY : "");
-
-    if (!apiKey) {
-      toast.error(
-        "Gemini API kaliti topilmadi (.env faylida VITE_GEMINI_API_KEY ni sozlang)!",
-      );
-      return;
-    }
+    const count = Math.min(
+      Math.max(Number(aiCount) || 8, MIN_QUESTIONS),
+      MAX_QUESTIONS,
+    );
 
     setIsGenerating(true);
 
-    const difficultyText =
-      aiDifficulty === "oson"
-        ? "oson darajadagi"
-        : aiDifficulty === "qiyin"
-          ? "murakkab, qiyin darajadagi"
-          : aiDifficulty === "aralash"
-            ? "har xil qiyinlikdagi"
-            : "o'rtacha darajadagi";
-
-    const prompt = `Siz professional ta'lim va test tuzish ekspertisiz. Menga '${topic}' mavzusida (${difficultyText}) aniq ${count} ta test savolini tuzib bering.
-Qoidalar:
-1. Har bir savol uchun aniq 4 ta javob varianti bo'lsin (1 ta to'g'ri va 3 ta chalg'ituvchi aralash).
-2. To'g'ri javob indeksi "correctIndex" (0, 1, 2 yoki 3) da bo'lsin. To'g'ri javob har safar bir xil o'rinda bo'lmasin, variantlar aralashtirilsin.
-3. "timeLimit" maydoni ${aiTimeLimit || 20} bo'lsin.
-4. "points" maydoni 100 bo'lsin.
-5. "explanation" maydonida to'g'ri javob sababi o'zbek tilida qisqa tushuntirilsin.
-6. Variantlar qisqa va aniq bolsin.
-Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z yoki markdown belgilarisiz:
-[
-  {
-    "text": "Savol matni",
-    "options": ["A variant", "B variant", "C variant", "D variant"],
-    "correctIndex": 0,
-    "timeLimit": ${aiTimeLimit || 20},
-    "points": 100,
-    "explanation": "To'g'ri javob izohi"
-  }
-]`;
-
-    const requestBody = {
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.7,
-      },
-    };
-
-    const models = [
-      "gemini-2.5-flash",
-      "gemini-1.5-flash",
-      "gemini-flash-latest",
-    ];
-
     try {
-      let rawText = "";
-      let lastError = null;
+      const res = await generateAiQuizQuestions({
+        topic,
+        count,
+        difficulty: aiDifficulty,
+        timeLimit: aiTimeLimit,
+        questionFormat: aiFormat,
+      });
 
-      for (const model of models) {
-        try {
-          const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(requestBody),
-            },
-          );
-
-          if (res.ok) {
-            const data = await res.json();
-            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) {
-              rawText = text;
-              break;
-            }
-          } else {
-            const errData = await res.json().catch(() => ({}));
-            lastError = new Error(
-              errData.error?.message ||
-                `Model ${model} xatolik qaytardi (${res.status})`,
-            );
-          }
-        } catch (netErr) {
-          lastError = netErr;
-        }
+      const generated = Array.isArray(res?.questions) ? res.questions : [];
+      if (generated.length === 0) {
+        throw new Error("AI savollar yaratmadi, qayta urinib ko'ring");
       }
 
-      if (!rawText) {
-        throw lastError || new Error("ZIYO AI'dan javob olib bo'lmadi");
-      }
-
-      const validated = parseAndValidateQuestions(rawText);
+      const validated = parseAndValidateQuestions(generated);
 
       if (!title.trim() && topic) {
-        setTitle(`${topic} viktorinasi`);
+        const suffix =
+          aiFormat === "true_false" ? "To'g'ri / Noto'g'ri" : "viktorinasi";
+        setTitle(`${topic} — ${suffix}`);
       }
 
       setQuestions(validated);
       setCurrentIndex(0);
       setAiQuizOpen(false);
       toast.success(
-        `${validated.length} ta savol ZIYO AI orqali muvaffaqiyatli yaratildi! 🎉`,
+        `${validated.length} ta savol AI orqali muvaffaqiyatli yaratildi! 🎉`,
       );
     } catch (err) {
-      console.error("ZIYO quiz generation error:", err);
-      toast.error(`Xatolik: ${err.message || "Testlarni yaratib bo'lmadi"}`);
+      console.error("AI quiz generation error:", err);
+      toast.error(`Xatolik: ${err.message || "Savollarni yaratib bo'lmadi"}`);
     } finally {
       setIsGenerating(false);
     }
   };
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Tahrirlash rejimida yuklash
   useEffect(() => {
@@ -337,10 +416,33 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
             setDescription(res.quiz.description || "");
             if (res.quiz.questions?.length > 0) {
               setQuestions(
-                res.quiz.questions.map((q) => ({
-                  ...DEFAULT_QUESTION(),
-                  ...q,
-                })),
+                res.quiz.questions.map((q) => {
+                  const isTf = q.type === "true_false";
+                  if (isTf) {
+                    const opts = Array.isArray(q.options) ? q.options : [];
+                    return {
+                      ...DEFAULT_QUESTION("true_false"),
+                      ...q,
+                      type: "true_false",
+                      options: [
+                        String(opts[0] || "To'g'ri"),
+                        String(opts[1] || "Noto'g'ri"),
+                      ],
+                      correctIndex: Number(q.correctIndex) === 1 ? 1 : 0,
+                    };
+                  }
+                  const base = DEFAULT_QUESTION("quiz");
+                  const opts = Array.isArray(q.options)
+                    ? q.options.map((o) => String(o ?? ""))
+                    : [];
+                  while (opts.length < 4) opts.push("");
+                  return {
+                    ...base,
+                    ...q,
+                    type: "quiz",
+                    options: opts.slice(0, 4),
+                  };
+                }),
               );
             }
           }
@@ -353,6 +455,42 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
   }, [id, isEditing]);
 
   const currentQ = questions[currentIndex] || DEFAULT_QUESTION();
+  const isCurrentTrueFalse = currentQ.type === "true_false";
+
+  // Savol turini almashtirish ('quiz' <-> 'true_false')
+  const handleQuestionTypeChange = (newType) => {
+    const updated = [...questions];
+    const curr = updated[currentIndex];
+    if (!curr || curr.type === newType) return;
+
+    if (newType === "true_false") {
+      updated[currentIndex] = {
+        ...curr,
+        type: "true_false",
+        options: ["To'g'ri", "Noto'g'ri"],
+        correctIndex: curr.correctIndex === 1 ? 1 : 0,
+      };
+    } else {
+      const oldOpts = Array.isArray(curr.options) ? [...curr.options] : [];
+      const nextOpts =
+        oldOpts.length >= 4
+          ? oldOpts.slice(0, 4)
+          : ["", "", "", ""].map((_, i) =>
+              oldOpts[i] &&
+              oldOpts[i] !== "To'g'ri" &&
+              oldOpts[i] !== "Noto'g'ri"
+                ? oldOpts[i]
+                : "",
+            );
+      updated[currentIndex] = {
+        ...curr,
+        type: "quiz",
+        options: nextOpts,
+        correctIndex: Math.min(Math.max(Number(curr.correctIndex) || 0, 0), 3),
+      };
+    }
+    setQuestions(updated);
+  };
 
   // Savol matni o'zgarishi
   const handleQuestionTextChange = (text) => {
@@ -405,19 +543,21 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
   };
 
   // Yangi savol qo'shish
-  const handleAddQuestion = () => {
-    if (questions.length >= 25) {
-      toast.warning("Maksimal 25 ta savol qo'shish mumkin!");
+  const handleAddQuestion = (qType) => {
+    if (questions.length >= MAX_QUESTIONS) {
+      toast.warning(`Maksimal ${MAX_QUESTIONS} ta savol qo'shish mumkin!`);
       return;
     }
-    setQuestions([...questions, DEFAULT_QUESTION()]);
+    const resolvedType =
+      qType || currentQ?.type || initialModeParam || "quiz";
+    setQuestions([...questions, DEFAULT_QUESTION(resolvedType)]);
     setCurrentIndex(questions.length);
   };
 
   // Savolni nusxalash
   const handleDuplicateQuestion = (idx) => {
-    if (questions.length >= 25) {
-      toast.warning("Maksimal 25 ta savol qo'shish mumkin!");
+    if (questions.length >= MAX_QUESTIONS) {
+      toast.warning(`Maksimal ${MAX_QUESTIONS} ta savol qo'shish mumkin!`);
       return;
     }
     const copy = JSON.parse(JSON.stringify(questions[idx]));
@@ -429,8 +569,8 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
 
   // Savolni o'chirish
   const handleDeleteQuestion = (idx) => {
-    if (questions.length <= 8) {
-      toast.warning("Kamida 8 ta savol bo'lishi shart!");
+    if (questions.length <= MIN_QUESTIONS) {
+      toast.warning(`Kamida ${MIN_QUESTIONS} ta savol bo'lishi shart!`);
       return;
     }
     const updated = questions.filter((_, i) => i !== idx);
@@ -451,13 +591,19 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
       return;
     }
 
-    if (questions.length < 8 || questions.length > 25) {
-      toast.warning("Savollar soni 8 tadan 25 tagacha bo'lishi kerak!");
-      setErrorMsg("Savollar soni 8 tadan 25 tagacha bo'lishi kerak!");
+    if (
+      questions.length < MIN_QUESTIONS ||
+      questions.length > MAX_QUESTIONS
+    ) {
+      toast.warning(
+        `Savollar soni ${MIN_QUESTIONS} tadan ${MAX_QUESTIONS} tagacha bo'lishi kerak!`,
+      );
+      setErrorMsg(
+        `Savollar soni ${MIN_QUESTIONS} tadan ${MAX_QUESTIONS} tagacha bo'lishi kerak!`,
+      );
       return;
     }
 
-    // Har bir savolni tekshirish
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.text.trim()) {
@@ -466,6 +612,19 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
         setCurrentIndex(i);
         return;
       }
+
+      if (q.type === "true_false") {
+        if (q.correctIndex !== 0 && q.correctIndex !== 1) {
+          toast.warning(
+            `${i + 1}-savolda To'g'ri yoki Noto'g'ri tanlanmagan!`,
+          );
+          setErrorMsg(`${i + 1}-savolda To'g'ri yoki Noto'g'ri tanlanmagan!`);
+          setCurrentIndex(i);
+          return;
+        }
+        continue;
+      }
+
       const filledOptions = q.options.filter((o) => o.trim() !== "");
       if (filledOptions.length < 2) {
         toast.warning(
@@ -491,22 +650,46 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
         title: title.trim(),
         description: description.trim(),
         questions: questions.map((q) => {
-          const filledOptions = q.options
-            .map((o) => (typeof o === "string" ? o.trim() : String(o ?? "")))
-            .filter((o) => o !== "");
-
-          let safeCorrect = Number(q.correctIndex);
-          if (
-            isNaN(safeCorrect) ||
-            safeCorrect < 0 ||
-            safeCorrect >= filledOptions.length
-          ) {
-            safeCorrect = 0;
+          if (q.type === "true_false") {
+            const opt0 = String(q.options?.[0] || "To'g'ri").trim() || "To'g'ri";
+            const opt1 =
+              String(q.options?.[1] || "Noto'g'ri").trim() || "Noto'g'ri";
+            return {
+              type: "true_false",
+              text: q.text.trim(),
+              options: [opt0, opt1],
+              correctIndex: Number(q.correctIndex) === 1 ? 1 : 0,
+              timeLimit: Number(q.timeLimit) || 20,
+              points: Number(q.points) || 100,
+              explanation: q.explanation ? String(q.explanation).trim() : "",
+            };
           }
 
+          const indexedEntries = q.options
+            .map((o, idx) => ({
+              text: typeof o === "string" ? o.trim() : String(o ?? "").trim(),
+              idx,
+            }))
+            .filter((entry) => entry.text !== "");
+
+          const rawCorrect = Number(q.correctIndex);
+          let safeCorrect = indexedEntries.findIndex(
+            (entry) => entry.idx === rawCorrect,
+          );
+          if (
+            safeCorrect === -1 &&
+            !isNaN(rawCorrect) &&
+            rawCorrect >= 0 &&
+            rawCorrect < indexedEntries.length
+          ) {
+            safeCorrect = rawCorrect;
+          }
+          if (safeCorrect < 0) safeCorrect = 0;
+
           return {
+            type: "quiz",
             text: q.text.trim(),
-            options: filledOptions,
+            options: indexedEntries.map((entry) => entry.text),
             correctIndex: safeCorrect,
             timeLimit: Number(q.timeLimit) || 20,
             points: Number(q.points) || 100,
@@ -535,33 +718,6 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
     }
   };
 
-  const OPTION_COLORS = [
-    {
-      bg: "rgb(226, 27, 60)",
-      text: "#ffffff",
-      shape: <FaCaretUp />,
-      name: "Qizil",
-    },
-    {
-      bg: "rgb(19, 104, 206)",
-      text: "#ffffff",
-      shape: <FaDiamond />,
-      name: "Ko'k",
-    },
-    {
-      bg: "rgb(216, 158, 0)",
-      text: "#ffffff",
-      shape: <FaCircle />,
-      name: "Sariq",
-    },
-    {
-      bg: "rgb(38, 137, 12)",
-      text: "#ffffff",
-      shape: <FaSquare />,
-      name: "Yashil",
-    },
-  ];
-
   return (
     <div className="quiz-builder-layout">
       {/* Header Bar */}
@@ -588,7 +744,7 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
 
         <div className="builder-header-right">
           <span className="question-count-badge">
-            {questions.length} / 25 ta savol
+            {questions.length} / {MAX_QUESTIONS} ta savol
           </span>
 
           <button
@@ -617,8 +773,8 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
             <button
               type="button"
               className="add-q-mini-btn"
-              onClick={handleAddQuestion}
-              disabled={questions.length >= 25}
+              onClick={() => handleAddQuestion()}
+              disabled={questions.length >= MAX_QUESTIONS}
               title="Yangi savol qo'shish"
             >
               <FaPlus />
@@ -638,7 +794,10 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
                     {q.text ? q.text : "(Savol matni kiritilmagan)"}
                   </span>
                   <span className="q-preview-meta">
-                    ⏱ {q.timeLimit}s • 🌟 {q.points} ball
+                    {q.type === "true_false" && (
+                      <span className="q-type-chip">T/F</span>
+                    )}
+                    ⏱ {q.timeLimit}s • 🌟 {q.points}
                   </span>
                 </div>
                 <div className="q-card-actions">
@@ -653,7 +812,7 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
                   >
                     <FaCopy />
                   </button>
-                  {questions.length > 5 && (
+                  {questions.length > MIN_QUESTIONS && (
                     <button
                       type="button"
                       className="q-action-btn delete"
@@ -671,72 +830,155 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
             ))}
           </div>
 
-          <button
-            type="button"
-            className="sidebar-add-btn"
-            onClick={handleAddQuestion}
-            disabled={questions.length >= 25}
-          >
-            <FaPlus /> Savol qo'shish ({questions.length}/25)
-          </button>
+          <div className="sidebar-add-group">
+            <button
+              type="button"
+              className="sidebar-add-btn"
+              onClick={() => handleAddQuestion("quiz")}
+              disabled={questions.length >= MAX_QUESTIONS}
+            >
+              <FaPlus /> 4-variantli
+            </button>
+            <button
+              type="button"
+              className="sidebar-add-btn tf-add"
+              onClick={() => handleAddQuestion("true_false")}
+              disabled={questions.length >= MAX_QUESTIONS}
+            >
+              <FaCheck /> To&apos;g&apos;ri / Noto&apos;g&apos;ri
+            </button>
+          </div>
         </aside>
 
         {/* Main Content Area: Question Editor */}
         <main className="builder-main-content">
           {/* Question Text Box */}
           <div className="question-input-card">
-            <label className="question-input-label">
-              <IoSparkles /> {currentIndex + 1}-savol matnini kiriting:
-            </label>
+            <div className="question-card-top-row">
+              <label className="question-input-label">
+                <IoSparkles /> {currentIndex + 1}-savol matnini kiriting:
+              </label>
+
+              <div className="q-type-switcher" role="group" aria-label="Savol turi">
+                <button
+                  type="button"
+                  className={`q-type-btn ${!isCurrentTrueFalse ? "active" : ""}`}
+                  onClick={() => handleQuestionTypeChange("quiz")}
+                >
+                  Test (4 variant)
+                </button>
+                <button
+                  type="button"
+                  className={`q-type-btn tf ${isCurrentTrueFalse ? "active" : ""}`}
+                  onClick={() => handleQuestionTypeChange("true_false")}
+                >
+                  To&apos;g&apos;ri / Noto&apos;g&apos;ri
+                </button>
+              </div>
+            </div>
+
             <textarea
               className="question-textarea"
-              placeholder="Savolni shu yerga yozing..."
+              placeholder={
+                isCurrentTrueFalse
+                  ? "Bayon yoki faktni yozing (masalan: Yer Quyosh atrofida aylanadi)..."
+                  : "Savolni shu yerga yozing..."
+              }
               rows={3}
               value={currentQ.text}
               onChange={(e) => handleQuestionTextChange(e.target.value)}
             />
           </div>
 
-          {/* Options Grid (Kahoot-Style) */}
-          <div className="options-editor-grid">
-            {currentQ.options.map((opt, optIdx) => {
-              const color = OPTION_COLORS[optIdx % OPTION_COLORS.length];
-              const isCorrect = currentQ.correctIndex === optIdx;
+          {/* Options Grid (Kahoot-Style Quiz or True/False) */}
+          {isCurrentTrueFalse ? (
+            <div className="options-editor-grid true-false-editor-grid">
+              {[0, 1].map((optIdx) => {
+                const color = TRUE_FALSE_COLORS[optIdx];
+                const isCorrect = currentQ.correctIndex === optIdx;
+                const labelVal =
+                  currentQ.options?.[optIdx] ??
+                  (optIdx === 0 ? "To'g'ri" : "Noto'g'ri");
 
-              return (
-                <div
-                  key={optIdx}
-                  className={`option-edit-card ${isCorrect ? "is-correct" : ""}`}
-                  style={{
-                    background: color.bg,
-                  }}
-                >
-                  <div className="option-shape-badge">{color.shape}</div>
-
-                  <input
-                    type="text"
-                    className="option-edit-input"
-                    placeholder={`${optIdx + 1}-variant matni...`}
-                    value={opt}
-                    onChange={(e) => handleOptionChange(optIdx, e.target.value)}
-                  />
-
-                  <button
-                    type="button"
-                    className={`correct-toggle-btn ${isCorrect ? "active" : ""}`}
+                return (
+                  <div
+                    key={optIdx}
+                    className={`option-edit-card true-false-edit-card ${isCorrect ? "is-correct" : ""}`}
+                    style={{ background: color.bg }}
                     onClick={() => handleSetCorrect(optIdx)}
-                    title={
-                      isCorrect
-                        ? "To'g'ri javob tanlangan"
-                        : "To'g'ri javob sifatida belgilash"
-                    }
                   >
-                    <FaCheck />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                    <div className="option-shape-badge">{color.shape}</div>
+
+                    <input
+                      type="text"
+                      className="option-edit-input tf-edit-input"
+                      value={labelVal}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => handleOptionChange(optIdx, e.target.value)}
+                      maxLength={60}
+                    />
+
+                    <button
+                      type="button"
+                      className={`correct-toggle-btn ${isCorrect ? "active" : ""}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSetCorrect(optIdx);
+                      }}
+                      title={
+                        isCorrect
+                          ? "To'g'ri javob tanlangan"
+                          : "To'g'ri javob sifatida belgilash"
+                      }
+                    >
+                      <FaCheck />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="options-editor-grid">
+              {currentQ.options.map((opt, optIdx) => {
+                const color = OPTION_COLORS[optIdx % OPTION_COLORS.length];
+                const isCorrect = currentQ.correctIndex === optIdx;
+
+                return (
+                  <div
+                    key={optIdx}
+                    className={`option-edit-card ${isCorrect ? "is-correct" : ""}`}
+                    style={{
+                      background: color.bg,
+                    }}
+                  >
+                    <div className="option-shape-badge">{color.shape}</div>
+
+                    <input
+                      type="text"
+                      className="option-edit-input"
+                      placeholder={`${optIdx + 1}-variant matni...`}
+                      value={opt}
+                      onChange={(e) => handleOptionChange(optIdx, e.target.value)}
+                    />
+
+                    <button
+                      type="button"
+                      className={`correct-toggle-btn ${isCorrect ? "active" : ""}`}
+                      onClick={() => handleSetCorrect(optIdx)}
+                      title={
+                        isCorrect
+                          ? "To'g'ri javob tanlangan"
+                          : "To'g'ri javob sifatida belgilash"
+                      }
+                    >
+                      <FaCheck />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <div className="question-meta-bar">
             <div className="meta-item">
               <FaClock className="meta-icon" />
@@ -767,10 +1009,11 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
               </select>
             </div>
           </div>
+
           {/* Question Explanation Box */}
           <div className="question-explanation-card">
             <label className="explanation-label">
-              <FaInfoCircle /> To'g'ri javob tushuntirishi (ixtiyoriy):
+              <FaInfoCircle /> To&apos;g&apos;ri javob tushuntirishi (ixtiyoriy):
             </label>
             <input
               type="text"
@@ -805,15 +1048,16 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
               <button
                 type="button"
                 className="nav-step-btn add"
-                onClick={handleAddQuestion}
-                disabled={questions.length >= 25}
+                onClick={() => handleAddQuestion()}
+                disabled={questions.length >= MAX_QUESTIONS}
               >
-                <FaPlus /> Yangi savol qo'shish
+                <FaPlus /> Yangi savol qo&apos;shish
               </button>
             )}
           </div>
         </main>
       </div>
+
       <div className="ai-builder-btn">
         <button type="button" onClick={() => setAiQuizOpen(true)}>
           <IoSparkles /> AI Yordamchi
@@ -833,7 +1077,7 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
                 <IoSparkles />
               </span>
               <div>
-                <h2>AI yordamida test yaratish</h2>
+                <h2>AI yordamida viktorina yaratish</h2>
               </div>
             </div>
             <button
@@ -863,24 +1107,55 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
                 className={`aiQuiz-tab-btn ${aiMode === "manual" ? "active" : ""}`}
                 onClick={() => setAiMode("manual")}
               >
-                <FaEdit /> Qo'lda yaratish
+                <FaEdit /> Qo&apos;lda yaratish
               </button>
             </div>
           </div>
 
           <div className="aiQuiz-body">
+            {/* Savol formati tanlovi: Test / True-False / Aralash */}
+            <div className="ai-format-picker">
+              <label>O&apos;yin formati</label>
+              <div className="ai-format-grid">
+                <button
+                  type="button"
+                  className={`ai-format-btn ${aiFormat === "quiz" ? "active" : ""}`}
+                  onClick={() => setAiFormat("quiz")}
+                  disabled={isGenerating}
+                >
+                  4 variantli test
+                </button>
+                <button
+                  type="button"
+                  className={`ai-format-btn ${aiFormat === "true_false" ? "active" : ""}`}
+                  onClick={() => setAiFormat("true_false")}
+                  disabled={isGenerating}
+                >
+                  To&apos;g&apos;ri / Noto&apos;g&apos;ri
+                </button>
+                <button
+                  type="button"
+                  className={`ai-format-btn ${aiFormat === "mixed" ? "active" : ""}`}
+                  onClick={() => setAiFormat("mixed")}
+                  disabled={isGenerating}
+                >
+                  Aralash
+                </button>
+              </div>
+            </div>
+
             {aiMode === "quick" ? (
               <div className="ai-step-card">
                 <div className="ai-step-title">
                   <IoSparkles />
-                  ZIYO AI orqali avtomatik yaratish
+                  AI orqali avtomatik yaratish
                 </div>
 
                 <div className="ai-input-field">
-                  <label>Mavzu yoki yo'nalish nomi</label>
+                  <label>Mavzu yoki yo&apos;nalish nomi</label>
                   <input
                     type="text"
-                    placeholder="Mavzuni kiriting"
+                    placeholder="Masalan: Quyosh sistemasi, Alisher Navoiy, Fizika..."
                     value={aiTopic}
                     onChange={(e) => setAiTopic(e.target.value)}
                     disabled={isGenerating}
@@ -898,8 +1173,8 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
                     <label>Savollar soni</label>
                     <input
                       type="number"
-                      min={8}
-                      max={25}
+                      min={MIN_QUESTIONS}
+                      max={MAX_QUESTIONS}
                       value={aiCount}
                       onChange={(e) => setAiCount(Number(e.target.value))}
                       disabled={isGenerating}
@@ -941,7 +1216,7 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
                   <div className="ai-generating-indicator">
                     <div className="ai-spinner" />
                     <span>
-                      ZIYO AI test savollarini tuzmoqda, iltimos kuting...
+                      AI savollarni tuzmoqda, iltimos kuting...
                     </span>
                   </div>
                 )}
@@ -967,8 +1242,8 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
                       <label>Savollar soni</label>
                       <input
                         type="number"
-                        min={8}
-                        max={25}
+                        min={MIN_QUESTIONS}
+                        max={MAX_QUESTIONS}
                         value={aiCount}
                         onChange={(e) => setAiCount(Number(e.target.value))}
                       />
@@ -994,8 +1269,7 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
                     2-Qadam: Olingan JSON natijasini joylash
                   </div>
                   <p className="ai-step-desc">
-                    ChatGPT yoki Gemini qaytargan JSON kodini quyidagi maydonga
-                    tashlang:
+                    AI qaytargan JSON kodini quyidagi maydonga tashlang:
                   </p>
                   <textarea
                     className="ai-json-textarea"
@@ -1044,7 +1318,7 @@ Javobni FAQAT valid JSON massiv ko'rinishida qaytaring, boshqa hech qanday so'z 
                 className="aiQuiz-submit-btn"
                 onClick={handleImportAiJson}
               >
-                <IoCheckmark /> JSON’dan testlarni yuklash
+                <IoCheckmark /> JSON&apos;dan testlarni yuklash
               </button>
             )}
           </div>
